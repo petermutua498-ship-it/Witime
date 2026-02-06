@@ -2,6 +2,8 @@ import express from 'express';
 import db from './db.js';
 
 const app = express();
+const sqlite3 = require("sqlite3").verbose();
+const db = new sqlite3.Database('./witime.db');
 
 app.use(express.json());
 app.use(express.static('public'));
