@@ -1,10 +1,17 @@
 import sqlite3 from "sqlite3";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const _filename = fileURLToPath(import.meta.url);
+cost _dirname = path.dirname(_fileame);
+
+const db = new sqlite3.dataase(path.joi(_dirname, 'witime.db'));
 
 const db = new sqlite3.Database("./database.db", (err) => {
   if (err) {
-    console.error("❌ DB error:", err.message);
+    console.error("DB error:", err.message);
   } else {
-    console.log("✅ Database connected");
+    console.log("Database connected");
   }
 });
 

@@ -1,10 +1,25 @@
 import express from 'express';
+import sqlite3 from 'sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname (__filename);
+
+const dbpath = path.join(__dirname, 'witime.db');
+const db = new sqlite3.Database(dbpath, (err) => {
+  if (err) {
+    console.error("DB connection error:", err.message);
+  } else {
+    console.log ('connected to SQLite database');
+  }
+});
+
 app.get('/', (req, res) => {
-  res.send('Witime server is running');
+  res.send('Witime server with SQLite is running');
 });
 
 app.listen(3000, () => {
