@@ -1,9 +1,15 @@
 import express from 'express';
-import db from './db.js';
 
 const app = express();
-const sqlite3 = require("sqlite3").verbose();
-const db = new sqlite3.Database('./witime.db');
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Witime server is running');
+});
+
+app.listen(3000, () => {
+  console.log("Server running at http://localhost:3000");
+});
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -56,8 +62,4 @@ app.get("/admin/sessions", async (req, res) => {
     `SELECT * FROM users ORDER BY id DESC`
   );
   res.json(users);
-});
-
-app.listen(3000, () => {
-  console.log("Server running at http://localhost:3000");
 });
