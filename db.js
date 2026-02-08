@@ -1,34 +1,33 @@
-import sqlite3 from "sqlite3";
-import path from "path";
-import { fileURLToPath } from "url";
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-const _filename = fileURLToPath(import.meta.url);
-cost _dirname = path.dirname(_fileame);
+const db = new sqlite3.Database(path.join(__dirname, 'witime.db'));
 
-const db = new sqlite3.dataase(path.joi(_dirname, 'witime.db'));
-
-const db = new sqlite3.Database("./database.db", (err) => {
-  if (err) {
-    console.error("DB error:", err.message);
-  } else {
-    console.log("Database connected");
-  }
-});
-
+// Sessions table
 db.serialize(() => {
   db.run(`
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       phone TEXT,
-      code TEXT,
+      code TEXT UNIQUE,
       minutes INTEGER,
-      expires_at INTEGER,
-      status TEXT
+      start_time INTEGER,
+      end_time INTEGER,
+      status TEXT,
+      ip TEXT,
+      user_agent TEXT
     )
-  `, (err) => {
-    if (err) console.error("❌ Table error:", err);
-    else console.log("✅ Table ready");
-  });
+  `);
+
+  // Pending payments queue
+  db.run(`
+    CREATE TABLE IF NOT EXISTS pending_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      phone TEXT NOT NULL,
+      amount INTEGER NOT NULL,
+      requested_at INTEGER NOT NULL
+    )
+  `);
 });
 
-export default db;
+module.exports = db;
