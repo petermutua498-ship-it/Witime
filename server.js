@@ -8,6 +8,14 @@ app.use(express.static('public'));
 
 const MAX_ACTIVE_USERS = 6;
 
+const IntaSend = require('intasend-node');
+
+const intasend = new IntaSend(
+  process.env.INTASEND_PUBLISHABLE_KEY,
+  process.env.INTASEND_SECRET_KEY,
+  process.env.INTASEND_SANDBOX === 'true'
+);
+
 // Utility functions
 function generateCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -19,26 +27,50 @@ function sendSMS(phone, message) {
 }
 
 // ================= PAY ROUTE =================
-app.post('/pay', (req, res) => {
-  const { phone, amount } = req.body;
+app.post('/pay', async (req, res) => {
+  const { phone, minutes } = req.body;
 
-  db.get(`SELECT COUNT(*) AS total FROM sessions WHERE status='ACTIVE'`, [], (err, row) => {
-    const activeUsers = row?.total || 0;
-    
-    if (activeUsers >= MAX_ACTIVE_USERS) {
-      // Network full → add to queue
-      const now = Date.now();
-      db.run(`INSERT INTO pending_payments (phone, amount, requested_at) VALUES (?, ?, ?)`, [phone, amount, now]);
-      return res.json({
-        message: 'Network full. Your payment will be authorized automatically when a slot frees up.'
-      });
+  // Check active users limit
+  db.get(
+    "SELECT COUNT(*) AS total FROM sessions WHERE status='ACTIVE'",
+    [],
+    async (err, row) => {
+      const activeUsers = row?.total || 0;
+      if (activeUsers >= 6) {
+        return res.json({ message: 'Maximum active users reached, please wait' });
+      }
+
+      // Generate random 6-digit code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const start_time = Date.now();
+      const end_time = start_time + minutes * 60000;
+
+      // Save session in SQLite
+      db.run(
+        `INSERT INTO sessions (phone, code, start_time, end_time, status) VALUES (?, ?, ?, ?, 'ACTIVE')`,
+        [phone, code, start_time, end_time],
+        async (err) => {
+          if (err) return res.status(500).json({ error: 'DB error', details: err.message });
+
+          try {
+            // Send MPesa STK Push via IntaSend
+            const response = await intasend.collection.mpesaSTKPush({
+              amount: 1,          // you can adjust amount per package
+              phone_number: phone,
+              currency: 'KES'
+            });
+
+            console.log(`STK push sent to ${phone}: ${response.invoice.invoice_id}`);
+
+            res.json({ message: `Payment initiated, code sent to ${phone}`, code });
+          } catch (e) {
+            console.error('IntaSend error:', e.message);
+            res.status(500).json({ error: 'Payment failed', details: e.message });
+          }
+        }
+      );
     }
-
-    // Slots available → initiate IntaSend payment
-    initiateIntaSendPayment(phone, amount)
-      .then(paymentRef => res.json({ message: 'Payment initiated, complete on your phone', ref: paymentRef }))
-      .catch(err => res.json({ error: 'Payment initiation failed', details: err.message }));
-  });
+  );
 });
 
 // ================= INTASEND CALLBACK =================
@@ -62,21 +94,20 @@ app.post('/intasend-callback', (req, res) => {
 // ================= VERIFY CODE =================
 app.post('/verify-code', (req, res) => {
   const { code } = req.body;
-  const ip = req.ip;
-  const ua = req.headers['user-agent'];
 
-  db.get(`SELECT * FROM sessions WHERE code=?`, [code], (err, s) => {
-    if (!s || s.status !== 'ACTIVE') return res.json({ error: 'Invalid or expired code' });
+  db.get(
+    "SELECT * FROM sessions WHERE code=? AND status='ACTIVE'",
+    [code],
+    (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!row) return res.json({ error: 'Invalid or expired code' });
 
-    if (!s.ip) {
-      db.run(`UPDATE sessions SET ip=?, user_agent=? WHERE id=?`, [ip, ua, s.id]);
-    } else if (s.ip !== ip || s.user_agent !== ua) {
-      return res.json({ error: 'Code already used on another device' });
+      // Start timer
+      res.json({ message: 'Access granted', end_time: row.end_time });
     }
-
-    res.json({ end_time: s.end_time });
-  });
+  );
 });
+
 
 // ================= HEARTBEAT =================
 app.post('/heartbeat', (req, res) => {
