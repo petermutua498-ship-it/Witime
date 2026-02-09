@@ -23,55 +23,21 @@ function generateCode() {
 
 // SMS placeholder
 function sendSMS(phone, message) {
-  console.log(`SMS to ${phone}: ${message}`);
+  console.log(`SMS to ${phone}: ${message}`)
 }
 
 // ================= PAY ROUTE =================
 app.post('/pay', async (req, res) => {
   const { phone, minutes } = req.body;
+});
 
   // Check active users limit
-  db.get(
-    "SELECT COUNT(*) AS total FROM sessions WHERE status='ACTIVE'",
-    [],
-    async (err, row) => {
-      const activeUsers = row?.total || 0;
-      if (activeUsers >= 6) {
-        return res.json({ message: 'Maximum active users reached, please wait' });
-      }
+  const row = db
+  .prepare(
+    "SELECT COUNT(*) AS total FROM sessions WHERE status='ACTIVE'")
+    .get();
 
-      // Generate random 6-digit code
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const start_time = Date.now();
-      const end_time = start_time + minutes * 60000;
-
-      // Save session in SQLite
-      db.run(
-        `INSERT INTO sessions (phone, code, start_time, end_time, status) VALUES (?, ?, ?, ?, 'ACTIVE')`,
-        [phone, code, start_time, end_time],
-        async (err) => {
-          if (err) return res.status(500).json({ error: 'DB error', details: err.message });
-
-          try {
-            // Send MPesa STK Push via IntaSend
-            const response = await intasend.collection.mpesaSTKPush({
-              amount: 1,          // you can adjust amount per package
-              phone_number: phone,
-              currency: 'KES'
-            });
-
-            console.log(`STK push sent to ${phone}: ${response.invoice.invoice_id}`);
-
-            res.json({ message: `Payment initiated, code sent to ${phone}`, code });
-          } catch (e) {
-            console.error('IntaSend error:', e.message);
-            res.status(500).json({ error: 'Payment failed', details: e.message });
-          }
-        }
-      );
-    }
-  );
-});
+  const activeusers = row.total;
 
 // ================= INTASEND CALLBACK =================
 app.post('/intasend-callback', (req, res) => {
@@ -95,17 +61,14 @@ app.post('/intasend-callback', (req, res) => {
 app.post('/verify-code', (req, res) => {
   const { code } = req.body;
 
-  db.get(
-    "SELECT * FROM sessions WHERE code=? AND status='ACTIVE'",
-    [code],
-    (err, row) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!row) return res.json({ error: 'Invalid or expired code' });
+  const session = db
+  .prepare(
+    "SELECT * FROM sessions WHERE code=? AND status='ACTIVE'")
+  .get(code);
 
-      // Start timer
-      res.json({ message: 'Access granted', end_time: row.end_time });
-    }
-  );
+  if (!session) {
+    return res.json({ error: 'Invalid or expected code' });
+  }
 });
 
 
