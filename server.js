@@ -1,149 +1,123 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const db = require('./db');
+require("dotenv").config();
+const express = require("express");
+const db = require("./db");
+const IntaSend = require("intasend-node");
+const path = require('path');
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(express.static('public'));
-
-const MAX_ACTIVE_USERS = 6;
-
-const IntaSend = require('intasend-node');
 
 const intasend = new IntaSend(
   process.env.INTASEND_PUBLISHABLE_KEY,
   process.env.INTASEND_SECRET_KEY,
-  process.env.INTASEND_SANDBOX === 'true'
+  false // false = LIVE, true = SANDBOX
 );
 
-// Utility functions
-function generateCode() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+// PRICING
+const PACKAGES = {
+  1: { price: 10, hours: 1 },
+  2: { price: 25, hours: 2 },
+  3: { price: 45, hours: 3 },
+  5: { price: 60, hours: 5 },
+  12:{ price: 100, hours: 12 }
+};
+
+// LIMIT USERS TO 6
+function activeUsers() {
+  return db.prepare("SELECT COUNT(*) as total FROM sessions WHERE status='active").get().total;
 }
 
-// SMS placeholder
-function sendSMS(phone, message) {
-  console.log(`SMS to ${phone}: ${message}`)
-}
-
-// ================= PAY ROUTE =================
-app.post('/pay', async (req, res) => {
-  const { phone, minutes } = req.body;
+// BUY WIFI
+app.get('/index', (req, res) => {
+  res.sendFile(__dirname + '/public/admin.html');
 });
 
-  // Check active users limit
-  const row = db
-  .prepare(
-    "SELECT COUNT(*) AS total FROM sessions WHERE status='ACTIVE'")
-    .get();
+app.post("/pay", async (req, res) => {
+  const { phone, hours } = req.body;
 
-  const activeusers = row.total;
+  if (!PACKAGES[hours]) {
+    return res.status(400).json({ error: "Invalid package" });
+  }
 
-// ================= INTASEND CALLBACK =================
-app.post('/intasend-callback', (req, res) => {
-  const { phone, amount } = req.body; // from IntaSend callback
+  if (activeUsers() >= 6) {
+    return res.status(403).json({ error: "All slots full" });
+  }
 
-  db.get(`SELECT COUNT(*) AS total FROM sessions WHERE status='ACTIVE'`, [], (err, row) => {
-    const activeUsers = row?.total || 0;
-    
-    if (activeUsers < MAX_ACTIVE_USERS) {
-      processPayment(phone, amount);
-    } else {
-      const now = Date.now();
-      db.run(`INSERT INTO pending_payments (phone, amount, requested_at) VALUES (?, ?, ?)`, [phone, amount, now]);
-    }
-  });
+  const amount = PACKAGES[hours].price;
+
+  try {
+    const collection = intasend.collection();
+    const response = await collection.mpesaStkPush({
+      phone_number: phone,
+      amount,
+      narrative: "WiFi Access"
+    });
+
+    db.prepare(`
+      INSERT INTO payments (phone, amount, duration, status, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(phone, amount, hours, "PENDING", Date.now());
+
+    res.json({ success: true, message: "STK sent" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PAYMENT CALLBACK (IntaSend)
+app.post("/callback", (req, res) => {
+  const { phone_number, state } = req.body;
+
+  if (state !== "COMPLETE") return res.sendStatus(200);
+
+  const payment = db.prepare(`
+    SELECT * FROM payments
+    WHERE phone=? AND status='PENDING'
+    ORDER BY id DESC LIMIT 1
+  `).get(phone_number);
+
+  if (!payment) return res.sendStatus(200);
+
+  const start = Date.now();
+  const end = start + payment.duration * 60 * 60 * 1000;
+
+  db.prepare(`
+    INSERT INTO sessions (phone, start_time, end_time, active)
+    VALUES (?, ?, ?, 1)
+  `).run(phone_number, start, end);
+
+  db.prepare(`
+    UPDATE payments SET status='PAID' WHERE id=?
+  `).run(payment.id);
 
   res.sendStatus(200);
 });
 
-// ================= VERIFY CODE =================
-app.post('/verify-code', (req, res) => {
-  const { code } = req.body;
-
-  const session = db
-  .prepare(
-    "SELECT * FROM sessions WHERE code=? AND status='ACTIVE'")
-  .get(code);
-
-  if (!session) {
-    return res.json({ error: 'Invalid or expected code' });
-  }
-});
-
-
-// ================= HEARTBEAT =================
-app.post('/heartbeat', (req, res) => {
-  const { code } = req.body;
-  const ip = req.ip;
-  const ua = req.headers['user-agent'];
+// HEARTBEAT (AUTO DISCONNECT)
+setInterval(() => {
   const now = Date.now();
+  db.prepare(`
+    UPDATE sessions SET status='expired' WHERE end_time < ? AND status='active'
+  `).run(now);
+}, 10000);
 
-  db.get(`SELECT * FROM sessions WHERE code=?`, [code], (err, s) => {
-    if (!s || s.status !== 'ACTIVE' || now > s.end_time || s.ip !== ip || s.user_agent !== ua) {
-      if (s) db.run(`UPDATE sessions SET status='EXPIRED' WHERE id=?`, [s.id]);
-      return res.json({ action: 'disconnect' });
-    }
-
-    res.json({ action: 'ok', time_left: s.end_time - now });
-  });
+// ADMIN VIEW (READ ONLY)
+app.get("/admin", (req, res) => {
+  res.sendFile(__dirname + '/public/admin.html')
+  const users = db.prepare(`
+    SELECT phone, end_time FROM sessions WHERE status='active'
+  `).all();
+  res.json(users);
 });
 
-// ================= ADMIN VIEW =================
-app.get('/admin/sessions', (req, res) => {
-  db.all(`SELECT * FROM sessions ORDER BY id DESC`, (err, rows) => res.json(rows));
+// TEST ROUTE
+app.get("/", (req, res) => {
+  res.send("WiFi system running");
 });
-
-// ================= AUTO EXPIRE =================
-setInterval(() => {
-  db.run(`UPDATE sessions SET status='EXPIRED' WHERE end_time < ? AND status='ACTIVE'`, [Date.now()]);
-}, 30000);
-
-// ================= AUTO-PROCESS PENDING PAYMENTS =================
-setInterval(() => {
-  db.get(`SELECT COUNT(*) AS total FROM sessions WHERE status='ACTIVE'`, [], (err, row) => {
-    const activeUsers = row?.total || 0;
-    
-    if (activeUsers < MAX_ACTIVE_USERS) {
-      db.get(`SELECT * FROM pending_payments ORDER BY requested_at ASC LIMIT 1`, [], (err, payment) => {
-        if (!payment) return;
-        db.run(`DELETE FROM pending_payments WHERE id=?`, [payment.id]);
-        processPayment(payment.phone, payment.amount);
-      });
-    }
-  });
-}, 5000);
-
-// ================= PROCESS PAYMENT =================
-function processPayment(phone, amount) {
-  const packages = {10:60, 25:120, 45:180, 60:300, 100:720};
-  const minutes = packages[amount];
-  if (!minutes) return;
-
-  const code = generateCode();
-  const start = Date.now();
-  const end = start + minutes * 60000;
-
-  db.run(`INSERT INTO sessions (phone, code, minutes, start_time, end_time, status) VALUES (?, ?, ?, ?, ?, 'ACTIVE')`,
-    [phone, code, minutes, start, end],
-    () => {
-      console.log(`Payment processed for ${phone}, code: ${code}`);
-      sendSMS(phone, `WiTime access code: ${code}. Valid for ${minutes} minutes.`);
-    });
-}
-
-// ================= INTASEND INITIATION (placeholder) =================
-function initiateIntaSendPayment(phone, amount) {
-  // Here you insert IntaSend API call
-  // Example: STK push or checkout
-  return new Promise((resolve) => {
-    console.log(`IntaSend payment initiated for ${phone}, amount ${amount}`);
-    resolve('payment-ref-123'); // return payment reference
-  });
-}
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log('WiTime running on port 3000');
-});
+app.listen(PORT, () =>
+  console.log("Server running on port" + PORT)
+);
