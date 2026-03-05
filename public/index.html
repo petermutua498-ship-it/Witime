@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Witime Wifi</title>
+</head>
+<body>
+    <h2>Payment</h2>
+    <label>phone:</label>
+
+    <label>Package</label>
+    <select id="package">
+        <option value="1">1 Hour - 5ksh</option>
+        <option value="2">2 Hours - 10ksh</option>
+        <option value="3">3 Hours - 25ksh</option>
+        <option value="4">6 Hours - 50ksh</option>
+        <option value="5">12 hours - 70ksh</option>
+    </select>
+
+<input type="text" id="phone" placeholder="254708374149" value="254708374149"><br><br>
+
+<button id="payBtn">pay</button>
+
+<p id="msg"></p>
+
+<script>
+    document.getElementById("payBtn").addEventListener("click", async () => {
+        const phone = document.getElementById("phone").value;
+        const packageId = document.getElementById("package").value;
+
+        const resp = await fetch("/pay", { 
+            method: "POST", 
+            headers: {"Content-type":"application/json" },
+            body: JSON.stringify({ phone, packageId })
+        });
+
+        const text = await resp.text();
+        document.getElementById("msg").innerText = text;
+    });  
+</script>
+</body>
+</html>

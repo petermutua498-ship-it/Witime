@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin</title>
+</head>
+<body>
+    <h2>Admin dashboard</h2>
+
+    <h3>Total revenue: <span id="revenue">0</span></h3>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Phone</th>
+            <th>Expiry</th>
+        </tr>
+    </thead>
+    <tbody id="table"></tbody>
+</table>
+
+<button onclick="load()">Refresh</button>
+<script>
+    function load(){
+        fetch('/admin/stats')
+        .then(r => r.json())
+        .then(d => {
+
+            revenue.innertext = d.totalRevenue;
+
+            table.innerHtml= "";
+
+            d.activeUser.forEach (u => {
+                table.innerHtml += `
+                <tr>
+                    <td>${u.phone}</td>
+                    <td>${new Date(u.expiry).toLocaleString()}</td>
+                </tr>
+                `;
+            });
+        });
+    }
+    load();
+</script>
+
+</body>
+</html>
