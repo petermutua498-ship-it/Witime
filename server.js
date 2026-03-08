@@ -73,17 +73,7 @@ app.post('/pay', async (req, res) => {
     try {
         const token = await getAccessToken();
 
-        function getTimestamp() {
-        const now = new Date();
-        return now.getFullYear().toString() +
-        stringify(now.getMonth() + 1).padStart(2, "0") +
-        stringify(now.getDate()).padStart(2, "0") +
-        stringify(now.getHours()).padStart(2, "0") +
-        stringify(now.getMinutes()).padStart(2, "0") +
-        stringify(now.getSeconds()).padStart(2, "0");
-        }
-
-        const timestamp = getTimestamp();
+        const timestamp = moment().format("YYYYMMDDHHmmss");
         const password = Buffer.from(shortcode + passkey + timestamp)
         .toString("base64");
 
@@ -91,10 +81,10 @@ app.post('/pay', async (req, res) => {
             "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
             {
                 BusinessShortCode: "174379",
-                Password: Buffer.from(shortcode + passkey + timestamp).toString("base64"),
-                Timestamp: moment().format("YYYYMMDDHHmmss"),
+                Password: password,
+                Timestamp: timestamp,
                 TransactionType: "CustomerPayBillOnline",
-                Amount: packages[packageId].amount,
+                Amount: 1,
                 PartyA: "2547xxxxxxxx",
                 PartyB: 174379,
                 Phonenumber: "2547xxxxxxxx",
