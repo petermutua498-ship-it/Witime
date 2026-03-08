@@ -99,9 +99,9 @@ app.post('/pay', async (req, res) => {
             }
         );
 
-        console.log(stkResponse.data)
+        console.log(stkResponse.data);
 
-        res.json({ message: "STK Push Sent" });
+        res.json({ message: "STK Push Sent", data: stkResponse.data });
 
     } catch (err) {
         console.error("STK Push error:", err.response?.data || err.message);
