@@ -116,8 +116,7 @@ app.post('/pay', async (req, res) => {
     } catch (err) {
         console.error("STK Push error:", err.response?.data || err.message);
         
-        res.status(500).json({
-            error: "STK push failed"
+        res.status(500).json({error: "STK push failed"
         });
     }
 });
