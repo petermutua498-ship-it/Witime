@@ -1,18 +1,117 @@
-<div class="container"
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Pay</title>
 
-<h2>WITIME package<h2>
+        <style>
+            body {
+                font-family: Arial;
+                background: linear-gradient(to right, #2193b0, #6dd5ed);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
 
-<h3 id="selectedPackage"></h3>
+            .box {
+                background: white;
+                padding: 25px;
+                border-radius: 12px;
+                width: 300px;
+                text-align: center;
+            }
 
-<input type="text" id="phone" placeholder="2547xxxxxxxx">
-<button id="payBtn" onclick="pay()">Pay</button>
-<p id="msg"></p>
+            input, button {
+                width: 100%;
+                padding: 10px;
+                margin-top: 10px;
+            }
 
-<hr>
+            #codeBox {
+                margin-top: 15px;
+                display: none;
+            }
+        </style>
+    </head>
+<body>
+    <div class="box">
+        <h3> Enter Phone</h3>
 
-<h3>Enter verification code</h3>
-<input type="text" id="code" placeholder="Enter code">
-<button onclick="Verify()">Verify</button>
-<p id="verifyMsg"></p>
+        <input type="text" id="phone" placeholder="2547xxxxxxxx" autocomplete="tel" required>
 
-</div>
+        <button id="payBtn">Pay</button>
+
+        <p id="msg"></p>
+
+        <div id="codeBox">
+            <h4>Your Code</h4>
+            <p id="code"></p>
+            <p id="timer"></p>
+        </div>
+    </div>
+
+    <script>
+        
+        const packageId = new URLSearchParams(window.location.search).get("package");
+
+        document.getElementById("payBtn").addEventListener("click", function() {
+            const phone = document.getElementById("phone").value;
+
+            if (!phone || !packageId) {
+                alert("Missing details");
+                return;
+            }
+            
+
+            fetch("/pay", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ 
+                    phone: phone, 
+                    packageId: packageId
+                })
+            })
+            .then(res =>  res.json())
+            .then(data => {
+
+                if (data.code) {
+                    
+                    localStorage.setItem("wificode", data.code);
+
+                    window.location.href = "verify.html";
+                } else {
+                    alert(data.message);
+                }
+            });
+  
+        });
+
+        function startTimer(minutes) {
+            let time = minutes * 60;
+
+            const timerEl = document.getElementById("timer");
+
+            const interval = setInterval(() => {
+                let m = Math.floor(time / 60);
+                let s = time % 60;
+
+                timerEl.innerText = m + "m " + s +"s remaining";
+
+                time--;
+
+                if(time <= 0){
+                    clearInterval(interval);
+                    timerEl.innerText = "Expired"
+                }
+            }, 1000);
+        }
+
+        const device = localStorage.getItem("device") || Math.random();
+        localStorage.setItem("device", device);
+        
+    </script>
+
+</body>
+
+</html>
+

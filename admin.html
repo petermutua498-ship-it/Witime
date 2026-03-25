@@ -1,0 +1,36 @@
+<h2>Active Users</h2>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Phone</th>
+            <th>Code</th>
+            <th>Time Left</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+    async function load() {
+        const res = await fetch("/admin-data");
+        const data = await res.json();
+
+        let html = "";
+
+        for(let phone in data) {
+            const u = data[phone];
+
+            const remaining = Math.floor((u.expires - Date.now())/60000);
+            
+            html += `
+            <tr>
+                <td>${phone}</td>
+                <td>${u.code}</td>
+                <td>${remaining} mins</td>
+            </tr>`;
+        }
+
+        document.getElementById("table").innerHTML = html;
+    }
+
+    setInterval(load,2000);
+</script>

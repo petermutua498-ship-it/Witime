@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h2>Enter Code</h2>
+
+        <input type="text" id="code" placeholder="Enter code">
+        <button onclick="verifyCode()">Connect</button>
+
+        <script>
+            function verifyCode() {
+                const entered = document.getElementById("code").value;
+                const saved = localStorage.getItem("wifiCode");
+
+                if (entered === saved) {
+                    alert("Connected");
+
+                    window.location.href = "connected.html";
+
+                } else{
+                    alert("Invalid code");
+                }
+            }
+        </script>
+    </body>
+</html>

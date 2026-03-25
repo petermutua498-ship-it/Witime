@@ -1,93 +1,72 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WITIME</title>
-        <link rel="stylesheet" href="style.css">
+        <title>WITIME PACKAGES</title>
+        <style>
+            body {
+                font-family: Arial;
+                background: #1dbfe7d0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            h2{
+                color: white;
+                margin-bottom: 20px;
+            }
+            
+            .container {
+                width: 300px;
+                text-align: center;
+            }
+
+            .packages {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .packages button {
+                background: #00c3ff;
+                padding: 15px;
+                border: none;
+                cursor: pointer;
+                color: white;
+                font-size: 16px;
+                border-radius: 10px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                font-weight: bold;
+                transition: 0.3s;
+            }
+            
+            .package button:hover {
+                background: #0056b3;
+                transform: scale(1.03) ;
+            }
+        </style>
     </head>
     <body>
-        <h2>WITIME PACKAGES</h2>
-
-        <div class="packages">
-            <div class="package" onclick="choose(5)">5kes - 1 Hour</div>
-            <div class="package" onclick="choose(10)">10kes - 2 Hours</div>
-            <div class="package" onclick="choose(25)">25kes - 3 Hours</div>
-            <div class="package" onclick="choose(50)">50kes - 6 Hours</div>
-            <div class="package" onclick="choose(70)">70kes - 12 Hours</div>
+        <div class="container">
+            <h2>Witime Packages</h2>
+            
+            <div class="packages">
+            <button type="button" onclick="selectPackage('1 hour')">1 Hour - KES 5</button>
+            <button type="button" onclick="selectPackage('2 hours')">2 Hours - KES 15</button>
+            <button type="button" onclick="selectPackage('3 hours')">3 Hours - KES 25</button>
+            <button type="button" onclick="selectPackage('6 hours')">6 Hours - KES 50</button>
+            <button type="button" onclick="selectPackage('12 hours')">12 Hours - KES 80</button>
+            </div>
         </div>
-
+        
         <script>
-            let amount = localStorage.getItem("amount");
-
-            window.onload =async function(){
-
-                const res = await fetch("/session");
-                const data = await res.json();
-
-                if(data.active){
-                    document.getElementById("timerBox").style.display="block";
-
-                    startTimer(data.expires);
-
-                    document.getElementById("verifyMsg").innerText = "Session restored";
-                }
-
-                if(amount){
-                    document.getElementById("selectedPackage").innerText = "Selected Package: " + amount + "KES";
-                }
+            function selectPackage(pkg){
+                alert("CLICKED: " + pkg);
+                window.location.href = "pay.html?package=" + encodeURIComponent(pkg);
             }
 
-            function choose(amount){
-                localStorage.setItem("amount", amount);
-                window.location.href = "pay.html";
-            }
-
-            async function pay() {
-                const phone = document.getElementById("phone").value;
-                const btn = document.getElementById("payBtn");
-
-                if(!phone){
-                    document.getElementById("msg").innerText = "Enter phone number";
-                    return;
-                }
-
-                btn.disabled = true;
-                btn.innerText = "processing...";
-
-                const res = await fetch("/pay", {
-                    method:"POST",
-                    headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ phone, 
-                    amount: localStorage.getItem("amount") })
-                });
-
-                const data = await res.json();
-
-                document.getElementById("msg").innerText = data.message;
-
-                btn.disabled = false;
-                btn.innerText = "Pay";
-
-            }
-
-            async function verify() {
-                const phone = document.getElementById("phone").value;
-                const code=document.getElementById("code").value;
-
-                const res=await fetch("/verify", {
-                    method: "POST",
-                    headers:{"Content-Type":"application/json"},
-                    body:JSON.stringify({phone,code})
-                });
-
-                const data=await res.json();
-                document.getElementById("verifyMsg").innerText=data.message;
-
-                if(data.expires){
-                    document.getElementById("timerBox").style.display="block";
-
-                    startTimer(data.expires);
-                }
-            }
         </script>
     </body>
 </html>
