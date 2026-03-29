@@ -3,23 +3,41 @@
     <body>
         <h2>Enter Code</h2>
 
-        <input type="text" id="code" placeholder="Enter code">
-        <button onclick="verifyCode()">Connect</button>
+        <input type="text" id="codeInput" placeholder="Enter code">
+        <button id="verifyBtn">Connect</button>
+        <p id="result"></p>
 
         <script>
-            function verifyCode() {
-                const entered = document.getElementById("code").value;
-                const saved = localStorage.getItem("wifiCode");
+            const verifyBtn = document.getElementById("verifyBtn");
 
-                if (entered === saved) {
-                    alert("Connected");
+            if (!verifyBtn) {
+                console.error("Button not found");
+            } else {
+                
+                verifyBtn.addEventListener("click", () => {
 
-                    window.location.href = "connected.html";
+                const enteredCode = document.getElementById("codeInput").value;
+                const savedCode = localStorage.getItem("wificode");
 
-                } else{
-                    alert("Invalid code");
+                console.log("Entered:", enteredCode);
+                console.log("Saved:", savedCode);
+
+                if (!enteredCode) {
+                    alert("Enter code");
+                    return;
                 }
+
+                if (enteredCode === savedCode) {
+                    result.innerText = "Connected";
+                } else {
+                    result.innerText = "Invalid code";
+                }
+            });
+
             }
+
+        
+
         </script>
     </body>
 </html>

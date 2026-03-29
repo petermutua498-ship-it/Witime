@@ -37,6 +37,8 @@
     <div class="box">
         <h3> Enter Phone</h3>
 
+    
+
         <input type="text" id="phone" placeholder="2547xxxxxxxx" autocomplete="tel" required>
 
         <button id="payBtn">Pay</button>
@@ -52,10 +54,18 @@
 
     <script>
         
-        const packageId = new URLSearchParams(window.location.search).get("package");
+        const urlParams = new URLSearchParams(window.location.search);
+        const packageId = urlParams.get("package");
+        
 
-        document.getElementById("payBtn").addEventListener("click", function() {
+        document.getElementById("payBtn").addEventListener("click", () => {
+
+            console.log("Pay button clicked");
+
             const phone = document.getElementById("phone").value;
+
+            console.log("Phone:", phone);
+            console.log("Package:", packageId);
 
             if (!phone || !packageId) {
                 alert("Missing details");
@@ -68,7 +78,7 @@
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({ 
                     phone: phone, 
-                    packageId: packageId
+                    package: packageId
                 })
             })
             .then(res =>  res.json())
@@ -78,6 +88,8 @@
                     
                     localStorage.setItem("wificode", data.code);
 
+                    console.log("Redirectig to verify...")
+
                     window.location.href = "verify.html";
                 } else {
                     alert(data.message);
@@ -85,26 +97,6 @@
             });
   
         });
-
-        function startTimer(minutes) {
-            let time = minutes * 60;
-
-            const timerEl = document.getElementById("timer");
-
-            const interval = setInterval(() => {
-                let m = Math.floor(time / 60);
-                let s = time % 60;
-
-                timerEl.innerText = m + "m " + s +"s remaining";
-
-                time--;
-
-                if(time <= 0){
-                    clearInterval(interval);
-                    timerEl.innerText = "Expired"
-                }
-            }, 1000);
-        }
 
         const device = localStorage.getItem("device") || Math.random();
         localStorage.setItem("device", device);
