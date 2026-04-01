@@ -16,10 +16,83 @@ app.use(express.static("public"));
 
 const Session = mongoose.model("Session", {
     phone: String,
-    code: String,
+    deviceId: String,
+    ip: String,
     active: Boolean,
-    expiresAt: Date
+    expiresAt: Date,
+    speedlimit: Number
 });
+
+const admin = mongoose.model("admin", {
+    username: String,
+    password: String
+});
+
+async function checkUserLimit() {
+    const count = await Session.countDocuments({ active: true });
+    return count < 7;
+}
+
+let activeCodes = [];
+
+mongoose.connect(process.env.MONGO_URL)
+.then(() => console.log("MongoDB connected"))
+.catch(err => console.log("DB ERROR:", err));
+
+app.post("/callback", async (req, res) => {
+    const data = req.body.Body.stkCallback;
+
+    if (data.ResultCode === 0) {
+        const items = data.CallbackMetadata.Item;
+
+        const phone = items.find(i => i.Name === "PhoneNumber").Value;
+
+        const allowed = await checkUserLimit();
+
+        if (!allowed) {
+            console.log("NETWORK FULL");
+            return res.json({ status: "full" });
+        }
+
+        await Session.findOneAndUpdate(
+            {phone},
+            {
+                phone,
+                active: true,
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+                speedlimit: 1000
+            },
+            { upsert: true }
+        );
+
+        console.log("SUCCESS:", phone);
+    }
+
+    res.json({ ok:true });
+});
+
+app.post("/auth", async (req, res) => {
+    const {ip, deviceid} = req.body;
+
+    const session = await Session.findOne({ ip, deviceId });
+
+    if (!session) return res.json({ access: false });
+
+    if (!session.active) return res.json({ access: false });
+
+    if (Date.now() > session.expiresAt) {
+        session.active = false;
+        await session.save();
+        return res.json({ access: false });
+    }
+
+    return res.json({ access: true, speedLimit: session.speedLimit });
+});
+
+function bandwidthMiddleware(req, res, next) {
+    res.setHeader("X-Bandwidth-Limit", "1000kbps");
+    next();
+}
 
 async function stkPush(phone, amount) {
     const auth = await axios.get(process.env.DARAJA_TOKEN_URL, {
@@ -33,15 +106,15 @@ async function stkPush(phone, amount) {
     const response = await axios.post(
         "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
         {
-            BusinessShortCode: process.env.SHORTCODE,
+            BusinessShortCode: 17439,
             password: process.env.PASSKEY,
             Timestamp: new Date().toISOString(),
             TransactionType: "CustomerPayBillOnline",
-            Amount: amount,
-            PartyA: phone,
+            Amount: 1,
+            PartyA: "2547xxxxxxxx",
             PartyB: process.env.SHORTCODE,
-            PhoneNumber: phone,
-            CallBackUrl: process.env.CALLBACK_URL,
+            PhoneNumber: 254708374149,
+            CallBackUrl: "https://witime-o2tz.onrender.com/callack",
             AccountReference: "Witime",
             TransactionDesc: "Internet"
         },
@@ -60,10 +133,6 @@ const packages = {
     "6 hours": {price: 50, duration: 360},
     "12 hours": {price: 80, duration: 720},
 };
-
-const MAX_MEMBERS = 6;
-
-const activeCodes = [];
 
 function generateCode(){
     return Math.random().toString(36).substring(2,8).toUpperCase();
@@ -84,6 +153,28 @@ app.post("/create-session", async (req, res) => {
 
     await sendSMS(phone, ("Your Witime code is: ${code}"))
 });
+
+async function checkAccess() {
+    const ip = await fetch ("https://api.ipify.org?format=json")
+    .then(r => r.json())
+    .then(d => d.ip);
+
+    const deviceId = navigator.userAgent + screen.width;
+
+    const res = await fetch("/auth", {
+        method: "POST",
+        headers: {"Content-Type": "application/json" },
+        body: JSON.stringify({ip, deviceId})
+    });
+
+    const data = await res.json();
+
+    if (data.access) {
+        window.location.href = "/index.html";
+    } else {
+        window.location.href = "/pay.html"
+    }
+}
 
 app.get("/packages", (req,res) => {
     res.json(packages);
@@ -110,9 +201,24 @@ app.post("/pay", async(req, res) => {
 
 });      
 
-app.get("/admin", (req,res) => {
-    res.sendFile(path.join(__dirname, "admin.html"))
-})
+app.get("/admin/stats", async (req,res) => {
+    const users = await Session.find({ active: true });
+
+    res.json({activeUsers: users.length,
+        maxUsers: 7,
+        users
+    });
+});
+
+app.post("/admin/login", async (req, res) => {
+    const { username, password } = req.body;
+
+    const admin = await admin.findOne({ username, password });
+
+    if (!admin) return res.json({ status: "failed" });
+
+    res.json({ status: "ok"});
+});
 
 app.post("/verify", async(req, res) => {
     try {
@@ -144,6 +250,13 @@ app.get("/status/:phone", async (req, res) => {
         await session.save();
     }
 });
+
+setInterval(async () => {
+    await Session.updateMany(
+        { expiresAt: {$lt: new Date() } },
+        { active: false }
+    );
+}, 60000);
 
 app.listen(PORT, () => {
     console.log("Server running")
