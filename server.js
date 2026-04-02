@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const mongoose = require("mongoose");
@@ -5,7 +6,6 @@ const { duration } = require("moment");
 const path = require("path");
 const cors = require("cors");
 const { error } = require("console");
-require("dotenv").config();
 
 const app = express();
 const PORT = 3000;
@@ -13,6 +13,8 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
+
+mongoose.connect("mongodb://admin:5566@ac-x4lpdxk-shard-00-00.lf7iqch.mongodb.net:27017,ac-x4lpdxk-shard-00-01.lf7iqch.mongodb.net:27017,ac-x4lpdxk-shard-00-02.lf7iqch.mongodb.net:27017/?ssl=true&replicaSet=atlas-ut0x90-shard-0&authSource=admin&appName=Cluster0/witime")
 
 const Session = mongoose.model("Session", {
     phone: String,
@@ -51,7 +53,7 @@ app.post("/stk", async (req, res) => {
         const result = await sendSTK(phone, amount);
 
         res.json(result);
-        
+
     } catch (err) {
         console.log("STK ERROR:", err.message);
         res.status(500).json({ error: "STK failed" });
