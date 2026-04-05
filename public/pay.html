@@ -55,56 +55,37 @@
     </div>
 
     <script>
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const packageId = urlParams.get("package");
-        
-
-        document.getElementById("payBtn").addEventListener("click", () => {
-
-            console.log("Pay button clicked");
-
+        async function pay() {
             const phone = document.getElementById("phone").value;
 
-            console.log("Phone:", phone);
-            console.log("Package:", packageId);
-
-            if (!phone || !packageId) {
-                alert("Missing details");
+            if (!phone) {
+                alert("Enter phoe number");
                 return;
             }
-            
 
-            fetch("/stk", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    phone: phone,
-                    amount: 1
-                })
-            })
-            .then(res =>  res.json())
-            .then(data => {
+            try{
+                const res = await fetch("/stk", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ phone })
+                });
 
-                if (data.code) {
-                    
-                    localStorage.setItem("wificode", data.code);
+                const data = await res.json();
 
-                    console.log("Redirectig to verify...")
+                console.log(data);
 
-                    window.location.href = "verify.html";
-                } else {
+                if (data.message) {
                     alert(data.message);
+                } else {
+                    alert(data.error || "Payment failed");
                 }
-            });
-  
-        });
-
-        const device = localStorage.getItem("device") || Math.random();
-        localStorage.setItem("device", device);
-        
+            } catch (err) {
+                console.log(err);
+                alert("Network error");
+            }
+        }
     </script>
 
 </body>
