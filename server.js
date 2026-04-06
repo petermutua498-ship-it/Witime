@@ -131,6 +131,11 @@ app.post("/stk", async (req, res) => {
         return res.json({ message: "Phone missing" });
     }
 
+    console.log({
+        key: process.env.CONSUMER_KEY,
+        secret: process.env.CONSUMER_SECRET,
+    }); 
+    
     setInterval(() => {
         console.log("ping...");
     }, 300000);
