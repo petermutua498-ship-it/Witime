@@ -59,12 +59,12 @@
             const phone = document.getElementById("phone").value;
 
             if (!phone) {
-                alert("Enter phoe number");
+                alert("Enter phone number");
                 return;
             }
 
             try{
-                const res = await fetch("https://witime-o2tz.onrender.com/stk", {
+                const res = await fetch("/pay", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -76,13 +76,13 @@
 
                 console.log(data);
 
-                if (data.message) {
-                    alert(data.message);
+                if (data.success) {
+                    alert("STK sent. Check your phone");
                 } else {
                     alert(data.error || "Payment failed");
                 }
+
             } catch (err) {
-                console.log(err);
                 alert("Network error");
             }
         }
