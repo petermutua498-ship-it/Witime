@@ -72,15 +72,15 @@ app.post("/stk", async (req, res) => {
             "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
             
             {
-                BusinessShortCode: process.env.SHORTCODE,
+                BusinessShortCode:"174379",
                 password: password,
                 Timestamp: timestamp,
                 TransactionType: "CustomerPayBillOnline",
                 Amount: amount,
                 PartyA: phone,
-                PartyB: process.env.SHORTCODE,
+                PartyB: 174379,
                 PhoneNumber: phone,
-                CallBackUrl: process.env.HOST_URL + "/callback",
+                CallBackUrl: "https://witime-o2tz.onrender.com/callback",
                 AccountReference: "Witime",
                 TransactionDesc: "Internet Payment"
             },
