@@ -58,12 +58,12 @@ app.post("/stk", async (req, res) => {
 
         const timestamp = new Date ()
         .toISOString()
-        .replace(/[-:TZ.]/g, "")
-        .slice(0, 14);
+        .replace(/[^0-9]/g, '')
+        .slice(0, -3);
 
         const password = Buffer.from(
-            process.env.SHORTCODE + 
-            process.env.PASSKEY + 
+            SHORTCODE +
+            PASSKEY + 
             timestamp
         ).toString("base64");
 
@@ -73,15 +73,15 @@ app.post("/stk", async (req, res) => {
             "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
             
             {
-                BusinessShortCode:"174379",
+                BusinessShortCode: shortcode,
                 password: password,
                 Timestamp: timestamp,
                 TransactionType: "CustomerPayBillOnline",
                 Amount: "1",
                 PartyA: phone,
-                PartyB: 174379,
+                PartyB: shortcode,
                 PhoneNumber: phone,
-                CallBackUrl: "https://witime-o2tz.onrender.com/callback",
+                CallBackUrl: process.env.CALLBACK_URL,
                 AccountReference: "Witime",
                 TransactionDesc: "Internet Payment"
             },
