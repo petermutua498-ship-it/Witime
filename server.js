@@ -134,6 +134,8 @@ app.post("/stk", async (req, res) => {
     console.log({
         key: process.env.CONSUMER_KEY,
         secret: process.env.CONSUMER_SECRET,
+        shortcode: process.env.SHORTCODE,
+        passkey: process.env.PASSKEY?.slice(0,10)
     }); 
     
     setInterval(() => {
