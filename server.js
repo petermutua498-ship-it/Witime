@@ -29,34 +29,41 @@ function generateCode() {
     return math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function getAccessToken() {
-    const auth = Buffer.from(
-        process.env.CONSUMER_KEY + ":" + 
-        process.env.CONSUMER_SECRET
-    ).toString("base64"); 
-    const res = await axios.get (
-        "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-        {
-            headers: {
-                Authorization: 'Basic ${auth}'
-            }
-        }
-    );
-
-    return res.data.access_token;
-}
-
-app.post("/stk", async (req, res) => {
-    try {
-        const { phone } = req.body;
+app.post("/pay", async (req, res) => {
+    console.log("ROUTE HIT");
+    try{
+        let { phone } = req.body;
 
         if (!phone) {
             return res.json({ error: "Phone required" });
         }
-        
-        const token = await getAccessToken();
 
-        const timestamp = new Date ()
+        if(phonestartsWith("0")) {
+            phone = "254" + phone.substring(1);
+        }
+
+        console.log("PHONE:", phone);
+        
+        const auth = Buffer.from(
+            process.env.CONSUMER_KEY + ":" + 
+            process.env.CONSUMER_SECRET
+        ).toString("base64");
+        
+        const tokenRes = await axios.get(
+            
+            "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+            
+            {
+                headers: {
+                    Authorization: 'Basic ${auth}'
+                }
+            }
+        );
+
+        const token = tokenRes.data.access_token;
+        console.log("TOKEN OK");
+
+        const timestamp = new Date()
         .toISOString()
         .replace(/[^0-9]/g, '')
         .slice(0, -3);
@@ -67,51 +74,46 @@ app.post("/stk", async (req, res) => {
             timestamp
         ).toString("base64");
 
-        const phonenumber = "254708374149";
-        
-        const res = await axios.post(
+        console.log("PASSWORD GENERATED");
+
+        const stkres = await axios.post(
             "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
             
             {
-                BusinessShortCode: shortcode,
+                BusinessShortCode: process.env.SHORTCODE,
                 password: password,
                 Timestamp: timestamp,
                 TransactionType: "CustomerPayBillOnline",
                 Amount: "1",
                 PartyA: phone,
-                PartyB: shortcode,
+                PartyB: process.env.SHORTCODE,
                 PhoneNumber: phone,
-                CallBackUrl: process.env.CALLBACK_URL,
+                CallBackUrl: process.env.HOST_URL + "/callback",
                 AccountReference: "Witime",
                 TransactionDesc: "Internet Payment"
             },
-            
             {
                 headers: { Authorization: 'Bearer ${token}'}
             }
         );
 
-        console.log("STK RESPONSE:", stk.data);
 
-        console.log("KEY:", process.env.CONSUMER_KEY);
-        console.log("SECRET:", process.env.CONSUMER_SECRET);
-        
         res.json({
-            message: stk.data.responseDescription || "Request sent"
+            success:true,
+            message: "STK sent",
+            data: stk
         });
 
     } catch (err) {
-        console.log("STK ERROR:", err.response?.data || err.message);
-
         res.json({
-            error: err.response?.data?.errorMessage || "STK failed"
+            success: false,
+            error: err.errorMessage || "STK failed"
         });
     }
 });
 
 app.post("/stk", async (req, res) => {
-    console.log("ROUTE HIT");
-    
+
     const { phone, amount } = req.body;
 
     console.log("PHONE:", phone);
@@ -125,68 +127,9 @@ app.post("/stk", async (req, res) => {
     }, 300000);
 });
 
-app.post("/pay", async (req, res) => {
-    try{
-        let { phone } = req.body;
-
-        if (!phone) return res.json({ error: "Phone required" });
-
-        phone = phone.replace(/^0/, "254");
-
-        console.log("PHONE:", phone);
-
-        const stk = await sendSTK(phone, 1);
-
-        res.json({
-            success:true,
-            message: "STK sent",
-            data: stk
-        });
-    } catch (err) {
-        res.json({
-            success: false,
-            error: err.errorMessage || "STK failed"
-        });
-    }
-});
-
 app.post("/callback", async (req, res) => {
-    try{
         console.log("CALLBACK:", JSON.stringify(req.body, null, 2));
-
-      const data = req.body.Body.stkCallback;
-
-      if (data.ResultCode === 0) {
-        const items = data.CallbackMetadata.Item;
-
-        const phone = items.find(i => i.Name === "PhoneNumber").Value;
-
-        const allowed = await checkUserLimit();
-
-        if (!allowed) {
-            console.log("NETWORK FULL");
-            return res.json({ status: "full" });
-        }
-
-        const code = generateCode();
-
-        const expiry = new Date(Date.now() + 60 * 60 * 1000);
-
-        await Session.create({
-            phone,
-            code,
-            active: true,
-            expiresAt: expiry,
-        });
-            
-        console.log("SUCCESS:", phone, "CODE:", code);
-    }
-
-    res.json({ ok:true });
-} catch (err) {
-    console.log("CALLBACK ERROR:", err.message);
-    res.json({ ok: false });
-}
+        res.sendStatus(200);
 });
 
 app.post("/verify", async(req, res) => {
