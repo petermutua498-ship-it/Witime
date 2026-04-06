@@ -61,7 +61,10 @@ app.post("/pay", async (req, res) => {
         );
 
         const token = tokenRes.data.access_token;
-        console.log("TOKEN OK");
+        console.log("TOKEN:", token);
+
+        const shortcode = "174379";
+        const passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
 
         const timestamp = new Date()
         .toISOString()
@@ -69,9 +72,7 @@ app.post("/pay", async (req, res) => {
         .slice(0, -3);
 
         const password = Buffer.from(
-            SHORTCODE +
-            PASSKEY + 
-            timestamp
+            shortcode + passkey + timestamp
         ).toString("base64");
 
         console.log("PASSWORD GENERATED");
