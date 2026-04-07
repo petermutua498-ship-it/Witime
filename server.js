@@ -7,6 +7,7 @@ const moment = require("moment");
 const path = require("path");
 const cors = require("cors");
 global.Buffer = require("buffer").Buffer;
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
@@ -41,7 +42,7 @@ app.post("/pay", async (req, res) => {
 
         phone = phone.replace(/^0/, "254");
 
-        if(phonestartsWith("0")) {
+        if(phone.startsWith("0")) {
             phone = "254" + phone.substring(1);
         }
 
@@ -113,7 +114,7 @@ app.post("/pay", async (req, res) => {
 
     } catch (err) {
         console.log("FULL ERROR:", err.response?.data || err.message);
-        
+
         res.json({
             success: false,
             error: err.errorMessage || "STK failed"
