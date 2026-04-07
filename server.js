@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const moment = require("moment");
 const path = require("path");
 const cors = require("cors");
-const { buffer } = require("buffer");
+global.Buffer = require("buffer").Buffer;
 
 const app = express();
 app.use(cors());
@@ -29,6 +29,15 @@ const Session = mongoose.model("Session", {
 function generateCode() {
     return math.floor(100000 + Math.random() * 900000).toString();
 }
+
+app.get("/test-buffer", (req, res) => {
+    try{
+        const val = Buffer.from("hello").toString("base64");
+        res.send(val);
+    } catch (e) {
+        res.send("Buffer error: " + e.message);
+    }
+});
 
 app.post("/pay", async (req, res) => {
     console.log("ROUTE HIT");
