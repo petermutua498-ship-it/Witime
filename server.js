@@ -117,6 +117,15 @@ app.post("/pay", async (req, res) => {
     }
 });
 
+app.get("/debug-buffer", (req, res) => {
+    try{
+        const test = Buffer.from("test").toString("base64");
+        res.send("BUFFER OK: " + test);
+    } catch (e) {
+        res.send("BUFFER FAIL: " + e.message);
+    }
+});
+
 app.get("/test-token", async (req, res) => {
     try{
         const auth = buffer.from(
