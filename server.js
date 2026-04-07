@@ -128,6 +128,8 @@ app.get("/debug-buffer", (req, res) => {
 
 app.get("/test-token", async (req, res) => {
     try{
+        const { Buffer } = require("buffer");
+        
         const auth = buffer.from(
             "luesphuW8Qdo6vNSEbvAnOuvJOlDDc5vDe8V6pywUiHaCBqu:QfqAEvAtAUeEN8VwveaKkoZznWpiCWkfnuLeD5gOW94rOEm4GekcMmdBHpXYAHw8"
         ).toString("base64");
