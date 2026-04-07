@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const moment = require("moment");
 const path = require("path");
 const cors = require("cors");
+const { buffer } = require("stream/consumers");
 
 const app = express();
 app.use(cors());
@@ -115,6 +116,30 @@ app.post("/pay", async (req, res) => {
         });
     }
 });
+
+app.get("/test-token", async (req, res) => {
+    try{
+        const auth = buffer.from(
+            "luesphuW8Qdo6vNSEbvAnOuvJOlDDc5vDe8V6pywUiHaCBqu:QfqAEvAtAUeEN8VwveaKkoZznWpiCWkfnuLeD5gOW94rOEm4GekcMmdBHpXYAHw8"
+        ).toString("base64");
+
+        const response = await axios.get(
+            "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+        {
+            headers: {
+                authorization: 'Basic ${auth}'
+            }
+        }
+        );
+
+        console.log("TOKEN RESPONSE:", response.data);
+
+        res.json(response.data);
+    } catch (err) {
+        console.log("TOKEN ERROR:", err.response?.data || err.message);
+        res.json(err.response?.data || err.message);
+    }
+})
 
 app.post("/stk", async (req, res) => {
 
