@@ -73,7 +73,7 @@ app.post("/pay", async (req, res) => {
         const date = new Date(
             new Date().toLocaleString("en-US", { timeZone: "Africa/Nairobi" })
         );
-        
+
         const timestamp = 
         date.getFullYear().toString() +
         String(date.getMonth() + 1).padStart(2, "0") +
@@ -86,6 +86,9 @@ app.post("/pay", async (req, res) => {
             shortcode + passkey + timestamp
         ).toString("base64");
 
+        console.log("SHORTCODE:", process.env.SHORTCODE || "174379");
+        console.log("PASSKEY:", passkey);
+        console.log("TIMESTAMP:", timestamp);
         console.log("PASSWORD OK");
 
         const stkRes = await require("axios").post(
