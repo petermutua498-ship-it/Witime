@@ -32,8 +32,9 @@ function generateCode() {
 }
 
 app.post("/pay", async (req, res) => {
-    console.log("ROUTE HIT");
     try{
+        console.log("ROUTE HIT");
+
         let { phone } = req.body;
 
         if (!phone) {
@@ -41,7 +42,6 @@ app.post("/pay", async (req, res) => {
         }
 
         phone = String(phone).trim();
-
         if(phone.startsWith("0")) {
             phone = "254" + phone.substring(1);
         }
@@ -50,16 +50,16 @@ app.post("/pay", async (req, res) => {
         
         const consumerKey = "luesphuW8Qdo6vNSEbvAnOuvJOlDDc5vDe8V6pywUiHaCBqu";
         const consumerSecret = "QfqAEvAtAUeEN8VwveaKkoZznWpiCWkfnuLeD5gOW94rOEm4GekcMmdBHpXYAHw8";
+        const shortcode = "174379";
+        const passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
 
         const auth = Buffer.from(
-            consumerKey + ":" + 
-            consumerSecret
+            consumerKey + ":" + consumerSecret
         ).toString("base64");
         
-        const tokenRes = await axios.get(
+        const tokenRes = await require("axios").get(
             
             "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-            
             {
                 headers: {
                     Authorization: 'Basic ${auth}'
@@ -68,35 +68,35 @@ app.post("/pay", async (req, res) => {
         );
 
         const token = tokenRes.data.access_token;
-        console.log("TOKEN:", token);
+        console.log("TOKEN OK");
 
-        const shortcode = "174379";
-        const passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
-
-        const timestamp = new Date()
-        .toISOString()
-        .replace(/[-:TZ.]/g, "")
-        .slice(0, 14);
+        const date = new Date();
+        const timestamp = 
+        date.getFullYear().toString() +
+        String(date.getMonth() + 1).padStart(2, "0") +
+        String(date.getDate()).padStart(2, "0") +
+        String(date.getHours()).padStart(2, "0") +
+        String(date.getMinutes()).padStart(2, "0") +
+        String(date.getSeconds()).padStart(2, "0");
 
         const password = Buffer.from(
             shortcode + passkey + timestamp
         ).toString("base64");
 
-        console.log("PASSWORD READY");
+        console.log("PASSWORD OK");
 
-        const stkRes = await axios.post(
+        const stkRes = await require("axios").post(
             "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-            
             {
-                BusinessShortCode: process.env.SHORTCODE,
+                BusinessShortCode: shortcode,
                 password: password,
                 Timestamp: timestamp,
                 TransactionType: "CustomerPayBillOnline",
-                Amount: "1",
+                Amount: 1,
                 PartyA: phone,
-                PartyB: process.env.SHORTCODE,
+                PartyB: shortcode,
                 PhoneNumber: phone,
-                CallBackUrl: process.env.HOST_URL + "/callback",
+                CallBackUrl: "https://witime-o2tz.onrender.com/callback",
                 AccountReference: "Witime",
                 TransactionDesc: "Internet Payment"
             },
@@ -105,19 +105,15 @@ app.post("/pay", async (req, res) => {
             }
         );
 
+        console.log("STK RESPONSE:", stkRes.data);
 
-        res.json({
-            success:true,
-            message: "STK sent",
-            data: stk
-        });
+        res.json(stkRes.data);
 
     } catch (err) {
         console.log("FULL ERROR:", err.response?.data || err.message);
 
         res.json({
-            success: false,
-            error: err.errorMessage || "STK failed"
+            error: err.errorresponse?.data?.errorMessage || "STK failed"
         });
     }
 });
