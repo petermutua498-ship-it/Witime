@@ -115,19 +115,13 @@ app.post("/pay", async (req, res) => {
         console.log("FULL ERROR:", err.response?.data || err.message);
 
         res.json({
-            error: err.errorresponse?.data?.errorMessage || "STK failed"
+            error: err.response?.data?.errorMessage || "STK failed"
         });
     }
 });
 
 app.get("/stk", async (req, res) => {
     try{
-        const { Buffer } = require("buffer");
-
-        const auth = buffer.from(
-            "luesphuW8Qdo6vNSEbvAnOuvJOlDDc5vDe8V6pywUiHaCBqu:QfqAEvAtAUeEN8VwveaKkoZznWpiCWkfnuLeD5gOW94rOEm4GekcMmdBHpXYAHw8"
-        ).toString("base64");
-
         const response = await axios.get(
             "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
         {
