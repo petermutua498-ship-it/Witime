@@ -28,7 +28,7 @@ const Session = mongoose.model("Session", {
 });
 
 function generateCode() {
-    return math.floor(100000 + Math.random() * 900000).toString();
+    return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 app.post("/pay", async (req, res) => {
@@ -57,23 +57,19 @@ app.post("/pay", async (req, res) => {
             consumerKey + ":" + consumerSecret
         ).toString("base64");
         
-        const tokenRes = await require("axios").get(
+        const tokenRes = await axios.get(
             
             "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
             {
                 headers: {
-                    Authorization: 'Basic ${auth}'
+                    Authorization: `Basic ${auth}`
                 }
             }
         );
 
         const token = tokenRes.data.access_token;
-        console.log("TOKEN OK");
 
-        const date = new Date(
-            new Date().toLocaleString("en-US", { timeZone: "Africa/Nairobi" })
-        );
-
+        const date = new Date();
         const timestamp = 
         date.getFullYear().toString() +
         String(date.getMonth() + 1).padStart(2, "0") +
@@ -91,23 +87,23 @@ app.post("/pay", async (req, res) => {
         console.log("TIMESTAMP:", timestamp);
         console.log("PASSWORD OK");
 
-        const stkRes = await require("axios").post(
+        const stkRes = await axios.post(
             "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
             {
                 BusinessShortCode: shortcode,
-                password: password,
+                Password: password,
                 Timestamp: timestamp,
                 TransactionType: "CustomerPayBillOnline",
                 Amount: 1,
                 PartyA: phone,
                 PartyB: shortcode,
                 PhoneNumber: phone,
-                CallBackUrl: "https://witime-o2tz.onrender.com/callback",
+                CallBackURL: "https://witime-o2tz.onrender.com/callback",
                 AccountReference: "Witime",
                 TransactionDesc: "Internet Payment"
             },
             {
-                headers: { Authorization: 'Bearer ${token}'}
+                headers: { Authorization: `Bearer ${token}`}
             }
         );
 
