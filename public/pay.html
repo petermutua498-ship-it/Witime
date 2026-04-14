@@ -55,40 +55,39 @@
     </div>
 
     <script>
-        function formatPhone(input) {
-            let value = input.value;
+         async function pay() {
+            let phone = document.getElementById("phone").value;
 
-            value = value.replace(/\D/g, "");
+            phone = phone.replace(/\D/g, "");
 
-            if (value,startsWith("254")) {
-
-            } else if (value.startsWith("0")) {
-                value = "254" + value.substring(1);
+            if (phone.startsWith("0")) {
+                phone = "254" + phone.substring(1);
+            } else if (phone.startsWith("254")) {
+                //ok
+            } else if (phone.startsWith("7")) {
+                phone = "254" + phone;
             }
 
-            value = value.substring(0,12);
-            
-            input.value = value;
-        }
+            console.log("PHONE SENT:", phone);
 
-        async function pay() {
-            const phone = document.getElementById("phone").value;
- 
-            if (!phone) {
-                alert("Enter phone number");
+            if (phone.length !== 12 || !phone.startsWith("2547")) {
+                alert("Enter valid MPESA number");
                 return;
             }
 
-            document.getElementById("result").innerText = "Waiting for payment confirmation...";
+            document.getElementById("result").innerText = "Waiting for Payment confirmation...";
             
-            await fetch("https://witime-o2tz.onrender.com/pay", {
+            const res = await fetch("/pay", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ phone })
             });
-            
+
+            const data = await res.json();
+            console.log("PAY RESPONSE:", data);
+
             const interval = setInterval(async () => {
                 const res = await fetch(`/check-payment/${phone}`);
                 
@@ -99,8 +98,7 @@
 
                     clearInterval(interval);
                 }
-            }, 5000);
-             
+            }, 5000);             
         }
     </script>
 
