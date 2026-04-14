@@ -156,8 +156,24 @@ app.post("/stk", async (req, res) => {
 });
 
 app.post("/callback", async (req, res) => {
-        console.log("CALLBACK:", JSON.stringify(req.body, null, 2));
-        res.sendStatus(200);
+    const data = req.body;
+
+    console.log("CALLBACK FULL:", JSON.stringify(data, null, 2));
+
+    const resultCode = data.Body.stkCallback.ResultCode;
+
+    if (resultCode === 0) {
+        await Session.updateOne(
+            { phone: phone},
+            { active: true}
+        );
+
+        console.log("PAYMENT SUCCESS");
+    } else {
+        console.log("PAYMENT FAILED");
+    }
+
+    res.sendStatus(200);
 });
 
 app.post("/verify", async(req, res) => {
