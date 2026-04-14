@@ -55,36 +55,52 @@
     </div>
 
     <script>
+        function formatPhone(input) {
+            let value = input.value;
+
+            value = value.replace(/\D/g, "");
+
+            if (value,startsWith("254")) {
+
+            } else if (value.startsWith("0")) {
+                value = "254" + value.substring(1);
+            }
+
+            value = value.substring(0,12);
+            
+            input.value = value;
+        }
+
         async function pay() {
             const phone = document.getElementById("phone").value;
-
+ 
             if (!phone) {
                 alert("Enter phone number");
                 return;
             }
 
-            try{
-                const res = await fetch("https://witime-o2tz.onrender.com/pay", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ phone })
-                });
-
+            document.getElementById("result").innerText = "Waiting for payment confirmation...";
+            
+            await fetch("https://witime-o2tz.onrender.com/pay", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ phone })
+            });
+            
+            const interval = setInterval(async () => {
+                const res = await fetch(`/check-payment/${phone}`);
+                
                 const data = await res.json();
+                
+                if (data.status === "success") {
+                    document.getElementById("result").innerText = "Your code is: " + data.code;
 
-                console.log(data);
-
-                if (data.success) {
-                    alert("STK sent. Check your phone");
-                } else {
-                    alert(data.error || "Payment failed");
+                    clearInterval(interval);
                 }
-
-            } catch (err) {
-                alert("Network error");
-            }
+            }, 5000);
+             
         }
     </script>
 

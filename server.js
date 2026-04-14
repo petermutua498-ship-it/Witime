@@ -41,10 +41,6 @@ app.post("/pay", async (req, res) => {
             return res.json({ error: "Phone required" });
         }
 
-        phone = String(phone).trim();
-        if(phone.startsWith("0")) {
-            phone = "254" + phone.substring(1);
-        }
 
         console.log("PHONE:", phone);
         
@@ -158,22 +154,50 @@ app.post("/stk", async (req, res) => {
 app.post("/callback", async (req, res) => {
     const data = req.body;
 
-    console.log("CALLBACK FULL:", JSON.stringify(data, null, 2));
+    console.log("CALLBACK:", JSON.stringify(data, null, 2));
 
     const resultCode = data.Body.stkCallback.ResultCode;
 
+    const phone = data.Body.stkCallback.CallbackMetadata?.Item?.find(i => i.name === "Phonenumber")?.Value;
+
     if (resultCode === 0) {
-        await Session.updateOne(
-            { phone: phone},
-            { active: true}
-        );
 
         console.log("PAYMENT SUCCESS");
+
+        const code = generateCode();
+
+        await Session.create({
+            phone,
+            code,
+            active: true,
+            expiresAt: new Date(Date.now() + 60 * 60 * 1000) 
+        });
+
+        console.log("CODE GENERATED:, code");
+
     } else {
         console.log("PAYMENT FAILED");
     }
 
     res.sendStatus(200);
+});
+
+app.get("/check-payment/:phone", async (req, res) => {
+    const phone = req.params.phone;
+
+    const session = await Session.findOne({
+        phone,
+        active: true
+    });
+
+    if (!session) {
+        return res.json({ status: "Pending"});
+    }
+
+    res.json({
+        status: "success",
+        code: session.code
+    });
 });
 
 app.post("/verify", async(req, res) => {
