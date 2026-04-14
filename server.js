@@ -51,7 +51,7 @@ app.post("/pay", async (req, res) => {
         const consumerKey = "GJVPwfSnXl0a1UmdAgeZarHHGZ8KV2SJ21aq8cM3istjxWFc";
         const consumerSecret = "8XBR2wMkfUemAFPqFqXlyTtk3dug85xSWksAF6gRdIlXDogpKhrxG9p76YicS71b";
         const shortcode = "174379";
-        const passkey = "bfb279f9aa9bdbcf1582a8c4d7d6b8f2c3d8b4d3a0f6c4d2b1c6e0f2a5a7bb9c";
+        const passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
 
         const auth = Buffer.from(
             consumerKey + ":" + consumerSecret
@@ -90,13 +90,13 @@ app.post("/pay", async (req, res) => {
         const stkRes = await axios.post(
             "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
             {
-                BusinessShortCode: shortcode,
+                BusinessShortCode: "174379",
                 Password: password,
                 Timestamp: timestamp,
                 TransactionType: "CustomerPayBillOnline",
                 Amount: 1,
                 PartyA: phone,
-                PartyB: shortcode,
+                PartyB: "174379",
                 PhoneNumber: phone,
                 CallBackURL: "https://witime-o2tz.onrender.com/callback",
                 AccountReference: "Witime",
@@ -126,7 +126,7 @@ app.get("/stk", async (req, res) => {
             "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
         {
             headers: {
-                authorization: 'Basic ${auth}'
+                authorization: `Basic ${auth}`
             }
         }
         );
@@ -171,7 +171,7 @@ app.post("/verify", async(req, res) => {
         });
         
         if (!session) {
-            return re.json({status: "Invalid" });
+            return res.json({status: "Invalid" });
         }
 
         if (session.expiresAt < new Date()) {
