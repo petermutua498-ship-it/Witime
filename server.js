@@ -152,32 +152,46 @@ app.post("/stk", async (req, res) => {
 });
 
 app.post("/callback", async (req, res) => {
-    const data = req.body;
+    try {
+        const data = req.body;
 
-    console.log("CALLBACK:", JSON.stringify(data, null, 2));
+        console.log("CALLBACK:", JSON.stringify(data, null, 2));
 
-    const resultCode = data.Body.stkCallback.ResultCode;
+        const stk = data.Body.stkCallback;
 
-    const phone = data.Body.stkCallback.CallbackMetadata?.Item?.find(i => i.name === "Phonenumber")?.Value;
+        if (stk.ResultCode === 0) {
 
-    if (resultCode === 0) {
+            const items = stkCallbackMetadata.Item;
 
-        console.log("PAYMENT SUCCESS");
+            const phoneItem = items.find(i => i.Name === "PhoneNumber");
+            
+            const phone = phoneItem ? String(phoneItem.Value) : null;
 
-        const code = generateCode();
+            console.log("EXTRACTED PHONE:", phone);
 
-        await Session.create({
-            phone,
-            code,
-            active: true,
-            expiresAt: new Date(Date.now() + 60 * 60 * 1000) 
-        });
+            if (!phone) {
+                console.log("Phone missing in callback");
+                return res.sendStatus(200);
+            }
 
-        console.log("CODE:", code, "{PHONE:", phone);
+            const code = generateCode();
 
+            await Session.create({
+                phone,
+                code,
+                active: true,
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000)
+            });
+
+            console.log("PAYMENT SUCCESS");
+            console.log("CODE:", code, "PHONE:", phone)
+        }
+
+        res.sendStatus(200);
+    } catch (err) {
+        console.log("CALLBACK ERROR:", err);
+        res.sendStatus(200);
     }
-
-    res.sendStatus(200);
 });
 
 app.get("/check-payment/:phone", async (req, res) => {

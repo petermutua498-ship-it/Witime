@@ -84,21 +84,8 @@
                 body: JSON.stringify({ phone })
             });
 
-            window.locatio.href = `/verify.html?phone=${phone}`;
-
-
-            const interval = setInterval(async () => {
-                const res = await fetch(`/check-payment/${phone}`);
-                const data = await res.json();
-
-                console.log("CHECK:", data);
-                
-                if (data.status === "success") {
-                    document.getElementById("msg").innerText = "Your code is: " + data.code;
-
-                    clearInterval(interval);
-                }
-            }, 5000);             
+            window.location.href = `/verify.html?phone=${phone}`;
+        
         }
     </script>
 
