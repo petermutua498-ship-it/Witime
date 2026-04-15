@@ -42,6 +42,7 @@
             <h3>Enter code</h3>
 
             <input type="text" id="codeInput" placeholder="Enter your code">
+            <br><br>
             <button onclick="connect()">Connect</button>
             <p id="connectStatus"></p>
         </div>
@@ -53,8 +54,7 @@
             console.log("PHONE:", phone);
 
             async function connect() {
-                const phone = new URLSearchParams(window.location.search).get("phone");
-                const code = document.getElementById("userCode").Value = data.code;
+                const code = document.getElementById("codeInput").value;
 
                 const res = await fetch("/verify", {
                     method: "POST",
@@ -69,7 +69,7 @@
                 if (data.status === "ok") {
                     document.getElementById("connectStatus").innerText = "Connected!";
                 } else {
-                    document.getElementById("connectStatus").innerText = "Invalid or expired code";
+                    document.getElementById("connectStatus").innerText = "Invalid code";
                 }
             }
 
@@ -80,11 +80,13 @@
                 console.log("CHECK:", data);
 
                 if(data.status === "success") {
-                    document.getElementById('status').innerText = "Payment successfull!";
+                    document.getElementById("status").innerText = "Payment successful!";
 
                     const codeBox = document.getElementById("codeBox");
                     codeBox.innerText = data.code;
                     codeBox.style.display = "block";
+
+                    document.getElementById("codeInput").value = data.code;
 
                     clearIterval(interval);
                 }
