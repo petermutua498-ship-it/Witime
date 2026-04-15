@@ -91,9 +91,9 @@ app.post("/pay", async (req, res) => {
                 Timestamp: timestamp,
                 TransactionType: "CustomerPayBillOnline",
                 Amount: 1,
-                PartyA: phone,
+                PartyA: `2547${phone}`,
                 PartyB: "174379",
-                PhoneNumber: phone,
+                PhoneNumber: `2547${phone}`,
                 CallBackURL: "https://witime-o2tz.onrender.com/callback",
                 AccountReference: "Witime",
                 TransactionDesc: "Internet Payment"
@@ -195,21 +195,29 @@ app.post("/callback", async (req, res) => {
 });
 
 app.get("/check-payment/:phone", async (req, res) => {
-    const phone = req.params.phone;
+    try {
+        const phone = req.params.phone;
 
-    const session = await Session.findOne({
-        phone: String(phone),
-        active: true
-    });
+        console.log("CHECKING PAYMENT FOR:", phone);
 
-    if (!session) {
-        return res.json({ status: "Pending"});
+        const session = await Session.findOne({
+            phone: String(phone),
+            active: true
+        });
+
+        if (!session) {
+            return res.json({ status: "Pending"});
+        }
+
+        res.json({
+            status: "success",
+            code: session.code
+        });
+        
+    } catch (err) {
+        console.log("CHECK ERROR:", err);
+        res.json({ status: "error" });
     }
-
-    res.json({
-        status: "success",
-        code: session.code
-    });
 });
 
 app.post("/verify", async(req, res) => {
