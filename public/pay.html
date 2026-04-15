@@ -72,9 +72,6 @@
                 alert("Enter valid M-Pesa number");
                 return;
             }
-
-            document.getElementById("msg").innerText = "Waiting for Payment confirmation...";
-            
             
             await fetch("/pay", {
                 method: "POST",
