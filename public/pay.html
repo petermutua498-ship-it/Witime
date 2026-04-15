@@ -55,29 +55,28 @@
     </div>
 
     <script>
-         async function pay() {
+        async function pay() {
             let phone = document.getElementById("phone").value;
 
             phone = phone.replace(/\D/g, "");
 
             if (phone.startsWith("0")) {
                 phone = "254" + phone.substring(1);
-            } else if (phone.startsWith("254")) {
-                //ok
             } else if (phone.startsWith("7")) {
                 phone = "254" + phone;
             }
 
             console.log("PHONE SENT:", phone);
 
-            if (phone.length !== 12 || !phone.startsWith("2547")) {
-                alert("Enter valid MPESA number");
+            if (!/^2547\d{8}$/.test(phone)) {
+                alert("Enter valid M-Pesa number");
                 return;
             }
 
-            document.getElementById("result").innerText = "Waiting for Payment confirmation...";
+            document.getElementById("msg").innerText = "Waiting for Payment confirmation...";
             
-            const res = await fetch("/pay", {
+            
+            await fetch("/pay", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -85,16 +84,17 @@
                 body: JSON.stringify({ phone })
             });
 
-            const data = await res.json();
-            console.log("PAY RESPONSE:", data);
+            window.locatio.href = `/verify.html?phone=${phone}`;
+
 
             const interval = setInterval(async () => {
                 const res = await fetch(`/check-payment/${phone}`);
-                
                 const data = await res.json();
+
+                console.log("CHECK:", data);
                 
                 if (data.status === "success") {
-                    document.getElementById("result").innerText = "Your code is: " + data.code;
+                    document.getElementById("msg").innerText = "Your code is: " + data.code;
 
                     clearInterval(interval);
                 }

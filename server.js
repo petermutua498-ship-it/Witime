@@ -173,10 +173,8 @@ app.post("/callback", async (req, res) => {
             expiresAt: new Date(Date.now() + 60 * 60 * 1000) 
         });
 
-        console.log("CODE GENERATED:, code");
+        console.log("CODE:", code, "{PHONE:", phone);
 
-    } else {
-        console.log("PAYMENT FAILED");
     }
 
     res.sendStatus(200);
@@ -186,7 +184,7 @@ app.get("/check-payment/:phone", async (req, res) => {
     const phone = req.params.phone;
 
     const session = await Session.findOne({
-        phone,
+        phone: String(phone),
         active: true
     });
 

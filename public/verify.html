@@ -1,43 +1,73 @@
 <!DOCTYPE html>
 <html>
+    <title>Verify Payment</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            padding-top: 60px;
+            background: #f5f5f5;
+        }
+
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .code-box {
+            margin-top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            padding: 15px;
+            border: 2px dashed #333;
+            display: none;
+        }
+
+        .status {
+            font-size: 18px;
+        }
+    </style>
     <body>
-        <h2>Enter Code</h2>
+        <div class="box">
+            <h2>Payment Verification</h2>
+            <p id="status" class="status">Waiting for payment confirmation...</p>
 
-        <input type="text" id="codeInput" placeholder="Enter code">
-        <button id="verifyBtn">Connect</button>
-        <p id="result"></p>
+            <div id="codeBox" class="code-box"></div>
 
-        <script>
-            const verifyBtn = document.getElementById("verifyBtn");
+            <h3>Enter code</h3>
 
-            if (!verifyBtn) {
-                console.error("Button not found");
-            } else {
-                
-                verifyBtn.addEventListener("click", () => {
-
-                const enteredCode = document.getElementById("codeInput").value;
-                const savedCode = localStorage.getItem("wificode");
-
-                console.log("Entered:", enteredCode);
-                console.log("Saved:", savedCode);
-
-                if (!enteredCode) {
-                    alert("Enter code");
-                    return;
-                }
-
-                if (enteredCode === savedCode) {
-                    result.innerText = "Connected";
-                } else {
-                    result.innerText = "Invalid code";
-                }
-            });
-
-            }
-
+            <input type="text" id="codeInput" placeholder="Enter code">
+            <button id="verifyBtn">Connect</button>
+            <p id="result"></p>
+        </div>
         
+        <script>
+            const params = new URLSearchParams(window.location.search);
+            const phone = params.get("phone");
 
+            console.log("PHONE:", phone);
+
+            const interval = setInterval(async () => {
+                const res = await fetch(`/check-paymet/${phone}`);
+                const data = await res.json();
+
+                console.log("CHECK:", data);
+
+                if(data.status === "success") {
+                    document.getElementById('status').innerText = "Payment successfull!";
+
+                    const codeBox = document.getElementById("codeBox");
+                    codeBox.innerText = data.code;
+                    codeBox.style.display = "block";
+
+                    clearIterval(interval);
+                }
+            }, 5000);
         </script>
     </body>
 </html>
