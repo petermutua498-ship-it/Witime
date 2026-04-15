@@ -91,9 +91,9 @@ app.post("/pay", async (req, res) => {
                 Timestamp: timestamp,
                 TransactionType: "CustomerPayBillOnline",
                 Amount: 1,
-                PartyA: `2547${phone}`,
+                PartyA: phone,
                 PartyB: "174379",
-                PhoneNumber: `2547${phone}`,
+                PhoneNumber: phone,
                 CallBackURL: "https://witime-o2tz.onrender.com/callback",
                 AccountReference: "Witime",
                 TransactionDesc: "Internet Payment"
@@ -213,7 +213,7 @@ app.get("/check-payment/:phone", async (req, res) => {
             status: "success",
             code: session.code
         });
-        
+
     } catch (err) {
         console.log("CHECK ERROR:", err);
         res.json({ status: "error" });
