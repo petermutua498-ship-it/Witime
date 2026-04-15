@@ -161,16 +161,16 @@ app.post("/callback", async (req, res) => {
 
         if (stk.ResultCode === 0) {
 
-            const items = stkCallbackMetadata.Item;
+            const items = stk.CallbackMetadata.Item;
 
             const phoneItem = items.find(i => i.Name === "PhoneNumber");
             
             const phone = phoneItem ? String(phoneItem.Value) : null;
 
-            console.log("EXTRACTED PHONE:", phone);
+            console.log("PHONE:", phone);
 
             if (!phone) {
-                console.log("Phone missing in callback");
+                console.log("Phone not found");
                 return res.sendStatus(200);
             }
 
