@@ -52,23 +52,6 @@
 
             console.log("PHONE:", phone);
 
-            const interval = setInterval(async () => {
-                const res = await fetch(`/check-paymet/${phone}`);
-                const data = await res.json();
-
-                console.log("CHECK:", data);
-
-                if(data.status === "success") {
-                    document.getElementById('status').innerText = "Payment successfull!";
-
-                    const codeBox = document.getElementById("codeBox");
-                    codeBox.innerText = data.code;
-                    codeBox.style.display = "block";
-
-                    clearIterval(interval);
-                }
-            }, 5000);
-
             async function connect() {
                 const phone = new URLSearchParams(window.location.search).get("phone");
                 const code = document.getElementById("userCode").Value = data.code;
@@ -89,6 +72,25 @@
                     document.getElementById("connectStatus").innerText = "Invalid or expired code";
                 }
             }
+
+            const interval = setInterval(async () => {
+                const res = await fetch(`/check-paymet/${phone}`);
+                const data = await res.json();
+
+                console.log("CHECK:", data);
+
+                if(data.status === "success") {
+                    document.getElementById('status').innerText = "Payment successfull!";
+
+                    const codeBox = document.getElementById("codeBox");
+                    codeBox.innerText = data.code;
+                    codeBox.style.display = "block";
+
+                    clearIterval(interval);
+                }
+            }, 5000);
+
+            
         </script>
     </body>
 </html>
