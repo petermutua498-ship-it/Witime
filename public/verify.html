@@ -41,9 +41,9 @@
 
             <h3>Enter code</h3>
 
-            <input type="text" id="codeInput" placeholder="Enter code">
-            <button id="verifyBtn">Connect</button>
-            <p id="result"></p>
+            <input type="text" id="codeInput" placeholder="Enter your code">
+            <button onclick="connect()">Connect</button>
+            <p id="connectStatus"></p>
         </div>
         
         <script>
@@ -68,6 +68,27 @@
                     clearIterval(interval);
                 }
             }, 5000);
+
+            async function connect() {
+                const phone = new URLSearchParams(window.location.search).get("phone");
+                const code = document.getElementById("userCode").Value = data.code;
+
+                const res = await fetch("/verify", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ phone, code })
+                });
+
+                const data = await res.json();
+
+                if (data.status === "ok") {
+                    document.getElementById("connectStatus").innerText = "Connected!";
+                } else {
+                    document.getElementById("connectStatus").innerText = "Invalid or expired code";
+                }
+            }
         </script>
     </body>
 </html>
