@@ -155,17 +155,15 @@ app.post("/callback", async (req, res) => {
     try {
         const data = req.body;
 
-        console.log("CALLBACK:", JSON.stringify(data, null, 2));
-
         const stk = data.Body.stkCallback;
+
+        console.log("CALLBACK:", JSON.stringify(data, null, 2));
 
         if (stk.ResultCode === 0) {
 
             const items = stk.CallbackMetadata.Item;
 
-            const phoneItem = items.find(i => i.Name === "PhoneNumber");
-            
-            const phone = phoneItem ? String(phoneItem.Value) : null;
+            const phone = items.find(i => i.Name === "PhoneNumber")?.Value;
 
             console.log("PHONE:", phone);
 
@@ -177,8 +175,8 @@ app.post("/callback", async (req, res) => {
             const code = generateCode();
 
             await Session.create({
-                phone,
-                code,
+                phone: String(phone),
+                code: String(code),
                 active: true,
                 expiresAt: new Date(Date.now() + 60 * 60 * 1000)
             });
@@ -198,15 +196,13 @@ app.get("/check-payment/:phone", async (req, res) => {
     try {
         const phone = req.params.phone;
 
-        console.log("CHECK REQUEST:", phone);
-
         const session = await Session.findOne({
             phone,
             active: true
         });
 
         if (!session) {
-            return res.json({ status: "Pending" });
+            return res.json({ status: "pending" });
         }
 
         res.json({
