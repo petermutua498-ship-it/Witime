@@ -73,16 +73,20 @@
                 return;
             }
             
-            await fetch("/pay", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ phone })
-            });
-
-            window.location.href = `/verify.html?phone=${phone}`;
-        
+            try {
+                await fetch("/pay", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ phone })
+                });
+                
+                window.location.href = "/verify.html?phone=" + phone;
+            } catch (err) {
+                console.log("PAY ERROR:", err);
+                alert("something went wrong");
+            }
         }
     </script>
 
