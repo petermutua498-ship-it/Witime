@@ -245,10 +245,46 @@ app.post("/verify", async(req, res) => {
             return res.json({ status: "expired"});
         }
 
+        const allowed = await checkUserLimit();
+
+        if (!allowed) {
+            return res.json({ status: "full"});
+        }
+
+        session.active = false;
+        await session.save();
+
         res.json({ status: "ok" });
 
     } catch (err) {
         res.json({ status: "error"});
+    }
+});
+
+setInterval(async () => {
+    await Session.updateMany(
+        { expiresAt: { $lt: new Date() } },
+        { active: false }
+        );
+    }, 60000);
+
+app.get("/admin-data", async (req, res) => {
+    try {
+        const sessions = (await Session.find()).toSorted({ expiresAt: -1 });
+        res.json(sessions);
+    } catch (err) {
+        res.json([]);
+    }
+});
+
+app.post("/admin-login", (req, res) => {
+    const { username, password } = req.body;
+
+    if(username === "admin" && password === "admin")
+    {
+        res.json({ status: "ok" });
+    } else {
+        res.json({ status: "invalid" });
     }
 });
 
@@ -258,7 +294,7 @@ app.get("/ping", (req, res) => {
 
 async function checkUserLimit() {
     const count = await Session.countDocuments({ active: true });
-    return count < 7;
+    return count < 10;
 }
 
 let activeCodes = [];

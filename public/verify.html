@@ -68,6 +68,8 @@
 
                 if (data.status === "ok") {
                     document.getElementById("connectStatus").innerText = "Connected!";
+                } else if (data.status === "full") {
+                    document.getElementById("connectStatus").innerText = "Network full, try later.";
                 } else {
                     document.getElementById("connectStatus").innerText = "Invalid code";
                 }

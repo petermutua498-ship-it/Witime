@@ -4,29 +4,32 @@
     <title>Admin Login</title>
 </head>
 
-<body>
+<body style="text-align: center; padding-top: 100px; font-family: Arial;">
 
-<h2>Witime Admin Login</h2>
+<h2>Login</h2>
+<input id="username" placeholder="Username"><br><br>
+<input id="password" type="password" placeholder="Enter password"><br><br>
 
-<input id="password" placeholder="Enter password">
 <button onclick="login()">Login</button>
 
 <script>
     async function login(){
-        const password=document.getElementById("password").value;
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
 
-        const res=await fetch("/admin/login", {
+        const res = await fetch("/admin-login", {
             method:"POST",
             headers:{"Contet-Type":"application/json"},
-            body:JSON.stringify({password})
+            body:JSON.stringify({ username, password })
         });
 
         const data = await res.json();
 
-        if(data.success){
-            window.location.href="/admin";
+        if(data.status === "ok"){
+            localStorage.setItem("admin", "true");
+            window.location.href="/dashboard.html";
         } else {
-            alert("Wrong password")
+            alert("Wrong login")
         }
     }
 </script>
