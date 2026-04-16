@@ -280,10 +280,16 @@ app.get("/admin-data", async (req, res) => {
 app.post("/admin-login", (req, res) => {
     const { username, password } = req.body;
 
-    if(
-        username === "admin" && 
-        password === "1234"
-    ) {
+    console.log("LOGIN INPUT:", username, password);
+
+    const admin = await Admin.findOne({
+        username: username.trim(),
+        password: password.trim()
+    });
+
+    console.log("FOUND ADMIN:", admin);
+
+    if (admin) {
         res.json({ status: "ok" });
     } else {
         res.json({ status: "invalid" });
