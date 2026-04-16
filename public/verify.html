@@ -51,7 +51,7 @@
             const params = new URLSearchParams(window.location.search);
             const phone = params.get("phone");
 
-            console.log("PHONE:", phone);
+            console.log("PHONE FROM URL:", phone);
 
             async function connect() {
                 const code = document.getElementById("codeInput").value;
@@ -74,7 +74,7 @@
             }
 
             const interval = setInterval(async () => {
-                const res = await fetch(`/check-paymet/${phone}`);
+                const res = await fetch(`/check-payment/${phone}`);
                 const data = await res.json();
 
                 console.log("CHECK:", data);
@@ -88,7 +88,7 @@
 
                     document.getElementById("codeInput").value = data.code;
 
-                    clearIterval(interval);
+                    clearInterval(interval);
                 }
             }, 5000);
 

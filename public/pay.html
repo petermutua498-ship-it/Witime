@@ -66,7 +66,7 @@
                 phone = "254" + phone;
             }
 
-            console.log("PHONE SENT:", phone);
+            console.log("FORMATTED PHONE:", phone);
 
             if (!/^2547\d{8}$/.test(phone)) {
                 alert("Enter valid M-Pesa number");
@@ -80,6 +80,9 @@
                 },
                 body: JSON.stringify({ phone })
             });
+
+            const data = await res.json();
+            console.log("PAY RESPONSE:", data);
 
             window.location.href = `/verify.html?phone=${phone}`;
         

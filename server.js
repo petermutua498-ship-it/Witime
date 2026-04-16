@@ -198,15 +198,15 @@ app.get("/check-payment/:phone", async (req, res) => {
     try {
         const phone = req.params.phone;
 
-        console.log("CHECKING PAYMENT FOR:", phone);
+        console.log("CHECK REQUEST:", phone);
 
         const session = await Session.findOne({
-            phone: String(phone),
+            phone,
             active: true
         });
 
         if (!session) {
-            return res.json({ status: "Pending"});
+            return res.json({ status: "Pending" });
         }
 
         res.json({
