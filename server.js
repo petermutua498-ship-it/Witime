@@ -280,8 +280,10 @@ app.get("/admin-data", async (req, res) => {
 app.post("/admin-login", (req, res) => {
     const { username, password } = req.body;
 
-    if(username === "admin" && password === "admin")
-    {
+    if(
+        username === process.env.ADMIN_USER && 
+        password === process.env.ADMIN_PASS
+    ) {
         res.json({ status: "ok" });
     } else {
         res.json({ status: "invalid" });
