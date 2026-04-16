@@ -172,20 +172,26 @@ app.post("/callback", async (req, res) => {
                 return res.sendStatus(200);
             }
 
+            await Session.updateMany(
+                { phone: String(phone) }, 
+                { active: false }
+            );
+
             const code = generateCode();
 
-            await Session.create({
+            const session = await Session.create({
                 phone: String(phone),
                 code: String(code),
                 active: true,
                 expiresAt: new Date(Date.now() + 60 * 60 * 1000)
             });
 
-            console.log("PAYMENT SUCCESS");
+            console.log("Payment Success");
             console.log("CODE:", code, "PHONE:", phone)
         }
 
         res.sendStatus(200);
+
     } catch (err) {
         console.log("CALLBACK ERROR:", err);
         res.sendStatus(200);
