@@ -172,10 +172,15 @@ app.post("/callback", async (req, res) => {
                 return res.sendStatus(200);
             }
 
-            await Session.updateMany(
-                { phone: String(phone) }, 
-                { active: false }
-            );
+            const existing = await Session.findOne({
+                phone: String(phone),
+                active: true
+            });
+
+            if (existing) {
+                console.log("Code already exists, skipping...");
+                return res.sendStatus(200);
+            }
 
             const code = generateCode();
 
