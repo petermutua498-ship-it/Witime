@@ -277,19 +277,21 @@ app.get("/admin-data", async (req, res) => {
     }
 });
 
+app.post("/disconnect", async (req, res) => {
+    const { phone } = req.body;
+
+    await Session.updateOne({ phone }, { active: false });
+
+    res.json({ status: "disconnected" });
+})
+
 app.post("/admin-login", (req, res) => {
     const { username, password } = req.body;
 
-    console.log("LOGIN INPUT:", username, password);
+    console.log("INPUT:", username, password);
+    console.log("EXPECTED:", "admin", "1234");
 
-    const admin = await Admin.findOne({
-        username: username.trim(),
-        password: password.trim()
-    });
-
-    console.log("FOUND ADMIN:", admin);
-
-    if (admin) {
+    if (username === "admin" && password === "1234") {
         res.json({ status: "ok" });
     } else {
         res.json({ status: "invalid" });

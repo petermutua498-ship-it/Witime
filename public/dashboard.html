@@ -37,44 +37,64 @@
 
     <body>
         <h2>Admin Dashboard</h2>
-    <thead>
-        <tr>
-            <th>Phone</th>
-            <th>Code</th>
-            <th>Status</th>
-            <th>Expiry</th>
-        </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-</table>
 
-<script>
-    async function load() {
-        const res = await fetch("/admin-data");
-        const data = await res.json();
-
-        const tbody = document.getElementById("tableBody");
-        tbody.innerHTML = "";
+        <button onclick="loadData()">Refresh</button>
+        <button onclick="logout()">Logout</button>
         
-        data.forEach(item => {
-            const row = `
-            <tr>
-                <td>${item.phone}</td>
-                <td>${item.code}</td>
-                <td>${item.active ? "Active" : "Used"}</td>
-                <td>${new Date(item.expiresAt).toLocaleString()}</td>
-            </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    }
+        <table>
+            <thead>
+                <tr>
+                    <th>Phone</th>
+                    <th>Code</th>
+                    <th>Status</th>
+                    <th>Expiry</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
 
-    function logout() {
-        localStorage.removeItem("admin");
-        window.location.href = "/admin-login.html";
-    }
+    <script>
+        if (localStorage.getItem("admin") !== "true") {
+            window.location.href = "/admin-login.html";
+        }
 
-    loadData();
-</script>
+        async function load() {
+            const res = await fetch("/admin-data");
+            const data = await res.json();
+
+            const tbody = document.getElementById("tableBody");
+            tbody.innerHTML = "";
+        
+            data.forEach(item => {
+                const row = `
+                <tr>
+                    <td>${item.phone}</td>
+                    <td>${item.code}</td>
+                    <td>${item.active ? "Active" : "Used"}</td>
+                    <td>${new Date(item.expiresAt).toLocaleString()}</td>
+                </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+        
+        function logout() {
+            localStorage.removeItem("admin");
+            window.location.href = "/admin-login.html";
+        }
+
+        async function disconnect(phone) {
+            await fetch("/disconnect", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ phone })
+            });
+
+            loadData();
+        }
+    </script>
+
     </body>
 </html>
