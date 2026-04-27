@@ -8,7 +8,6 @@ const path = require("path");
 const cors = require("cors");
 global.Buffer = require("buffer").Buffer;
 
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -25,7 +24,22 @@ const Session = mongoose.model("Session", {
     code: String,
     active: Boolean,
     expiresAt: Date,
+    amount: Number,
+    duration: Number
 });
+
+function getDuration(amount) {
+    if (amount == 5) return 1 * 60 * 1000;
+    if (amount == 15) return 2 * 60 * 1000;
+    if (amount == 25) return 3 * 60 * 1000;
+    if (amount == 50) return 6 * 60 * 1000;
+    if (amount == 80) return 12 * 60 * 1000;
+    if (amount == 120) return 24 * 60 * 1000;
+    return 60 * 60 * 1000;
+}
+
+const duration = getDuration(amount);
+const expires = new Date(Date.now() + duration);
 
 function generateCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -40,7 +54,6 @@ app.post("/pay", async (req, res) => {
         if (!phone) {
             return res.json({ error: "Phone required" });
         }
-
 
         console.log("PHONE:", phone);
         
@@ -230,6 +243,15 @@ app.get("/check-payment/:phone", async (req, res) => {
 app.post("/verify", async(req, res) => {
     try {
         const {phone, code} = req.body;
+
+        const existing = await Session.findOne({
+            phone,
+            active: true
+        })
+
+        if (existing) {
+            return res.json({ error: "You already have an active session"});
+        }
         
         const session = await Session.findOne({ 
             phone, 
@@ -308,7 +330,6 @@ async function checkUserLimit() {
 }
 
 let activeCodes = [];
-
 
 app.listen(PORT, () => {
     console.log("Server running", PORT);
