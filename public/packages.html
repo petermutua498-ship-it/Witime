@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packages - WiTime</title>
+
+    <link rel="stylesheet" href="css/packages.css">
+</head>
+<body>
+
+<div class="container">
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <div class="circle">WT</div>
+            <h2>WiTime</h2>
+        </div>
+
+        <ul>
+            <li onclick="location.href='dashboard.html'">🏠 Dashboard</li>
+            <li class="active">📦 Packages</li>
+            <li onclick="location.href='payments.html'">💳 Payments</li>
+            <li onclick="location.href='users.html'">👥 Users</li>
+            <li onclick="location.href='reports.html'">📈 Reports</li>
+            <li onclick="location.href='settings.html'">⚙ Settings</li>
+            <li>🚪 Logout</li>
+        </ul>
+
+    </aside>
+
+    <main class="content">
+
+        <h1>Internet Packages</h1>
+
+        <button class="addBtn">+ Add Package</button>
+
+        <input
+    type="text"
+    id="searchPackage"
+    placeholder="Search packages...">
+
+        <table>
+
+            <tr>
+                <th>Package</th>
+                <th>Price</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+
+            <tr>
+                <td>1 Hour</td>
+                <td>KES 10</td>
+                <td>1 Hour</td>
+                <td><span class="status active">Active</span></td>
+                <td>Edit | Delete</td>
+            </tr>
+
+            <tr>
+                <td>2 Hours</td>
+                <td>KES 25</td>
+                <td>2 Hours</td>
+                <td><span class="status active">Active</span></td>
+                <td>Edit | Delete</td>
+            </tr>
+
+        </table>
+
+    </main>
+
+</div>
+
+<div id="packageModal" class="modal">
+
+    <div class="modal-content">
+
+        <span class="close">&times;</span>
+
+        <h2>Add Package</h2>
+
+        <input type="text" id="packageName" placeholder="Package Name">
+
+        <input type="number" id="packagePrice" placeholder="Price (KES)">
+
+        <input type="number" id="packageDuration" placeholder="Duration">
+
+        <select id="durationUnit">
+            <option>Minutes</option>
+            <option selected>Hours</option>
+            <option>Days</option>
+            <option>Weeks</option>
+            <option>Months</option>
+        </select>
+
+        <button id="savePackage">Save Package</button>
+
+    </div>
+
+</div>
+
+<script src="js/packages.js"></script>
+
+</body>
+</html>

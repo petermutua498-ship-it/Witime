@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiTime Status</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <div class="logo-circle">
+            WT
+        </div>
+
+        <h1>WiTime</h1>
+
+        <p class="tagline">
+            You are Connected
+        </p>
+
+    </div>
+
+    <div class="welcome">
+
+        <h2 style="color:green;">
+            🟢 Connected
+        </h2>
+
+        <br>
+
+        <p>
+            <strong>Phone</strong>
+        </p>
+
+        <h3 id="phone"></h3>
+
+        <br>
+
+        <p>
+            <strong>Package</strong>
+        </p>
+
+        <h3 id="package"></h3>
+
+        <br>
+
+        <p>
+            <strong>Remaining Time</strong>
+        </p>
+
+        <h1 id="timer">
+            00:00:00
+        </h1>
+
+    </div>
+
+    <button class="buy-btn" onclick="buyMore()">
+        Buy More Time
+    </button>
+
+</div>
+
+<script src="js/status.js"></script>
+
+</body>
+</html>

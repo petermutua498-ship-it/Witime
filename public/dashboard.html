@@ -1,100 +1,91 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Admin Dashboard</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiTime Admin Dashboard</title>
 
-        <style>
-            body {
-                font-family: Arial;
-                padding: 20px;
-                background: #f5f5f5;
-            }
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
 
-            table {
-                width: 100%;
-                background: white;
-                border-collapse: collapse;
-            }
+<body>
 
-            th, td {
-                padding: 10px;
-                border: 1px solid #ccc;
-                text-align: center;
-            }
+<div class="container">
 
-            th {
-                background: #333;
-                color: white;
-            }
+    <aside class="sidebar">
 
-            button {
-                margin-bottom: 15px;
-                padding: 10px;
-            }
+        <div class="logo">
+            <div class="circle">WT</div>
+            <h2>WiTime</h2>
+        </div>
 
-        </style>
-    </head>
+        <ul>
+            <li class="active">🏠 Dashboard</li>
+            <li>📦 Packages</li>
+            <li>💳 Payments</li>
+            <li>👥 Users</li>
+            <li>📶 Sessions</li>
+            <li>📈 Reports</li>
+            <li>⚙ Settings</li>
+            <li>🚪 Logout</li>
+        </ul>
 
-    <body>
-        <h2>Admin Dashboard</h2>
+    </aside>
 
-        <button onclick="loadData()">Refresh</button>
-        <button onclick="logout()">Logout</button>
-        
-        <table>
-            <thead>
+    <main class="content">
+
+        <h1>Dashboard</h1>
+
+        <div class="cards">
+
+            <div class="card">
+                <h3>Today's Revenue</h3>
+                <p>KES 0</p>
+            </div>
+
+            <div class="card">
+                <h3>Active Users</h3>
+                <p>0</p>
+            </div>
+
+            <div class="card">
+                <h3>Pending Payments</h3>
+                <p>0</p>
+            </div>
+
+            <div class="card">
+                <h3>Active Sessions</h3>
+                <p>0</p>
+            </div>
+
+        </div>
+
+        <div class="table">
+
+            <h2>Recent Payments</h2>
+
+            <table>
+
                 <tr>
                     <th>Phone</th>
-                    <th>Code</th>
+                    <th>Package</th>
+                    <th>Amount</th>
                     <th>Status</th>
-                    <th>Expiry</th>
                 </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
 
-    <script>
-        if (localStorage.getItem("admin") !== "true") {
-            window.location.href = "/admin-login.html";
-        }
-
-        async function load() {
-            const res = await fetch("/admin-data");
-            const data = await res.json();
-
-            const tbody = document.getElementById("tableBody");
-            tbody.innerHTML = "";
-        
-            data.forEach(item => {
-                const row = `
                 <tr>
-                    <td>${item.phone}</td>
-                    <td>${item.code}</td>
-                    <td>${item.active ? "Active" : "Used"}</td>
-                    <td>${new Date(item.expiresAt).toLocaleString()}</td>
+                    <td colspan="4">No payments yet.</td>
                 </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
-        
-        function logout() {
-            localStorage.removeItem("admin");
-            window.location.href = "/admin-login.html";
-        }
 
-        async function disconnect(phone) {
-            await fetch("/disconnect", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ phone })
-            });
+            </table>
 
-            loadData();
-        }
-    </script>
+        </div>
 
-    </body>
+    </main>
+
+</div>
+
+<script src="js/dashboard.js"></script>
+
+</body>
 </html>

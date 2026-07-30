@@ -1,47 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Login</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiTime Admin Login</title>
+
+<link rel="stylesheet" href="css/style.css">
+
 </head>
 
-<body style="text-align: center; padding-top: 100px; font-family: Arial;">
+<body>
 
-<h2>Login</h2>
-<input id="username" placeholder="Username"><br><br>
-<input id="password" type="password" placeholder="Enter password"><br><br>
+<div class="container">
 
-<button onclick="login()">Login</button>
+<div class="header">
 
-<script>
-    async function login(){
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
+<div class="logo-circle">
+WT
+</div>
 
-        console.log("SENDING:", username, password);
+<h1>WiTime Admin</h1>
 
-        const res = await fetch("/admin-login", {
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body:JSON.stringify({ 
-                username: username, 
-                password: password 
-            })
-        });
+<p class="tagline">
+Administrator Login
+</p>
 
-        const data = await res.json();
+</div>
 
-        console.log("RESPONSE:", data);
+<div class="welcome">
 
-        if(data.status === "ok"){
-            localStorage.setItem("admin", "true");
-            window.location.href = "/dashboard.html";
-        } else {
-            alert("Wrong login")
-        }
-    }
-</script>
+<input
+type="text"
+id="username"
+placeholder="Username"
+autocomplete="username">
+
+<br><br>
+
+<input
+type="password"
+id="password"
+placeholder="Password"
+autocomplete="current-password">
+
+<br><br>
+
+<button class="buy-btn" id="loginBtn">
+Login
+</button>
+
+</div>
+
+</div>
+
+<script src="js/admin-login.js"></script>
 
 </body>
 </html>

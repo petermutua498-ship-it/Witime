@@ -1,73 +1,116 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>WITIME PACKAGES</title>
-        <style>
-            body {
-                font-family: Arial;
-                background: #1dbfe7d0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-            }
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiTime Hotspot</title>
 
-            h2{
-                color: white;
-                margin-bottom: 20px;
-            }
-            
-            .container {
-                width: 300px;
-                text-align: center;
-            }
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
 
-            .packages {
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .packages button {
-                background: #00c3ff;
-                padding: 15px;
-                border: none;
-                cursor: pointer;
-                color: white;
-                font-size: 16px;
-                border-radius: 10px;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-                font-weight: bold;
-                transition: 0.3s;
-            }
-            
-            .package button:hover {
-                background: #0056b3;
-                transform: scale(1.03) ;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h2>Witime Wifi</h2>
-            <p>Fast & Secure Internet Access</p>
-            
-            <div class="packages">
-            <button type="button" onclick="selectPackage('1 hour')">1 Hour - KES 5</button>
-            <button type="button" onclick="selectPackage('2 hours')">2 Hours - KES 15</button>
-            <button type="button" onclick="selectPackage('3 hours')">3 Hours - KES 25</button>
-            <button type="button" onclick="selectPackage('6 hours')">6 Hours - KES 50</button>
-            <button type="button" onclick="selectPackage('12 hours')">12 Hours - KES 80</button>
-            <button type="button" onclick="selectPackage('24 hours')">24 Hours - KES 120</button>
-            </div>
+
+<div class="background-logo">
+    <div class="logo-watermark">WT</div>
+</div>
+
+<div class="watermark">
+<div class="container">
+
+    <div class="header">
+
+        <div class="logo-circle">
+            WT
         </div>
-        
-        <script>
-            function selectPackage(pkg){
-                window.location.href = "pay.html?package=" + encodeURIComponent(pkg);
-            }
 
-        </script>
-    </body>
+        <h1>WiTime</h1>
+
+        <p class="tagline">
+            Fast • Secure • Affordable Internet
+        </p>
+
+    </div>
+
+    <div class="welcome">
+
+        <h2>Welcome</h2>
+
+        <p>
+            Connect to the internet in just a few seconds.
+        </p>
+
+    </div>
+
+    <div class="free-box">
+
+        <h3>🎁 First Time Here?</h3>
+
+        <p>
+            Enjoy <strong>FREE 5 Minutes</strong> of internet.
+        </p>
+
+        <button id="freeBtn">
+            Start Free Trial
+        </button>
+
+    </div>
+
+    <h2 class="package-title">
+        Internet Packages
+    </h2>
+
+    <div class="packages">
+
+        <div class="package">
+            <p>KES 10</p>
+            <span>1 Hour</span>
+        </div>
+
+        <div class="package">
+            <p>KES 20</p>
+            <span>2 Hours</span>
+        </div>
+
+        <div class="package">
+            <p>KES 40</p>
+            <span>3 Hours</span>
+        </div>
+
+        <div class="package">
+            <p>KES 55</p>
+            <span>6 Hours</span>
+        </div>
+
+        <div class="package">
+            <h3>Daily</h3>
+            <p>KES 100</p>
+            <span>12 Hours</span>
+        </div>
+
+    </div>
+
+    
+
+    <button id="buyBtn" class="buy-btn">
+        Buy Internet
+    </button>
+
+    <div class="footer">
+
+        <p>Need Help?</p>
+
+        <p>📞 0112647941</p>
+
+        <small>
+            © 2026 WiTime. All Rights Reserved.
+        </small>
+
+    </div>
+
+</div>
+</div>
+
+<script src="js/index.js"></script>
+
+</body>
 </html>

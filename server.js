@@ -1,336 +1,65 @@
 require("dotenv").config();
 
 const express = require("express");
-const axios = require("axios");
 const mongoose = require("mongoose");
-const moment = require("moment");
-const path = require("path");
+const session = require("express-session");
 const cors = require("cors");
-global.Buffer = require("buffer").Buffer;
+const packageRoutes = require("./routes/packageRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const verifyRoutes = require("./routes/verifyRoutes");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(express.static("public"));
 
-const PORT = process.env.port || 3000;
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false
+}));
 
-mongoose.connect(process.env.MONGO_URL)
-.then(() => console.log("MongoDB connected"))
+
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("✅ MongoDB Connected"))
 .catch(err => console.log(err));
 
-const Session = mongoose.model("Session", {
-    phone: String,
-    code: String,
-    active: Boolean,
-    expiresAt: Date,
-    amount: Number,
-    duration: Number
+app.get("/", (req,res)=>{
+    res.sendFile(__dirname + "/public/index.html");
 });
 
-function getDuration(amount) {
-    if (amount == 5) return 1 * 60 * 1000;
-    if (amount == 15) return 2 * 60 * 1000;
-    if (amount == 25) return 3 * 60 * 1000;
-    if (amount == 50) return 6 * 60 * 1000;
-    if (amount == 80) return 12 * 60 * 1000;
-    if (amount == 120) return 24 * 60 * 1000;
-    return 60 * 60 * 1000;
-}
+const PORT = process.env.PORT || 3000;
 
-const duration = getDuration(amount);
-const expires = new Date(Date.now() + duration);
+app.post("/pay", (req, res) => {
 
-function generateCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
+    console.log("Payment Request:");
 
-app.post("/pay", async (req, res) => {
-    try{
-        console.log("ROUTE HIT");
+    console.log(req.body);
 
-        let { phone } = req.body;
+    res.json({
+        success: true,
+        message: "Payment request received."
+    });
 
-        if (!phone) {
-            return res.json({ error: "Phone required" });
-        }
-
-        console.log("PHONE:", phone);
-        
-        const consumerKey = "GJVPwfSnXl0a1UmdAgeZarHHGZ8KV2SJ21aq8cM3istjxWFc";
-        const consumerSecret = "8XBR2wMkfUemAFPqFqXlyTtk3dug85xSWksAF6gRdIlXDogpKhrxG9p76YicS71b";
-        const shortcode = "174379";
-        const passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
-
-        const auth = Buffer.from(
-            consumerKey + ":" + consumerSecret
-        ).toString("base64");
-        
-        const tokenRes = await axios.get(
-            
-            "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-            {
-                headers: {
-                    Authorization: `Basic ${auth}`
-                }
-            }
-        );
-
-        const token = tokenRes.data.access_token;
-
-        const date = new Date();
-        const timestamp = 
-        date.getFullYear().toString() +
-        String(date.getMonth() + 1).padStart(2, "0") +
-        String(date.getDate()).padStart(2, "0") +
-        String(date.getHours()).padStart(2, "0") +
-        String(date.getMinutes()).padStart(2, "0") +
-        String(date.getSeconds()).padStart(2, "0");
-
-        const password = Buffer.from(
-            shortcode + passkey + timestamp
-        ).toString("base64");
-
-        console.log("SHORTCODE:", process.env.SHORTCODE || "174379");
-        console.log("PASSKEY:", passkey);
-        console.log("TIMESTAMP:", timestamp);
-        console.log("PASSWORD OK");
-
-        const stkRes = await axios.post(
-            "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-            {
-                BusinessShortCode: "174379",
-                Password: password,
-                Timestamp: timestamp,
-                TransactionType: "CustomerPayBillOnline",
-                Amount: 1,
-                PartyA: phone,
-                PartyB: "174379",
-                PhoneNumber: phone,
-                CallBackURL: "https://witime-o2tz.onrender.com/callback",
-                AccountReference: "Witime",
-                TransactionDesc: "Internet Payment"
-            },
-            {
-                headers: { Authorization: `Bearer ${token}`}
-            }
-        );
-
-        console.log("STK RESPONSE:", stkRes.data);
-
-        res.json(stkRes.data);
-
-    } catch (err) {
-        console.log("FULL ERROR:", err.response?.data || err.message);
-
-        res.json({
-            error: err.response?.data?.errorMessage || "STK failed"
-        });
-    }
 });
 
-app.get("/stk", async (req, res) => {
-    try{
-        const response = await axios.get(
-            "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-        {
-            headers: {
-                authorization: `Basic ${auth}`
-            }
-        }
-        );
+app.use("/api/packages", packageRoutes);
+app.use("/", paymentRoutes);
+app.use("/", verifyRoutes);
 
-        console.log("TOKEN RESPONSE:", response.data);
+app.get("/check-payment/:phone", (req, res) => {
 
-        res.json(response.data);
-    } catch (err) {
-        console.log("TOKEN ERROR:", err.response?.data || err.message);
-        res.json(err.response?.data || err.message);
-    }
-})
+    res.json({
+        success: false,
+        paid: false,
+        message: "Payment not yet confirmed."
+    });
 
-app.post("/stk", async (req, res) => {
-
-    const { phone, amount } = req.body;
-
-    console.log("PHONE:", phone);
-
-    if (!phone) {
-        return res.json({ message: "Phone missing" });
-    }
-    
-    setInterval(() => {
-        console.log("ping...");
-    }, 300000);
 });
 
-app.post("/callback", async (req, res) => {
-    try {
-        const data = req.body;
-
-        const stk = data.Body.stkCallback;
-
-        console.log("CALLBACK:", JSON.stringify(data, null, 2));
-
-        if (stk.ResultCode === 0) {
-
-            const items = stk.CallbackMetadata.Item;
-
-            const phone = items.find(i => i.Name === "PhoneNumber")?.Value;
-
-            console.log("PHONE:", phone);
-
-            if (!phone) {
-                console.log("Phone not found");
-                return res.sendStatus(200);
-            }
-
-            const existing = await Session.findOne({
-                phone: String(phone),
-                active: true
-            });
-
-            if (existing) {
-                console.log("Code already exists, skipping...");
-                return res.sendStatus(200);
-            }
-
-            const code = generateCode();
-
-            const session = await Session.create({
-                phone: String(phone),
-                code: String(code),
-                active: true,
-                expiresAt: new Date(Date.now() + 60 * 60 * 1000)
-            });
-
-            console.log("Payment Success");
-            console.log("CODE:", code, "PHONE:", phone)
-        }
-
-        res.sendStatus(200);
-
-    } catch (err) {
-        console.log("CALLBACK ERROR:", err);
-        res.sendStatus(200);
-    }
-});
-
-app.get("/check-payment/:phone", async (req, res) => {
-    try {
-        const phone = req.params.phone;
-
-        const session = await Session.findOne({
-            phone,
-            active: true
-        });
-
-        if (!session) {
-            return res.json({ status: "pending" });
-        }
-
-        res.json({
-            status: "success",
-            code: session.code
-        });
-
-    } catch (err) {
-        console.log("CHECK ERROR:", err);
-        res.json({ status: "error" });
-    }
-});
-
-app.post("/verify", async(req, res) => {
-    try {
-        const {phone, code} = req.body;
-
-        const existing = await Session.findOne({
-            phone,
-            active: true
-        })
-
-        if (existing) {
-            return res.json({ error: "You already have an active session"});
-        }
-        
-        const session = await Session.findOne({ 
-            phone, 
-            code,
-            active: true 
-        });
-        
-        if (!session) {
-            return res.json({status: "Invalid" });
-        }
-
-        if (session.expiresAt < new Date()) {
-            return res.json({ status: "expired"});
-        }
-
-        const allowed = await checkUserLimit();
-
-        if (!allowed) {
-            return res.json({ status: "full"});
-        }
-
-        session.active = false;
-        await session.save();
-
-        res.json({ status: "ok" });
-
-    } catch (err) {
-        res.json({ status: "error"});
-    }
-});
-
-setInterval(async () => {
-    await Session.updateMany(
-        { expiresAt: { $lt: new Date() } },
-        { active: false }
-        );
-    }, 60000);
-
-app.get("/admin-data", async (req, res) => {
-    try {
-        const sessions = (await Session.find()).toSorted({ expiresAt: -1 });
-        res.json(sessions);
-    } catch (err) {
-        res.json([]);
-    }
-});
-
-app.post("/disconnect", async (req, res) => {
-    const { phone } = req.body;
-
-    await Session.updateOne({ phone }, { active: false });
-
-    res.json({ status: "disconnected" });
-})
-
-app.post("/admin-login", (req, res) => {
-    const { username, password } = req.body;
-
-    console.log("INPUT:", username, password);
-    console.log("EXPECTED:", "admin", "1234");
-
-    if (username === "admin" && password === "1234") {
-        res.json({ status: "ok" });
-    } else {
-        res.json({ status: "invalid" });
-    }
-});
-
-app.get("/ping", (req, res) => {
-    res.send("alive");
-})
-
-async function checkUserLimit() {
-    const count = await Session.countDocuments({ active: true });
-    return count < 10;
-}
-
-let activeCodes = [];
-
-app.listen(PORT, () => {
-    console.log("Server running", PORT);
+app.listen(PORT, ()=>{
+    console.log(`WiTime running on port ${PORT}`);
 });
