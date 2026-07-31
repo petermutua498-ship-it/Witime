@@ -26,8 +26,13 @@ console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
 console.log("MONGO_URI value:", process.env.MONGO_URI);
 
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.log(err));
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+  })
+  .catch(err => {
+    console.error("MongoDB connection error:");
+    console.error(err);
+});
 
 app.get("/", (req,res)=>{
     res.sendFile(__dirname + "/public/index.html");
