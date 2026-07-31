@@ -29,6 +29,13 @@ router.post("/pay", async (req, res) => {
             packageDuration
         });
 
+        console.log("Reached /pay");
+console.log("About to request access token");
+
+const token = await mpesa.getAccessToken();
+
+console.log("Access token received");
+
         const token = await mpesa.getAccessToken();
         console.log("Getting Access Token...");
         console.log("Access Token:", token);
