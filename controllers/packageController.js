@@ -1,5 +1,5 @@
 const Package = require("../models/Package");
-
+const Payment = require("../models/Payment");
 // Get all active packages
 exports.getPackages = async (req, res) => {
     try {
@@ -15,3 +15,25 @@ exports.getPackages = async (req, res) => {
         });
     }
 };
+
+await Payment.create({
+
+    phone,
+
+    packageName,
+
+    packagePrice: amount,
+
+    packageDuration,
+
+    merchantRequestID: stk.data.MerchantRequestID,
+
+    checkoutRequestID: stk.data.CheckoutRequestID,
+
+    status: "pending"
+
+});
+
+res.json({
+    success: true
+});

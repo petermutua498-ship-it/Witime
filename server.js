@@ -7,6 +7,7 @@ const cors = require("cors");
 const packageRoutes = require("./routes/packageRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const verifyRoutes = require("./routes/verifyRoutes");
+const callbackRoutes = require("./routes/callbackRoutes");
 
 const app = express();
 
@@ -22,8 +23,6 @@ app.use(session({
     saveUninitialized: false
 }));
 
-console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
-console.log("MONGO_URI value:", process.env.MONGO_URI);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
@@ -56,6 +55,7 @@ app.post("/pay", (req, res) => {
 app.use("/api/packages", packageRoutes);
 app.use("/", paymentRoutes);
 app.use("/", verifyRoutes);
+app.use(callbackRoutes);
 
 app.get("/check-payment/:phone", (req, res) => {
 
