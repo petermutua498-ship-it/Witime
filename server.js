@@ -39,19 +39,6 @@ app.get("/", (req,res)=>{
 
 const PORT = process.env.PORT || 3000;
 
-app.post("/pay", (req, res) => {
-
-    console.log("Payment Request:");
-
-    console.log(req.body);
-
-    res.json({
-        success: true,
-        message: "Payment request received."
-    });
-
-});
-
 app.use("/api/packages", packageRoutes);
 app.use("/", paymentRoutes);
 app.use("/", verifyRoutes);
