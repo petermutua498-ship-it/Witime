@@ -17,12 +17,12 @@ async function getAccessToken() {
             }
         );
 
-        return response.data.access_token;
-
         console.log("KEY:", process.env.MPESA_CONSUMER_KEY);
-console.log("SECRET LENGTH:", process.env.MPESA_CONSUMER_SECRET?.length);
+console.log("SECRET:", process.env.MPESA_CONSUMER_SECRET);
 console.log("SHORTCODE:", process.env.MPESA_SHORTCODE);
-console.log("PASSKEY LENGTH:", process.env.MPESA_PASSKEY?.length);
+console.log("PASSKEY:", process.env.MPESA_PASSKEY);
+
+        return response.data.access_token;
 
     } catch (err) {
     console.error("ACCESS TOKEN ERROR");
