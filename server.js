@@ -22,6 +22,8 @@ app.use(session({
     saveUninitialized: false
 }));
 
+console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
+console.log("MONGO_URI value:", process.env.MONGO_URI);
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("✅ MongoDB Connected"))
