@@ -26,12 +26,46 @@ exports.pay = async (req, res) => {
             packageDuration
         });
 
-        // STK Push will be added here
+       const timestamp = new Date()
+    .toISOString()
+    .replace(/[-:.TZ]/g, "")
+    .slice(0, 14);
 
-        res.json({
-            success: true,
-            message: "Payment request received."
-        });
+const password = Buffer.from(
+    process.env.MPESA_SHORTCODE +
+    process.env.MPESA_PASSKEY +
+    timestamp
+).toString("base64");
+
+const amount = parseInt(packagePrice.replace(/\D/g, ""));
+
+const stk = await axios.post(
+    "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+    {
+        BusinessShortCode: process.env.MPESA_SHORTCODE,
+        Password: password,
+        Timestamp: timestamp,
+        TransactionType: "CustomerPayBillOnline",
+        Amount: amount,
+        PartyA: phone,
+        PartyB: process.env.MPESA_SHORTCODE,
+        PhoneNumber: phone,
+        CallBackURL: "https://witime-o2tz.onrender.com/callback",
+        AccountReference: "WiTime",
+        TransactionDesc: packageDuration
+    },
+    {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }
+);
+
+console.log(stk.data);
+
+res.json({
+    success: true
+});
 
     } catch (err) {
 

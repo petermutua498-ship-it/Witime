@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-async function getAccessToken() {
+exports.getAccessToken = async () => {
 
     const auth = Buffer.from(
         `${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`
@@ -16,8 +16,4 @@ async function getAccessToken() {
     );
 
     return response.data.access_token;
-}
-
-module.exports = {
-    getAccessToken
 };
