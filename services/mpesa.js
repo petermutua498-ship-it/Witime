@@ -6,6 +6,11 @@ exports.getAccessToken = async () => {
         `${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`
     ).toString("base64");
 
+    console.log("Consumer Key:", process.env.MPESA_CONSUMER_KEY);
+console.log("Consumer Secret Exists:", !!process.env.MPESA_CONSUMER_SECRET);
+
+console.log("Authorization:", auth);
+
     const response = await axios.get(
         "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
         {
