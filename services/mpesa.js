@@ -1,24 +1,42 @@
 const axios = require("axios");
 
-exports.getAccessToken = async () => {
+async function getAccessToken() {
 
     const auth = Buffer.from(
-        `${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`
+        process.env.MPESA_CONSUMER_KEY + ":" + process.env.MPESA_CONSUMER_SECRET
     ).toString("base64");
 
-    console.log("Consumer Key:", process.env.MPESA_CONSUMER_KEY);
-console.log("Consumer Secret Exists:", !!process.env.MPESA_CONSUMER_SECRET);
+    try {
 
-console.log("Authorization:", auth);
-
-    const response = await axios.get(
-        "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-        {
-            headers: {
-                Authorization: `Basic ${auth}`
+        const response = await axios.get(
+            "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+            {
+                headers: {
+                    Authorization: "Basic " + auth
+                }
             }
-        }
-    );
+        );
 
-    return response.data.access_token;
-};
+        return response.data.access_token;
+
+        console.log("KEY:", process.env.MPESA_CONSUMER_KEY);
+console.log("SECRET LENGTH:", process.env.MPESA_CONSUMER_SECRET?.length);
+console.log("SHORTCODE:", process.env.MPESA_SHORTCODE);
+console.log("PASSKEY LENGTH:", process.env.MPESA_PASSKEY?.length);
+
+    } catch (err) {
+    console.error("ACCESS TOKEN ERROR");
+
+    if (err.response) {
+        console.error("Status:", err.response.status);
+        console.error("Response:", JSON.stringify(err.response.data, null, 2));
+    } else {
+        console.error(err);
+    }
+
+    throw err;
+}
+    }
+
+
+module.exports = { getAccessToken };
