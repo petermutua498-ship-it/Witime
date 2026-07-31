@@ -1,10 +1,18 @@
+const Payment = require("../models/Payment");
+
 exports.checkPayment = async (req, res) => {
 
-    const phone = req.params.phone;
+    const payment = await Payment.findOne({
+        phone: req.params.phone
+    });
 
-    console.log("Checking payment for:", phone);
+    if (payment && payment.status === "success") {
 
-    // Later we'll check MongoDB here.
+        return res.json({
+            status: "success"
+        });
+
+    }
 
     res.json({
         status: "pending"

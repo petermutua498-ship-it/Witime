@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const axios = require("axios");
 const { getAccessToken } = require("../services/mpesa");
+const Payment = require("../models/Payment");
 
 router.post("/pay", async (req, res) => {
 
@@ -23,6 +24,14 @@ router.post("/pay", async (req, res) => {
         ).toString("base64");
 
         const amount = Number(packagePrice.replace(/\D/g, ""));
+        await Payment.findOneAndUpdate(
+    { phone },
+    {
+        phone,
+        status: "pending"
+    },
+    { upsert: true }
+);
 
         const response = await axios.post(
 
