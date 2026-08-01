@@ -20,24 +20,28 @@ router.post("/callback", async (req, res) => {
             callback.ResultCode;
 
         const payment = await Payment.findOne({
-            checkoutRequestID
-        });
+    checkoutRequestID
+});
 
-        if (payment) {
+console.log("Found payment:", payment);
 
-            if (resultCode === 0) {
+if (payment) {
 
-                payment.status = "success";
+    if (resultCode === 0) {
+        payment.status = "success";
+    } else {
+        payment.status = "failed";
+    }
 
-            } else {
+    await payment.save();
 
-                payment.status = "failed";
+    console.log("Saved status:", payment.status);
 
-            }
+} else {
 
-            await payment.save();
+    console.log("Payment NOT FOUND");
 
-        }
+}
 
         
         res.json({

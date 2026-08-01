@@ -49,14 +49,6 @@
 
 const phone = new URLSearchParams(window.location.search).get("phone");
 
-if(data.status==="success"){
-
-    clearInterval(timer);
-
-    window.location.href=`/connected.html?phone=${phone}`;
-
-}
-
 async function checkPayment() {
 
     try {
@@ -95,6 +87,8 @@ async function checkPayment() {
     }
 
 }
+
+const timer = setInterval(checkPayment, 3000);
 
 checkPayment();
 
