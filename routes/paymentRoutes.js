@@ -1,16 +1,32 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const { getAccessToken } = require("../services/mpesa");
+
+const mpesa = require("../services/mpesa");
 const Payment = require("../models/Payment");
 
 router.post("/pay", async (req, res) => {
 
     try {
 
-        const { phone, packagePrice } = req.body;
+        const {
+            phone,
+            packageName,
+            packagePrice,
+            packageDuration
+        } = req.body;
 
-        const token = await getAccessToken();
+        if (!phone || !packagePrice) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing payment details."
+            });
+        }
+
+        console.log("========== PAYMENT REQUEST ==========");
+        console.log(req.body);
+
+        const token = await mpesa.getAccessToken();
 
         const timestamp = new Date()
             .toISOString()
@@ -24,16 +40,8 @@ router.post("/pay", async (req, res) => {
         ).toString("base64");
 
         const amount = Number(packagePrice.replace(/\D/g, ""));
-        await Payment.findOneAndUpdate(
-    { phone },
-    {
-        phone,
-        status: "pending"
-    },
-    { upsert: true }
-);
 
-        const response = await axios.post(
+        const stk = await axios.post(
 
             "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
 
@@ -48,37 +56,57 @@ router.post("/pay", async (req, res) => {
                 PhoneNumber: phone,
                 CallBackURL: "https://witime-o2tz.onrender.com/callback",
                 AccountReference: "WiTime",
-                TransactionDesc: "Internet Payment"
+                TransactionDesc: packageDuration
             },
 
             {
                 headers: {
-                    Authorization: "Bearer " + token
+                    Authorization: `Bearer ${token}`
                 }
             }
 
         );
 
-        console.log(response.data);
+        console.log("========== STK RESPONSE ==========");
+        console.log(stk.data);
+
+        await Payment.create({
+
+            phone,
+
+            packageName,
+
+            packagePrice: amount,
+
+            packageDuration,
+
+            merchantRequestID: stk.data.MerchantRequestID,
+
+            checkoutRequestID: stk.data.CheckoutRequestID,
+
+            status: "pending"
+
+        });
 
         res.json({
-            success: true
+            success: true,
+            checkoutRequestID: stk.data.CheckoutRequestID
         });
 
     } catch (err) {
 
-        console.error("PAY ERROR");
+        console.log("========== PAY ERROR ==========");
 
         if (err.response) {
-            console.error(err.response.status);
-            console.error(err.response.data);
+            console.log(err.response.status);
+            console.log(err.response.data);
         } else {
-            console.error(err.message);
+            console.log(err.message);
         }
 
         res.status(500).json({
             success: false,
-            message: err.message
+            message: "Payment failed."
         });
 
     }

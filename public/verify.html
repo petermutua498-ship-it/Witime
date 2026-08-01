@@ -49,37 +49,54 @@
 
 const phone = new URLSearchParams(window.location.search).get("phone");
 
-async function checkPayment(){
+if(data.status==="success"){
 
-    try{
+    clearInterval(timer);
+
+    window.location.href=`/connected.html?phone=${phone}`;
+
+}
+
+async function checkPayment() {
+
+    try {
 
         const response = await fetch(`/check-payment/${phone}`);
 
         const data = await response.json();
 
-        if(data.status === "success"){
+        console.log(data);
 
-            document.getElementById("status").innerText="Payment Successful";
+        if (data.status === "success") {
 
-            document.getElementById("message").innerText="Connecting you to the internet...";
+            clearInterval(timer);
 
-            setTimeout(()=>{
+            document.getElementById("status").innerText =
+                "Payment Successful";
 
-                window.location.href=`/connected.html?phone=${phone}`;
+            document.getElementById("message").innerText =
+                "Connecting you to the internet...";
 
-            },2000);
+            document.getElementById("loader").style.display = "none";
+
+            setTimeout(() => {
+
+                window.location.href =
+                    `/connected.html?phone=${phone}`;
+
+            }, 2000);
 
         }
 
-    }catch(err){
+    } catch (err) {
 
-        console.log(err);
+        console.error(err);
 
     }
 
 }
 
-setInterval(checkPayment,3000);
+checkPayment();
 
 </script>
 

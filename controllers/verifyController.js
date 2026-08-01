@@ -2,20 +2,44 @@ const Payment = require("../models/Payment");
 
 exports.checkPayment = async (req, res) => {
 
-    const payment = await Payment.findOne({
-        phone: req.params.phone
-    });
+    try {
 
-    if (payment && payment.status === "success") {
+        const payment = await Payment.findOne({
+
+            phone: req.params.phone
+
+        }).sort({
+
+            createdAt: -1
+
+        });
+
+        if (!payment) {
+
+            return res.json({
+
+                status: "pending"
+
+            });
+
+        }
 
         return res.json({
-            status: "success"
+
+            status: payment.status
+
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+        return res.json({
+
+            status: "pending"
+
         });
 
     }
-
-    res.json({
-        status: "pending"
-    });
 
 };

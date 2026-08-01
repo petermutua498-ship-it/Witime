@@ -44,15 +44,7 @@ app.use("/", paymentRoutes);
 app.use("/", verifyRoutes);
 app.use(callbackRoutes);
 
-app.get("/check-payment/:phone", (req, res) => {
 
-    res.json({
-        success: false,
-        paid: false,
-        message: "Payment not yet confirmed."
-    });
-
-});
 
 app.listen(PORT, ()=>{
     console.log(`WiTime running on port ${PORT}`);

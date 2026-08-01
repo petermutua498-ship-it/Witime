@@ -1,37 +1,51 @@
 const express = require("express");
 const router = express.Router();
+
 const Payment = require("../models/Payment");
 
 router.post("/callback", async (req, res) => {
 
-    console.log("========== CALLBACK RECEIVED ==========");
-
-    console.log(JSON.stringify(req.body, null, 2));
-
     try {
+
+        console.log("========== CALLBACK RECEIVED ==========");
+        console.log(JSON.stringify(req.body, null, 2));
 
         const callback =
             req.body.Body.stkCallback;
 
-        if (callback.ResultCode === 0) {
+        const checkoutRequestID =
+            callback.CheckoutRequestID;
 
-            const phone = callback.CallbackMetadata.Item.find(
-                x => x.Name === "PhoneNumber"
-            ).Value;
+        const resultCode =
+            callback.ResultCode;
 
-            await Payment.findOneAndUpdate(
-                { phone },
-                {
-                    phone,
-                    checkoutRequestID: callback.CheckoutRequestID,
-                    status: "success"
-                },
-                { upsert: true }
-            );
+        const payment = await Payment.findOne({
+            checkoutRequestID
+        });
 
-            console.log("Payment Saved");
+        if (payment) {
+
+            if (resultCode === 0) {
+
+                payment.status = "success";
+
+            } else {
+
+                payment.status = "failed";
+
+            }
+
+            await payment.save();
 
         }
+
+        console.log("CheckoutRequestID:", checkoutRequestID);
+
+const payment = await Payment.findOne({
+    checkoutRequestID
+});
+
+console.log("Payment found:", payment);
 
         res.json({
             ResultCode: 0,
