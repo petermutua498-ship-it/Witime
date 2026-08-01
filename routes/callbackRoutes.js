@@ -39,14 +39,7 @@ router.post("/callback", async (req, res) => {
 
         }
 
-        console.log("CheckoutRequestID:", checkoutRequestID);
-
-const payment = await Payment.findOne({
-    checkoutRequestID
-});
-
-console.log("Payment found:", payment);
-
+        
         res.json({
             ResultCode: 0,
             ResultDesc: "Accepted"
