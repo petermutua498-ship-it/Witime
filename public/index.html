@@ -1,116 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WiTime Hotspot</title>
 
-    <link rel="stylesheet" href="css/style.css">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>WiTime</title>
+
+<link rel="stylesheet" href="css/style.css">
+
 </head>
+
 <body>
 
-
-<div class="background-logo">
-    <div class="logo-watermark">WT</div>
+<div class="watermark">
+WiTime
 </div>
 
-<div class="watermark">
-<div class="container">
+<div class="landing">
 
-    <div class="header">
+    <!-- Logo -->
 
-        <div class="logo-circle">
+    <div class="brand">
+
+        <div class="logo">
+
             WT
+
+        </div>
+        <div class="brand-text">
+
+            <h1>WiTime</h1>
+
+            <p>Fast • Affordable • Reliable</p>
+
         </div>
 
-        <h1>WiTime</h1>
-
-        <p class="tagline">
-            Fast • Secure • Affordable Internet
-        </p>
-
     </div>
+
+    <!-- Welcome -->
 
     <div class="welcome">
 
-        <h2>Welcome</h2>
+        <h2>Welcome to WiTime</h2>
 
         <p>
-            Connect to the internet in just a few seconds.
+            Choose an internet package to begin browsing.
         </p>
 
     </div>
 
-    <div class="free-box">
+    <!-- Packages -->
 
-        <h3>🎁 First Time Here?</h3>
-
-        <p>
-            Enjoy <strong>FREE 5 Minutes</strong> of internet.
-        </p>
-
-        <button id="freeBtn">
-            Start Free Trial
-        </button>
+    <div id="packages" class="package-grid">
 
     </div>
 
-    <h2 class="package-title">
-        Internet Packages
-    </h2>
+    <!-- Payment Section -->
 
-    <div class="packages">
+   <div id="paymentSection" class="payment-card" style="display:none;">
 
-        <div class="package">
-            <p>KES 10</p>
-            <span>1 Hour</span>
+    <h2>Complete Payment</h2>
+
+    <div class="payment-details">
+
+        <div class="detail-row">
+
+            <span>Package</span>
+
+            <strong id="selectedPackage"></strong>
+
         </div>
 
-        <div class="package">
-            <p>KES 20</p>
-            <span>2 Hours</span>
-        </div>
+        <div class="detail-row">
 
-        <div class="package">
-            <p>KES 40</p>
-            <span>3 Hours</span>
-        </div>
+            <span>Price</span>
 
-        <div class="package">
-            <p>KES 55</p>
-            <span>6 Hours</span>
-        </div>
+            <strong id="selectedPrice"></strong>
 
-        <div class="package">
-            <h3>Daily</h3>
-            <p>KES 100</p>
-            <span>12 Hours</span>
         </div>
 
     </div>
 
-    
+    <input
+        id="phone"
+        type="text"
+        placeholder="07XXXXXXXX">
 
-    <button id="buyBtn" class="buy-btn">
-        Buy Internet
+    <button id="payBtn">
+
+        Pay with M-Pesa
+
     </button>
 
-    <div class="footer">
+</div>
 
-        <p>Need Help?</p>
+    <!-- Waiting -->
 
-        <p>📞 0112647941</p>
+    <div id="waitingSection" style="display:none;">
+
+    <div class="waiting-card">
+
+        <div class="loader"></div>
+
+        <h2>Waiting for Payment</h2>
+
+        <p>
+
+            Check your phone and enter your M-Pesa PIN.
+
+        </p>
 
         <small>
-            © 2026 WiTime. All Rights Reserved.
+
+            This page will update automatically.
+
         </small>
 
     </div>
 
 </div>
+
+    <!-- Success -->
+
+    <div id="successSection" style="display:none;">
+
+    <div class="success-card">
+
+        <div class="success-icon">
+
+            ✔
+
+        </div>
+
+        <h2>Payment Successful</h2>
+
+        <p>
+
+            Connecting you to Internet...
+
+        </p>
+
+    </div>
+
+</div>
+
 </div>
 
 <script src="js/index.js"></script>
 
 </body>
+
 </html>

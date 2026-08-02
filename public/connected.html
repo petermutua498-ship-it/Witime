@@ -1,27 +1,107 @@
-<div class="success-container">
+<!DOCTYPE html>
+<html lang="en">
 
-    <div class="success-card">
+<head>
 
-        <div class="checkmark">✔</div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-        <h1>Connected Successfully</h1>
+<title>WiTime | Connected</title>
 
-        <p>
-            Your internet package has been activated.
-        </p>
+<link rel="stylesheet" href="css/style.css">
 
-        <div class="details">
+</head>
 
-            <p><strong>Package:</strong> 2 Hours</p>
+<body>
 
-            <p><strong>Remaining Time:</strong> 2 Hours</p>
+<div class="watermark">
+
+WiTime
+
+</div>
+
+<div class="connected-page">
+
+    <!-- Logo -->
+
+    <div class="brand">
+
+        <img src="images/logo.png" class="logo">
+
+        <div class="brand-text">
+
+            <h1>WiTime</h1>
+
+            <p>Fast • Affordable • Reliable</p>
 
         </div>
 
-        <button id="disconnectBtn">
+    </div>
+
+    <!-- Status Card -->
+
+    <div class="status-card">
+
+        <div class="online-dot"></div>
+
+        <h2>Connected Successfully</h2>
+
+        <p>You now have internet access.</p>
+
+    </div>
+
+    <!-- User Card -->
+
+    <div class="info-card">
+
+        <div class="row">
+
+            <span>📱 Phone</span>
+
+            <strong id="phoneNumber"></strong>
+
+        </div>
+
+        <div class="row">
+
+            <span>📦 Package</span>
+
+            <strong id="packageName">Loading...</strong>
+
+        </div>
+
+        <div class="row">
+
+            <span>⏳ Time Remaining</span>
+
+            <strong id="countdown">--:--:--</strong>
+
+        </div>
+
+    </div>
+
+    <!-- Buttons -->
+
+    <div class="button-group">
+
+        <button id="buyMore">
+
+            Buy More Time
+
+        </button>
+
+        <button id="disconnect">
+
             Disconnect
+
         </button>
 
     </div>
 
 </div>
+
+<script src="js/connected.js"></script>
+
+</body>
+
+</html>
