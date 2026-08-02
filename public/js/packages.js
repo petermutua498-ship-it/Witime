@@ -1,97 +1,76 @@
+// ===============================
+// WiTime Packages Management
+// ===============================
+
 const modal = document.getElementById("packageModal");
-
 const addBtn = document.querySelector(".addBtn");
-
 const closeBtn = document.querySelector(".close");
 
+const saveBtn = document.getElementById("savePackage");
+
+const table = document.getElementById("packageTable");
+
+const search = document.getElementById("searchPackage");
+
+let editingId = null;
+
+// ----------------------
+// Open Modal
+// ----------------------
+
 addBtn.onclick = () => {
+
+    editingId = null;
+
+    document.querySelector(".modal-content h2").innerText =
+        "Add Package";
+
+    saveBtn.innerText = "Save Package";
+
+    document.getElementById("packageName").value = "";
+    document.getElementById("packagePrice").value = "";
+    document.getElementById("packageDuration").value = "";
+    document.getElementById("durationUnit").value = "Hours";
+
     modal.style.display = "block";
+
 };
 
+// ----------------------
+// Close Modal
+// ----------------------
+
 closeBtn.onclick = () => {
+
     modal.style.display = "none";
+
 };
 
 window.onclick = (e) => {
+
     if (e.target === modal) {
+
         modal.style.display = "none";
+
     }
+
 };
 
-row.querySelector(".deleteBtn").addEventListener("click", () => {
+// ----------------------
+// Load Packages
+// ----------------------
 
-    if (confirm("Delete this package?")) {
-        row.remove();
-    }
-
-});
-
-row.querySelector(".editBtn").addEventListener("click", () => {
-
-    document.getElementById("packageName").value = name;
-    document.getElementById("packagePrice").value = price;
-    document.getElementById("packageDuration").value = duration;
-    document.getElementById("durationUnit").value = unit;
-
-    row.remove();
-
-    modal.style.display = "block";
-
-});
-
-saveBtn.addEventListener("click", async () => {
-
-    const packageData = {
-
-        name: document.getElementById("packageName").value,
-
-        price: document.getElementById("packagePrice").value,
-
-        duration: document.getElementById("packageDuration").value,
-
-        durationUnit: document.getElementById("durationUnit").value
-
-    };
-
-    const response = await fetch("/api/packages",{
-
-        method:"POST",
-
-        headers:{
-            "Content-Type":"application/json"
-        },
-
-        body:JSON.stringify(packageData)
-
-    });
-
-    const data = await response.json();
-
-    if(data.success){
-
-        alert("Package saved successfully.");
-
-        location.reload();
-
-    }else{
-
-        alert(data.message);
-
-    }
-
-});
-
-async function loadPackages(){
+async function loadPackages() {
 
     const response = await fetch("/api/packages");
 
     const packages = await response.json();
 
-    table.innerHTML="";
+    table.innerHTML = "";
 
-    packages.forEach(pkg=>{
+    packages.forEach(pkg => {
 
-        table.innerHTML +=`
+        table.innerHTML += `
 
 <tr>
 
@@ -101,11 +80,26 @@ async function loadPackages(){
 
 <td>${pkg.duration} ${pkg.durationUnit}</td>
 
-<td><span class="status active">Active</span></td>
+<td>
+<span class="status active">
+Active
+</span>
+</td>
 
 <td>
-<button>Edit</button>
-<button>Delete</button>
+
+<button
+class="editBtn"
+data-id="${pkg._id}">
+✏ Edit
+</button>
+
+<button
+class="deleteBtn"
+data-id="${pkg._id}">
+🗑 Delete
+</button>
+
 </td>
 
 </tr>
@@ -117,3 +111,157 @@ async function loadPackages(){
 }
 
 loadPackages();
+
+// ----------------------
+// Save / Update Package
+// ----------------------
+
+saveBtn.onclick = async () => {
+
+    const packageData = {
+
+        name:
+        document.getElementById("packageName").value,
+
+        price:
+        Number(document.getElementById("packagePrice").value),
+
+        duration:
+        Number(document.getElementById("packageDuration").value),
+
+        durationUnit:
+        document.getElementById("durationUnit").value
+
+    };
+
+    let url = "/api/packages";
+
+    let method = "POST";
+
+    if (editingId) {
+
+        url += "/" + editingId;
+
+        method = "PUT";
+
+    }
+
+    const response = await fetch(url, {
+
+        method,
+
+        headers: {
+
+            "Content-Type": "application/json"
+
+        },
+
+        body: JSON.stringify(packageData)
+
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+
+        modal.style.display = "none";
+
+        loadPackages();
+
+    } else {
+
+        alert(data.message);
+
+    }
+
+};
+
+// ----------------------
+// Delete / Edit
+// ----------------------
+
+document.addEventListener("click", async (e) => {
+
+    // DELETE
+
+    if (e.target.classList.contains("deleteBtn")) {
+
+        if (!confirm("Delete this package?")) return;
+
+        const id = e.target.dataset.id;
+
+        const response = await fetch(`/api/packages/${id}`, {
+
+            method: "DELETE"
+
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+
+            loadPackages();
+
+        }
+
+    }
+
+    // EDIT
+
+    if (e.target.classList.contains("editBtn")) {
+
+        const id = e.target.dataset.id;
+
+        const response = await fetch("/api/packages");
+
+        const packages = await response.json();
+
+        const pkg = packages.find(p => p._id === id);
+
+        if (!pkg) return;
+
+        editingId = id;
+
+        document.querySelector(".modal-content h2").innerText =
+            "Edit Package";
+
+        saveBtn.innerText = "Update Package";
+
+        document.getElementById("packageName").value =
+            pkg.name;
+
+        document.getElementById("packagePrice").value =
+            pkg.price;
+
+        document.getElementById("packageDuration").value =
+            pkg.duration;
+
+        document.getElementById("durationUnit").value =
+            pkg.durationUnit;
+
+        modal.style.display = "block";
+
+    }
+
+});
+
+// ----------------------
+// Search Packages
+// ----------------------
+
+search.addEventListener("keyup", () => {
+
+    const value = search.value.toLowerCase();
+
+    const rows = table.querySelectorAll("tr");
+
+    rows.forEach(row => {
+
+        row.style.display =
+            row.innerText.toLowerCase().includes(value)
+            ? ""
+            : "none";
+
+    });
+
+});

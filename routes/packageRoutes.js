@@ -34,4 +34,53 @@ router.post("/", async (req, res) => {
 
 });
 
+// Update package
+router.put("/:id", async (req, res) => {
+
+    try {
+
+        const pkg = await Package.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+
+        res.json({
+            success: true,
+            package: pkg
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
+
+// Delete package
+router.delete("/:id", async (req, res) => {
+
+    try {
+
+        await Package.findByIdAndDelete(req.params.id);
+
+        res.json({
+            success: true
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
+
 module.exports = router;
