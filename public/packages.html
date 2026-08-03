@@ -6,10 +6,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Packages - WiTime</title>
+<title>WiTime - Packages</title>
 
-<link rel="stylesheet" href="../css/admin.css">
-<link rel="stylesheet" href="../css/packages.css">
+<link rel="stylesheet" href="css/packages.css">
 
 </head>
 
@@ -23,9 +22,11 @@
 
         <div class="logo">
 
-            <img src="../images/logo.png" alt="WiTime">
+            <img src="images/logo.png" alt="Logo">
 
             <h2>WiTime</h2>
+
+            <p>Admin Panel</p>
 
         </div>
 
@@ -79,25 +80,16 @@
 
         </div>
 
-        <!-- Search -->
-
-        <div class="search-area">
+        <div class="toolbar">
 
             <input
-
                 type="text"
-
                 id="searchPackage"
-
-                placeholder="Search packages..."
-
-            >
+                placeholder="Search package...">
 
         </div>
 
-        <!-- Table -->
-
-        <div class="table-container">
+        <div class="table-card">
 
             <table>
 
@@ -106,13 +98,9 @@
                     <tr>
 
                         <th>Package</th>
-
                         <th>Price</th>
-
                         <th>Duration</th>
-
                         <th>Status</th>
-
                         <th>Actions</th>
 
                     </tr>
@@ -123,7 +111,7 @@
 
                     <tr>
 
-                        <td colspan="5" class="empty">
+                        <td colspan="5">
 
                             Loading packages...
 
@@ -147,56 +135,43 @@
 
     <div class="modal-content">
 
-        <span id="closeModal">&times;</span>
+        <span class="close">&times;</span>
 
-        <h2 id="modalTitle">
-
-            Add Package
-
-        </h2>
+        <h2>Add Package</h2>
 
         <input
-            type="hidden"
-            id="packageId">
-
-        <input
-            type="text"
             id="packageName"
+            type="text"
             placeholder="Package Name">
 
         <input
-            type="number"
             id="packagePrice"
+            type="number"
             placeholder="Price">
 
         <input
-            type="number"
             id="packageDuration"
+            type="number"
             placeholder="Duration">
 
         <select id="durationUnit">
 
             <option>Minutes</option>
-
             <option selected>Hours</option>
-
             <option>Days</option>
-
             <option>Weeks</option>
-
             <option>Months</option>
 
         </select>
 
         <select id="packageStatus">
 
-            <option selected>Active</option>
-
-            <option>Inactive</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
 
         </select>
 
-        <button id="savePackage" class="primary-btn">
+        <button id="savePackage">
 
             Save Package
 
@@ -206,11 +181,7 @@
 
 </div>
 
-<!-- Toast -->
-
-<div id="toast"></div>
-
-<script src="../js/packages.js"></script>
+<script src="js/packages.js"></script>
 
 </body>
 
