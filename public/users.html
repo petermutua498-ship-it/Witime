@@ -1,127 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>WiTime - Users</title>
 
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/users.css">
+
 </head>
 
 <body>
 
-<div class="dashboard">
+<div class="container">
 
-<div class="sidebar">
+    <!-- Sidebar -->
 
-<div class="logo-circle">
-WT
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <img src="images/logo.png" alt="WiTime">
+
+            <h2>WiTime</h2>
+
+            <p>Fast • Affordable • Reliable</p>
+
+        </div>
+
+        <ul>
+
+            <li onclick="location.href='dashboard.html'">🏠 Dashboard</li>
+
+            <li onclick="location.href='packages.html'">📦 Packages</li>
+
+            <li class="active">👥 Users</li>
+
+            <li onclick="location.href='payments.html'">💳 Payments</li>
+
+            <li onclick="location.href='reports.html'">📈 Reports</li>
+
+            <li onclick="location.href='settings.html'">⚙ Settings</li>
+
+            <li>🚪 Logout</li>
+
+        </ul>
+
+    </aside>
+
+    <!-- Main -->
+
+    <main class="main">
+
+        <div class="header">
+
+            <h1>Connected Users</h1>
+
+            <button id="refreshBtn">
+
+                🔄 Refresh
+
+            </button>
+
+        </div>
+
+        <!-- Cards -->
+
+        <div class="cards">
+
+            <div class="card">
+
+                <h3>Online Users</h3>
+
+                <h2 id="onlineUsers">0</h2>
+
+            </div>
+
+            <div class="card">
+
+                <h3>Expired Sessions</h3>
+
+                <h2 id="expiredUsers">0</h2>
+
+            </div>
+
+            <div class="card">
+
+                <h3>Total Sessions</h3>
+
+                <h2 id="totalUsers">0</h2>
+
+            </div>
+
+        </div>
+
+        <div class="toolbar">
+
+            <input
+
+            type="text"
+
+            id="searchUser"
+
+            placeholder="Search phone...">
+
+        </div>
+
+        <div class="table-card">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Phone</th>
+
+                        <th>Package</th>
+
+                        <th>Remaining Time</th>
+
+                        <th>Status</th>
+
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="usersTable">
+
+                    <tr>
+
+                        <td colspan="5" style="text-align:center;">
+
+                            No users connected.
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
 </div>
 
-<h2>WiTime</h2>
-
-<ul>
-
-<li onclick="location.href='admin.html'">📊 Dashboard</li>
-
-<li class="active">👥 Users</li>
-
-<li onclick="location.href='packages.html'">📦 Packages</li>
-
-<li onclick="location.href='payments.html'">💳 Payments</li>
-
-<li onclick="location.href='reports.html'">📈 Reports</li>
-
-<li onclick="location.href='settings.html'">⚙️ Settings</li>
-
-</ul>
-
-</div>
-
-<div class="content">
-
-<h1>Users</h1>
-
-<input
-type="text"
-placeholder="Search Phone Number"
-class="search-box">
-
-<br><br>
-
-<table class="user-table">
-
-<thead>
-
-<tr>
-
-<th>Status</th>
-
-<th>Phone</th>
-
-<th>Package</th>
-
-<th>Time Left</th>
-
-<th>Action</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<tr>
-
-<td>🟢</td>
-
-<td>254712345678</td>
-
-<td>Basic</td>
-
-<td>00:45:30</td>
-
-<td>
-
-<button class="disconnect">
-
-Disconnect
-
-</button>
-
-</td>
-
-</tr>
-
-<tr>
-
-<td>🟢</td>
-
-<td>254798765432</td>
-
-<td>Premium</td>
-
-<td>02:15:10</td>
-
-<td>
-
-<button class="disconnect">
-
-Disconnect
-
-</button>
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
+<script src="js/users.js"></script>
 
 </body>
+
 </html>

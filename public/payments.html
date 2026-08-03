@@ -1,116 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>WiTime - Payments</title>
 
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/payments.css">
 
 </head>
 
 <body>
 
-<div class="dashboard">
+<div class="container">
 
-<div class="sidebar">
+    <!-- Sidebar -->
 
-<div class="logo-circle">
-WT
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <img src="images/logo.png" alt="WiTime Logo">
+
+            <h2>WiTime</h2>
+
+            <p>Fast • Affordable • Reliable</p>
+
+        </div>
+
+        <ul>
+
+            <li onclick="location.href='dashboard.html'">
+                🏠 Dashboard
+            </li>
+
+            <li onclick="location.href='packages.html'">
+                📦 Packages
+            </li>
+
+            <li onclick="location.href='users.html'">
+                👥 Users
+            </li>
+
+            <li class="active">
+                💳 Payments
+            </li>
+
+            <li onclick="location.href='reports.html'">
+                📈 Reports
+            </li>
+
+            <li onclick="location.href='settings.html'">
+                ⚙ Settings
+            </li>
+
+            <li>
+                🚪 Logout
+            </li>
+
+        </ul>
+
+    </aside>
+
+    <!-- Main -->
+
+    <main class="main">
+
+        <!-- Header -->
+
+        <div class="header">
+
+            <h1>Payments</h1>
+
+            <button id="refreshBtn">
+
+                🔄 Refresh
+
+            </button>
+
+        </div>
+
+        <!-- Summary Cards -->
+
+        <div class="cards">
+
+            <div class="card">
+
+                <h3>Total Payments</h3>
+
+                <h2 id="totalPayments">0</h2>
+
+            </div>
+
+            <div class="card">
+
+                <h3>Today's Revenue</h3>
+
+                <h2 id="todayRevenue">KES 0</h2>
+
+            </div>
+
+            <div class="card">
+
+                <h3>Pending Payments</h3>
+
+                <h2 id="pendingPayments">0</h2>
+
+            </div>
+
+        </div>
+
+        <!-- Search -->
+
+        <div class="toolbar">
+
+            <input
+            type="text"
+            id="searchBox"
+            placeholder="Search phone or receipt number...">
+
+            <select id="statusFilter">
+
+                <option value="">All Status</option>
+
+                <option value="Success">Success</option>
+
+                <option value="Pending">Pending</option>
+
+                <option value="Failed">Failed</option>
+
+            </select>
+
+        </div>
+
+        <!-- Payments Table -->
+
+        <div class="table-card">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Phone</th>
+
+                        <th>Package</th>
+
+                        <th>Amount</th>
+
+                        <th>Status</th>
+
+                        <th>Receipt</th>
+
+                        <th>Date</th>
+
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="paymentsTable">
+
+                    <tr>
+
+                        <td colspan="7" style="text-align:center;">
+
+                            No payments found.
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
 </div>
 
-<h2>WiTime</h2>
-
-<ul>
-
-<li onclick="location.href='admin.html'">📊 Dashboard</li>
-
-<li onclick="location.href='users.html'">👥 Users</li>
-
-<li onclick="location.href='packages.html'">📦 Packages</li>
-
-<li class="active">💳 Payments</li>
-
-<li onclick="location.href='reports.html'">📈 Reports</li>
-
-<li onclick="location.href='settings.html'">⚙️ Settings</li>
-
-</ul>
-
-</div>
-
-<div class="content">
-
-<h1>Payments</h1>
-
-<input
-type="text"
-class="search-box"
-placeholder="Search Phone or Transaction ID">
-
-<table class="user-table">
-
-<thead>
-
-<tr>
-
-<th>Phone</th>
-
-<th>Amount</th>
-
-<th>Package</th>
-
-<th>Status</th>
-
-<th>Date</th>
-
-<th>Transaction ID</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<tr>
-
-<td>254712345678</td>
-
-<td>KES 25</td>
-
-<td>Standard</td>
-
-<td>🟢 Success</td>
-
-<td>24 Jul 2026</td>
-
-<td>RKT56HG891</td>
-
-</tr>
-
-<tr>
-
-<td>254798765432</td>
-
-<td>KES 100</td>
-
-<td>Daily</td>
-
-<td>🟢 Success</td>
-
-<td>24 Jul 2026</td>
-
-<td>RKT67JD911</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
+<script src="js/payments.js"></script>
 
 </body>
+
 </html>

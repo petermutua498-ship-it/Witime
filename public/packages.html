@@ -1,99 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Packages - WiTime</title>
 
-    <link rel="stylesheet" href="css/packages.css">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Packages - WiTime</title>
+
+<link rel="stylesheet" href="../css/admin.css">
+<link rel="stylesheet" href="../css/packages.css">
+
 </head>
+
 <body>
 
 <div class="container">
 
+    <!-- Sidebar -->
+
     <aside class="sidebar">
 
         <div class="logo">
-            <div class="circle">WT</div>
+
+            <img src="../images/logo.png" alt="WiTime">
+
             <h2>WiTime</h2>
+
         </div>
 
         <ul>
-            <li onclick="location.href='dashboard.html'">🏠 Dashboard</li>
-            <li class="active">📦 Packages</li>
-            <li onclick="location.href='payments.html'">💳 Payments</li>
-            <li onclick="location.href='users.html'">👥 Users</li>
-            <li onclick="location.href='reports.html'">📈 Reports</li>
-            <li onclick="location.href='settings.html'">⚙ Settings</li>
-            <li>🚪 Logout</li>
+
+            <li onclick="location.href='dashboard.html'">
+                🏠 Dashboard
+            </li>
+
+            <li class="active">
+                📦 Packages
+            </li>
+
+            <li onclick="location.href='users.html'">
+                👥 Users
+            </li>
+
+            <li onclick="location.href='payments.html'">
+                💳 Payments
+            </li>
+
+            <li onclick="location.href='reports.html'">
+                📈 Reports
+            </li>
+
+            <li onclick="location.href='settings.html'">
+                ⚙ Settings
+            </li>
+
+            <li>
+                🚪 Logout
+            </li>
+
         </ul>
 
     </aside>
 
-    <main class="content">
+    <!-- Main -->
 
-        <h1>Internet Packages</h1>
+    <main class="main">
 
-        <button class="addBtn">+ Add Package</button>
+        <div class="header">
 
-        <input
-    type="text"
-    id="searchPackage"
-    placeholder="Search packages...">
+            <h1>Package Manager</h1>
 
-        <table>
+            <button id="addPackageBtn" class="primary-btn">
 
-    <thead>
+                + Add Package
 
-        <tr>
-            <th>Package</th>
-            <th>Price</th>
-            <th>Duration</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
+            </button>
 
-    </thead>
+        </div>
 
-    <tbody id="packageTable">
+        <!-- Search -->
 
-    </tbody>
+        <div class="search-area">
 
-</table>
+            <input
+
+                type="text"
+
+                id="searchPackage"
+
+                placeholder="Search packages..."
+
+            >
+
+        </div>
+
+        <!-- Table -->
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Package</th>
+
+                        <th>Price</th>
+
+                        <th>Duration</th>
+
+                        <th>Status</th>
+
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="packageTable">
+
+                    <tr>
+
+                        <td colspan="5" class="empty">
+
+                            Loading packages...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
 
     </main>
 
 </div>
 
+<!-- Modal -->
+
 <div id="packageModal" class="modal">
 
     <div class="modal-content">
 
-        <span class="close">&times;</span>
+        <span id="closeModal">&times;</span>
 
-        <h2>Add Package</h2>
+        <h2 id="modalTitle">
 
-        <input type="text" id="packageName" placeholder="Package Name">
+            Add Package
 
-        <input type="number" id="packagePrice" placeholder="Price (KES)">
+        </h2>
 
-        <input type="number" id="packageDuration" placeholder="Duration">
+        <input
+            type="hidden"
+            id="packageId">
+
+        <input
+            type="text"
+            id="packageName"
+            placeholder="Package Name">
+
+        <input
+            type="number"
+            id="packagePrice"
+            placeholder="Price">
+
+        <input
+            type="number"
+            id="packageDuration"
+            placeholder="Duration">
 
         <select id="durationUnit">
+
             <option>Minutes</option>
+
             <option selected>Hours</option>
+
             <option>Days</option>
+
             <option>Weeks</option>
+
             <option>Months</option>
+
         </select>
 
-        <button id="savePackage">Save Package</button>
+        <select id="packageStatus">
+
+            <option selected>Active</option>
+
+            <option>Inactive</option>
+
+        </select>
+
+        <button id="savePackage" class="primary-btn">
+
+            Save Package
+
+        </button>
 
     </div>
 
 </div>
 
-<script src="js/packages.js"></script>
+<!-- Toast -->
+
+<div id="toast"></div>
+
+<script src="../js/packages.js"></script>
 
 </body>
+
 </html>

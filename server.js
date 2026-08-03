@@ -8,6 +8,11 @@ const packageRoutes = require("./routes/packageRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const verifyRoutes = require("./routes/verifyRoutes");
 const callbackRoutes = require("./routes/callbackRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const authRoutes = require("./routes/authRoutes");
+const paymentAdminRoutes = require("./routes/paymentAdminRoutes");
+const usersRoutes = require("./routes/usersRoutes");
+const reportsRoutes = require("./routes/reportsRoutes");
 
 const app = express();
 
@@ -48,8 +53,11 @@ app.use("/api/packages", packageRoutes);
 app.use("/", paymentRoutes);
 app.use("/", verifyRoutes);
 app.use(callbackRoutes);
-
-
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/auth", authRoutes);
+app.use("/api/payments", paymentAdminRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/reports", reportsRoutes);
 
 app.listen(PORT, ()=>{
     console.log(`WiTime running on port ${PORT}`);

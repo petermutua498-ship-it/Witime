@@ -1,99 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>WiTime - Reports</title>
 
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/reports.css">
 
 </head>
 
 <body>
 
-<div class="dashboard">
+<div class="container">
 
-<div class="sidebar">
+    <aside class="sidebar">
 
-<div class="logo-circle">
-WT
+        <div class="logo">
+
+            <img src="images/logo.png">
+
+            <h2>WiTime</h2>
+
+            <p>Fast • Affordable • Reliable</p>
+
+        </div>
+
+        <ul>
+
+            <li onclick="location.href='dashboard.html'">🏠 Dashboard</li>
+
+            <li onclick="location.href='packages.html'">📦 Packages</li>
+
+            <li onclick="location.href='users.html'">👥 Users</li>
+
+            <li onclick="location.href='payments.html'">💳 Payments</li>
+
+            <li class="active">📈 Reports</li>
+
+            <li onclick="location.href='settings.html'">⚙ Settings</li>
+
+            <li>🚪 Logout</li>
+
+        </ul>
+
+    </aside>
+
+    <main class="main">
+
+        <div class="header">
+
+            <h1>Reports</h1>
+
+            <button id="exportBtn">
+
+                Export CSV
+
+            </button>
+
+        </div>
+
+        <div class="cards">
+
+            <div class="card">
+
+                <h3>Today's Revenue</h3>
+
+                <h2 id="todayRevenue">KES 0</h2>
+
+            </div>
+
+            <div class="card">
+
+                <h3>This Month</h3>
+
+                <h2 id="monthRevenue">KES 0</h2>
+
+            </div>
+
+            <div class="card">
+
+                <h3>Total Revenue</h3>
+
+                <h2 id="totalRevenue">KES 0</h2>
+
+            </div>
+
+        </div>
+
+        <div class="table-card">
+
+            <h2>Package Sales</h2>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Package</th>
+
+                        <th>Sales</th>
+
+                        <th>Revenue</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="reportTable">
+
+                    <tr>
+
+                        <td colspan="3" style="text-align:center;">
+
+                            No report available.
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
 </div>
 
-<h2>WiTime</h2>
-
-<ul>
-
-<li onclick="location.href='admin.html'">📊 Dashboard</li>
-
-<li onclick="location.href='users.html'">👥 Users</li>
-
-<li onclick="location.href='packages.html'">📦 Packages</li>
-
-<li onclick="location.href='payments.html'">💳 Payments</li>
-
-<li class="active">📈 Reports</li>
-
-<li onclick="location.href='settings.html'">⚙️ Settings</li>
-
-</ul>
-
-</div>
-
-<div class="content">
-
-<h1>Reports</h1>
-
-<div class="cards">
-
-<div class="card">
-<h3>Today's Income</h3>
-<h2>KES 0</h2>
-</div>
-
-<div class="card">
-<h3>Weekly Income</h3>
-<h2>KES 0</h2>
-</div>
-
-<div class="card">
-<h3>Monthly Income</h3>
-<h2>KES 0</h2>
-</div>
-
-<div class="card">
-<h3>Total Users</h3>
-<h2>0</h2>
-</div>
-
-</div>
-
-<div class="system-status">
-
-<h2>Revenue Chart</h2>
-
-<div style="height:300px;display:flex;align-items:center;justify-content:center;color:#777;">
-
-Chart will appear here
-
-</div>
-
-</div>
-
-<div class="system-status">
-
-<h2>Export Reports</h2>
-
-<button>📄 PDF</button>
-
-<button>📊 Excel</button>
-
-<button>🖨 Print</button>
-
-</div>
-
-</div>
-
-</div>
+<script src="js/reports.js"></script>
 
 </body>
+
 </html>

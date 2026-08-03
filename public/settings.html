@@ -1,93 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>WiTime Settings</title>
+<title>WiTime - Settings</title>
 
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/settings.css">
 
 </head>
 
 <body>
 
-<div class="dashboard">
+<div class="container">
 
-<div class="sidebar">
+    <!-- Sidebar -->
 
-<div class="logo-circle">
-WT
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <img src="images/logo.png">
+
+            <h2>WiTime</h2>
+
+            <p>Fast • Affordable • Reliable</p>
+
+        </div>
+
+        <ul>
+
+            <li onclick="location.href='dashboard.html'">🏠 Dashboard</li>
+
+            <li onclick="location.href='packages.html'">📦 Packages</li>
+
+            <li onclick="location.href='users.html'">👥 Users</li>
+
+            <li onclick="location.href='payments.html'">💳 Payments</li>
+
+            <li onclick="location.href='reports.html'">📈 Reports</li>
+
+            <li class="active">⚙ Settings</li>
+
+            <li>🚪 Logout</li>
+
+        </ul>
+
+    </aside>
+
+    <!-- Main -->
+
+    <main class="main">
+
+        <h1>System Settings</h1>
+
+        <div class="settings-card">
+
+            <h2>Business Information</h2>
+
+            <input id="businessName" placeholder="Business Name">
+
+            <input id="businessPhone" placeholder="Phone Number">
+
+            <input id="businessEmail" placeholder="Email">
+
+            <input id="businessLocation" placeholder="Location">
+
+        </div>
+
+        <div class="settings-card">
+
+            <h2>Hotspot Settings</h2>
+
+            <input id="freeMinutes" type="number" placeholder="Free Trial Minutes">
+
+            <input id="sessionTimeout" type="number" placeholder="Session Timeout (Minutes)">
+
+            <input id="idleTimeout" type="number" placeholder="Idle Timeout (Minutes)">
+
+        </div>
+
+        <div class="settings-card">
+
+            <h2>M-Pesa</h2>
+
+            <input id="shortcode" placeholder="Business Shortcode">
+
+            <input id="callbackUrl" placeholder="Callback URL">
+
+        </div>
+
+        <div class="settings-card">
+
+            <h2>MikroTik</h2>
+
+            <input id="routerIP" placeholder="Router IP">
+
+            <input id="routerUser" placeholder="Username">
+
+            <input id="routerPassword" type="password" placeholder="Password">
+
+        </div>
+
+        <button id="saveSettings">
+
+            Save Settings
+
+        </button>
+
+    </main>
+
 </div>
 
-<h2>WiTime</h2>
-
-<ul>
-
-<li onclick="location.href='admin.html'">📊 Dashboard</li>
-
-<li onclick="location.href='users.html'">👥 Users</li>
-
-<li onclick="location.href='packages.html'">📦 Packages</li>
-
-<li onclick="location.href='payments.html'">💳 Payments</li>
-
-<li onclick="location.href='reports.html'">📈 Reports</li>
-
-<li class="active">⚙️ Settings</li>
-
-</ul>
-
-</div>
-
-<div class="content">
-
-<h1>Settings</h1>
-
-<div class="welcome">
-
-<label>WiTime Name</label>
-
-<input
-type="text"
-value="WiTime">
-
-<br><br>
-
-<label>Support Phone</label>
-
-<input
-type="text"
-placeholder="07XXXXXXXX">
-
-<br><br>
-
-<label>Free Trial Duration</label>
-
-<input
-type="number"
-value="5">
-
-<br><br>
-
-<label>Upload WT Logo</label>
-
-<input
-type="file">
-
-<br><br>
-
-<button class="buy-btn">
-
-Save Settings
-
-</button>
-
-</div>
-
-</div>
-
-</div>
+<script src="js/settings.js"></script>
 
 </body>
+
 </html>

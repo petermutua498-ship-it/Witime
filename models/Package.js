@@ -1,34 +1,50 @@
 const mongoose = require("mongoose");
 
 const packageSchema = new mongoose.Schema({
+
     name: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
 
     price: {
         type: Number,
-        required: true
+        required: true,
+        min: 0
     },
 
     duration: {
         type: Number,
-        required: true
+        required: true,
+        min: 1
     },
 
     durationUnit: {
         type: String,
-        enum: ["Minutes", "Hours", "Days", "Weeks", "Months"],
+        enum: [
+            "Minutes",
+            "Hours",
+            "Days",
+            "Weeks",
+            "Months"
+        ],
         default: "Hours"
     },
 
-    active: {
-        type: Boolean,
-        default: true
+    status: {
+        type: String,
+        enum: [
+            "Active",
+            "Inactive"
+        ],
+        default: "Active"
     }
 
 }, {
+
     timestamps: true
+
 });
 
 module.exports = mongoose.model("Package", packageSchema);

@@ -1,87 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WiTime Admin Dashboard</title>
 
-    <link rel="stylesheet" href="css/dashboard.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard - WiTime</title>
+
+<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/dashboard.css">
+
 </head>
 
 <body>
 
 <div class="container">
 
+    <!-- Sidebar -->
+
     <aside class="sidebar">
 
         <div class="logo">
-            <div class="circle">WT</div>
+
+            <img src="images/logo.png" alt="WiTime Logo">
+
             <h2>WiTime</h2>
+
         </div>
 
         <ul>
+
             <li class="active">🏠 Dashboard</li>
-            <li>📦 Packages</li>
-            <li>💳 Payments</li>
-            <li>👥 Users</li>
-            <li>📶 Sessions</li>
-            <li>📈 Reports</li>
-            <li>⚙ Settings</li>
-            <li>🚪 Logout</li>
+
+            <li onclick="location.href='packages.html'">
+                📦 Packages
+            </li>
+
+            <li onclick="location.href='users.html'">
+                👥 Users
+            </li>
+
+            <li onclick="location.href='payments.html'">
+                💳 Payments
+            </li>
+
+            <li onclick="location.href='reports.html'">
+                📈 Reports
+            </li>
+
+            <li onclick="location.href='settings.html'">
+                ⚙ Settings
+            </li>
+
+            <li>
+                🚪 Logout
+            </li>
+
         </ul>
 
     </aside>
 
-    <main class="content">
+    <!-- Main -->
 
-        <h1>Dashboard</h1>
+    <div class="main">
 
-        <div class="cards">
+        <!-- Header -->
 
-            <div class="card">
-                <h3>Today's Revenue</h3>
-                <p>KES 0</p>
-            </div>
+        <div class="header">
 
-            <div class="card">
-                <h3>Active Users</h3>
-                <p>0</p>
-            </div>
+            <h1>Dashboard</h1>
 
-            <div class="card">
-                <h3>Pending Payments</h3>
-                <p>0</p>
-            </div>
+            <div class="admin">
 
-            <div class="card">
-                <h3>Active Sessions</h3>
-                <p>0</p>
+                <span>Administrator</span>
+
+                <img src="images/admin.png" alt="Admin">
+
             </div>
 
         </div>
 
-        <div class="table">
+        <!-- Content -->
 
-            <h2>Recent Payments</h2>
+        <div class="content">
+
+            <div class="cards">
+
+                <div class="card">
+
+    <h3>👥 Online Users</h3>
+
+    <h2 id="onlineUsers">0</h2>
+
+</div>
+
+<div class="card">
+
+    <h3>📦 Packages</h3>
+
+    <h2 id="totalPackages">0</h2>
+
+</div>
+
+<div class="card">
+
+    <h3>💳 Payments Today</h3>
+
+    <h2 id="paymentsToday">0</h2>
+
+</div>
+
+<div class="card">
+
+    <h3>💰 Revenue Today</h3>
+
+    <h2 id="revenueToday">KES 0</h2>
+
+</div>
+
+            <h2 style="margin-bottom:20px;">
+                Recent Payments
+            </h2>
+
+            </div>
 
             <table>
 
-                <tr>
-                    <th>Phone</th>
-                    <th>Package</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                </tr>
+                <thead>
 
-                <tr>
-                    <td colspan="4">No payments yet.</td>
-                </tr>
+                    <tr>
+
+                        <th>Phone</th>
+
+                        <th>Package</th>
+
+                        <th>Amount</th>
+
+                        <th>Status</th>
+
+                        <th>Date</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="paymentTable">
+
+                    <tr>
+
+                        <td colspan="5" style="text-align:center;">
+
+                            No payments found.
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
 
             </table>
 
         </div>
 
-    </main>
+    </div>
 
 </div>
 
