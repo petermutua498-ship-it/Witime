@@ -26,25 +26,35 @@
 
             <h2>WiTime</h2>
 
-            <p>Fast • Affordable • Reliable</p>
+            <p>Admin Panel</p>
 
         </div>
 
         <ul>
 
-            <li onclick="location.href='dashboard.html'">🏠 Dashboard</li>
+            <li onclick="location.href='dashboard.html'">
+                🏠 Dashboard
+            </li>
 
-            <li onclick="location.href='packages.html'">📦 Packages</li>
+            <li onclick="location.href='packages.html'">
+                📦 Packages
+            </li>
 
-            <li class="active">👥 Users</li>
+            <li class="active">
+                👥 Users
+            </li>
 
-            <li onclick="location.href='payments.html'">💳 Payments</li>
+            <li onclick="location.href='payments.html'">
+                💳 Payments
+            </li>
 
-            <li onclick="location.href='reports.html'">📈 Reports</li>
+            <li onclick="location.href='reports.html'">
+                📈 Reports
+            </li>
 
-            <li onclick="location.href='settings.html'">⚙ Settings</li>
-
-            <li>🚪 Logout</li>
+            <li onclick="location.href='settings.html'">
+                ⚙ Settings
+            </li>
 
         </ul>
 
@@ -56,55 +66,22 @@
 
         <div class="header">
 
-            <h1>Connected Users</h1>
+            <h1>User Manager</h1>
 
-            <button id="refreshBtn">
+            <button id="refreshUsers" class="primary-btn">
 
-                🔄 Refresh
+                Refresh
 
             </button>
-
-        </div>
-
-        <!-- Cards -->
-
-        <div class="cards">
-
-            <div class="card">
-
-                <h3>Online Users</h3>
-
-                <h2 id="onlineUsers">0</h2>
-
-            </div>
-
-            <div class="card">
-
-                <h3>Expired Sessions</h3>
-
-                <h2 id="expiredUsers">0</h2>
-
-            </div>
-
-            <div class="card">
-
-                <h3>Total Sessions</h3>
-
-                <h2 id="totalUsers">0</h2>
-
-            </div>
 
         </div>
 
         <div class="toolbar">
 
             <input
-
-            type="text"
-
-            id="searchUser"
-
-            placeholder="Search phone...">
+                type="text"
+                id="searchUser"
+                placeholder="Search phone number...">
 
         </div>
 
@@ -117,26 +94,22 @@
                     <tr>
 
                         <th>Phone</th>
-
                         <th>Package</th>
-
-                        <th>Remaining Time</th>
-
+                        <th>Remaining</th>
                         <th>Status</th>
-
-                        <th>Action</th>
+                        <th>Actions</th>
 
                     </tr>
 
                 </thead>
 
-                <tbody id="usersTable">
+                <tbody id="userTable">
 
                     <tr>
 
-                        <td colspan="5" style="text-align:center;">
+                        <td colspan="5" class="empty">
 
-                            No users connected.
+                            Loading users...
 
                         </td>
 

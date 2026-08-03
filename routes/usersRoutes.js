@@ -1,15 +1,17 @@
 const express = require("express");
 const router = express.Router();
 
-const Session = require("../models/Session");
+const User = require("../models/Users");
 
-// Get all users/sessions
+// ======================================
+// Get All Users
+// ======================================
+
 router.get("/", async (req, res) => {
 
     try {
 
-        const users = await Session.find()
-            .sort({ createdAt: -1 });
+        const users = await User.find().sort({ createdAt: -1 });
 
         res.json(users);
 
@@ -27,20 +29,21 @@ router.get("/", async (req, res) => {
 
 });
 
-// Disconnect user
-router.post("/disconnect/:id", async (req, res) => {
+// ======================================
+// Disconnect User
+// ======================================
+
+router.post("/:id/disconnect", async (req, res) => {
 
     try {
 
-        await Session.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
 
             req.params.id,
 
             {
 
-                status: "Disconnected",
-
-                remainingTime: "0"
+                status: "Offline"
 
             }
 
@@ -66,26 +69,31 @@ router.post("/disconnect/:id", async (req, res) => {
 
 });
 
-// Extend user time
-router.post("/extend/:id", async (req, res) => {
+// ======================================
+// Extend User
+// ======================================
+
+router.post("/:id/extend", async (req, res) => {
 
     try {
 
-        const { remainingTime } = req.body;
+        const user = await User.findById(req.params.id);
 
-        await Session.findByIdAndUpdate(
+        if (!user) {
 
-            req.params.id,
+            return res.status(404).json({
 
-            {
+                success: false,
 
-                remainingTime,
+                message: "User not found"
 
-                status: "Online"
+            });
 
-            }
+        }
 
-        );
+        user.remainingTime = "Extended";
+
+        await user.save();
 
         res.json({
 

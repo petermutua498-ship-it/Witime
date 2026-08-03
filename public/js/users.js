@@ -1,48 +1,65 @@
-const table = document.getElementById("usersTable");
+// =======================================
+// WiTime Users Management
+// =======================================
 
-const onlineUsers = document.getElementById("onlineUsers");
-const expiredUsers = document.getElementById("expiredUsers");
-const totalUsers = document.getElementById("totalUsers");
+const table = document.getElementById("userTable");
+const searchBox = document.getElementById("searchUser");
+const refreshBtn = document.getElementById("refreshUsers");
 
-const searchUser = document.getElementById("searchUser");
-const refreshBtn = document.getElementById("refreshBtn");
+let users = [];
 
-let allUsers = [];
+// =======================================
+// Load Users
+// =======================================
 
-// Load users
 async function loadUsers() {
 
     try {
 
+        table.innerHTML = `
+        <tr>
+            <td colspan="5" class="empty">
+                Loading users...
+            </td>
+        </tr>
+        `;
+
         const response = await fetch("/api/users");
 
-        const users = await response.json();
-
-        allUsers = users;
+        users = await response.json();
 
         displayUsers(users);
-
-        updateCards(users);
 
     } catch (err) {
 
         console.error(err);
 
+        table.innerHTML = `
+        <tr>
+            <td colspan="5" class="empty">
+                Unable to load users.
+            </td>
+        </tr>
+        `;
+
     }
 
 }
 
-// Display users
-function displayUsers(users) {
+// =======================================
+// Display Users
+// =======================================
+
+function displayUsers(data) {
 
     table.innerHTML = "";
 
-    if (users.length === 0) {
+    if (data.length === 0) {
 
         table.innerHTML = `
         <tr>
-            <td colspan="5" style="text-align:center;">
-                No users connected.
+            <td colspan="5" class="empty">
+                No users found.
             </td>
         </tr>
         `;
@@ -51,7 +68,7 @@ function displayUsers(users) {
 
     }
 
-    users.forEach(user => {
+    data.forEach(user => {
 
         table.innerHTML += `
 
@@ -61,11 +78,13 @@ function displayUsers(users) {
 
             <td>${user.packageName}</td>
 
-            <td>${user.remainingTime || "-"}</td>
+            <td>${user.remainingTime}</td>
 
             <td>
 
-                <span class="${user.status === "Online" ? "online" : "offline"}">
+                <span class="${user.status === "Online"
+                    ? "online"
+                    : "offline"}">
 
                     ${user.status}
 
@@ -75,15 +94,19 @@ function displayUsers(users) {
 
             <td>
 
-                <button class="extendBtn">
+                <button
+                    class="extendBtn"
+                    data-id="${user._id}">
 
-                    Extend
+                    ➕ Extend
 
                 </button>
 
-                <button class="disconnectBtn">
+                <button
+                    class="disconnectBtn"
+                    data-id="${user._id}">
 
-                    Disconnect
+                    🔌 Disconnect
 
                 </button>
 
@@ -97,29 +120,17 @@ function displayUsers(users) {
 
 }
 
-// Update cards
-function updateCards(users) {
+// =======================================
+// Search Users
+// =======================================
 
-    totalUsers.textContent = users.length;
+searchBox.addEventListener("keyup", () => {
 
-    const online = users.filter(u => u.status === "Online").length;
+    const keyword = searchBox.value.toLowerCase();
 
-    const expired = users.filter(u => u.status === "Expired").length;
+    const filtered = users.filter(user =>
 
-    onlineUsers.textContent = online;
-
-    expiredUsers.textContent = expired;
-
-}
-
-// Search
-searchUser.addEventListener("input", () => {
-
-    const search = searchUser.value.toLowerCase();
-
-    const filtered = allUsers.filter(user =>
-
-        user.phone.toLowerCase().includes(search)
+        user.phone.toLowerCase().includes(keyword)
 
     );
 
@@ -127,11 +138,100 @@ searchUser.addEventListener("input", () => {
 
 });
 
-// Refresh
-refreshBtn.addEventListener("click", loadUsers);
+// =======================================
+// Refresh Button
+// =======================================
 
-// Initial load
-loadUsers();
+refreshBtn.addEventListener("click", () => {
 
-// Auto refresh every 10 seconds
-setInterval(loadUsers, 10000);
+    loadUsers();
+
+});
+
+// =======================================
+// Buttons
+// =======================================
+
+document.addEventListener("click", async (e) => {
+
+    // Disconnect
+
+    if (e.target.classList.contains("disconnectBtn")) {
+
+        const id = e.target.dataset.id;
+
+        if (!confirm("Disconnect this user?")) return;
+
+        try {
+
+            const response = await fetch(`/api/users/${id}/disconnect`, {
+
+                method: "POST"
+
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+
+                loadUsers();
+
+            } else {
+
+                alert(result.message);
+
+            }
+
+        } catch (err) {
+
+            console.error(err);
+
+        }
+
+    }
+
+    // Extend
+
+    if (e.target.classList.contains("extendBtn")) {
+
+        const id = e.target.dataset.id;
+
+        try {
+
+            const response = await fetch(`/api/users/${id}/extend`, {
+
+                method: "POST"
+
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+
+                loadUsers();
+
+            } else {
+
+                alert(result.message);
+
+            }
+
+        } catch (err) {
+
+            console.error(err);
+
+        }
+
+    }
+
+});
+
+// =======================================
+// Initialize
+// =======================================
+
+window.addEventListener("DOMContentLoaded", () => {
+
+    loadUsers();
+
+});
