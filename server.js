@@ -7,9 +7,9 @@ const cors = require("cors");
 const packageRoutes = require("./routes/packageRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const verifyRoutes = require("./routes/verifyRoutes");
-//const callbackRoutes = require("./routes/callbackRoutes");
+const callbackRoutes = require("./routes/callbackRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
-//const authRoutes = require("./routes/authRoutes");
+const authRoutes = require("./routes/authRoutes");
 const paymentAdminRoutes = require("./routes/paymentAdminRoutes");
 const usersRoutes = require("./routes/usersRoutes");
 const reportsRoutes = require("./routes/reportsRoutes");
@@ -52,25 +52,12 @@ const PORT = process.env.PORT || 3000;
 app.use("/api/packages", packageRoutes);
 app.use("/", paymentRoutes);
 app.use("/", verifyRoutes);
-//app.use(callbackRoutes);
+app.use(callbackRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-//app.use("/auth", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/api/payments", paymentAdminRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/reports", reportsRoutes);
-
-app.post("/callback", (req, res) => {
-
-    console.log("***** CALLBACK HIT *****");
-
-    console.log(req.body);
-
-    res.json({
-        ResultCode: 0,
-        ResultDesc: "Accepted"
-    });
-
-});
 
 app.listen(PORT, ()=>{
     console.log(`WiTime running on port ${PORT}`);
