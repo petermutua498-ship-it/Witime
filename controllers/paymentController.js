@@ -1,5 +1,6 @@
 const axios = require("axios");
 const mpesa = require("../services/mpesa");
+const Payment = require("../models/Payment");
 
 exports.pay = async (req, res) => {
 
@@ -46,7 +47,7 @@ const stk = await axios.post(
         Password: password,
         Timestamp: timestamp,
         TransactionType: "CustomerPayBillOnline",
-        Amount: amount,
+        Amount: 1,
         PartyA: phone,
         PartyB: process.env.MPESA_SHORTCODE,
         PhoneNumber: phone,
@@ -61,10 +62,36 @@ const stk = await axios.post(
     }
 );
 
+const Payment = require("../models/Payment");
+
+// Save pending payment
+
+await Payment.create({
+
+    phone,
+
+    amount,
+
+    packageName,
+
+    packageDuration,
+
+    checkoutRequestID: stk.data.CheckoutRequestID,
+
+    merchantRequestID: stk.data.MerchantRequestID,
+
+    status: "pending"
+
+});
+
 console.log(stk.data);
 
 res.json({
-    success: true
+
+    success: true,
+
+    checkoutRequestID: stk.data.CheckoutRequestID
+
 });
 
     } catch (err) {

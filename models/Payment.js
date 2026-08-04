@@ -18,9 +18,9 @@ const paymentSchema = new mongoose.Schema({
     },
 
     transactionId:{
-        type:String,
-        required:true
-    },
+    type:String,
+    default:""
+},
 
     status:{
         type:String,

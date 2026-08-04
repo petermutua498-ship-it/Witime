@@ -1,30 +1,9 @@
-const express=require("express");
-const router=express.Router();
+const express = require("express");
+const router = express.Router();
 
-const Payment=require("../models/Payment");
+const paymentController = require("../controllers/paymentController");
 
-// Get all payments
+// Customer STK Push
+router.post("/pay", paymentController.pay);
 
-router.get("/",async(req,res)=>{
-
-    try{
-
-        const payments=await Payment.find().sort({paymentDate:-1});
-
-        res.json(payments);
-
-    }catch(err){
-
-        res.status(500).json({
-
-            success:false,
-
-            message:err.message
-
-        });
-
-    }
-
-});
-
-module.exports=router;
+module.exports = router;
