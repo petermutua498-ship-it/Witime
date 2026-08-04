@@ -10,40 +10,51 @@ router.post("/callback", async (req, res) => {
         console.log("========== CALLBACK RECEIVED ==========");
         console.log(JSON.stringify(req.body, null, 2));
 
-        const callback =
-            req.body.Body.stkCallback;
+        const callback = req.body.Body.stkCallback;
 
-        const checkoutRequestID =
-            callback.CheckoutRequestID;
-
-        const resultCode =
-            callback.ResultCode;
+        const checkoutRequestID = callback.CheckoutRequestID;
 
         const payment = await Payment.findOne({
-    checkoutRequestID
-});
+            checkoutRequestID
+        });
 
-console.log("Found payment:", payment);
+        if (!payment) {
 
-if (payment) {
+            console.log("Payment not found.");
 
-    if (resultCode === 0) {
-        payment.status = "success";
-    } else {
-        payment.status = "failed";
-    }
+            return res.json({
+                ResultCode: 0,
+                ResultDesc: "Accepted"
+            });
 
-    await payment.save();
+        }
 
-    console.log("Saved status:", payment.status);
+        if (callback.ResultCode === 0) {
 
-} else {
+            payment.status = "success";
 
-    console.log("Payment NOT FOUND");
+            const items = callback.CallbackMetadata.Item;
 
-}
+            for (const item of items) {
 
-        
+                if (item.Name === "MpesaReceiptNumber")
+                    payment.transactionId = item.Value;
+
+                if (item.Name === "PhoneNumber")
+                    payment.phone = String(item.Value);
+
+            }
+
+        } else {
+
+            payment.status = "failed";
+
+        }
+
+        await payment.save();
+
+        console.log("Payment Updated");
+
         res.json({
             ResultCode: 0,
             ResultDesc: "Accepted"
