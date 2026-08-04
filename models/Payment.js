@@ -2,38 +2,54 @@ const mongoose = require("mongoose");
 
 const paymentSchema = new mongoose.Schema({
 
-    phone:{
-        type:String,
-        required:true
+    phone: {
+        type: String,
+        required: true
     },
 
-    amount:{
-        type:Number,
-        required:true
+    amount: {
+        type: Number,
+        required: true
     },
 
-    packageName:{
-        type:String,
-        required:true
+    packageName: {
+        type: String,
+        required: true
     },
 
-    transactionId:{
-    type:String,
-    default:""
-},
-
-    status:{
-        type:String,
-        default:"Success"
+    packageDuration: {
+        type: String,
+        default: ""
     },
 
-    paymentDate:{
-        type:Date,
-        default:Date.now
+    checkoutRequestID: {
+        type: String,
+        required: true,
+        unique: true
+    },
+
+    merchantRequestID: {
+        type: String,
+        default: ""
+    },
+
+    transactionId: {
+        type: String,
+        default: ""
+    },
+
+    status: {
+        type: String,
+        default: "pending"
+    },
+
+    paymentDate: {
+        type: Date,
+        default: Date.now
     }
 
-},{
-    timestamps:true
+}, {
+    timestamps: true
 });
 
-module.exports = mongoose.model("Payment",paymentSchema);
+module.exports = mongoose.model("Payment", paymentSchema);
