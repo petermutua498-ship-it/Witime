@@ -4,95 +4,108 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<title>WiTime | Connected</title>
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="css/style.css">
+<title>WiTime - Connected</title>
+
+<link rel="stylesheet" href="css/connected.css">
 
 </head>
 
 <body>
 
-<div class="watermark">
+<div class="container">
 
-WiTime
+    <div class="card">
 
-</div>
+        <div class="success">
 
-<div class="connected-page">
-
-    <!-- Logo -->
-
-    <div class="brand">
-
-        <img src="images/logo.png" class="logo">
-
-        <div class="brand-text">
-
-            <h1>WiTime</h1>
-
-            <p>Fast • Affordable • Reliable</p>
+            ✅
 
         </div>
 
-    </div>
+        <h1>Payment Successful</h1>
 
-    <!-- Status Card -->
+        <p class="subtitle">
 
-    <div class="status-card">
+            You are now connected to WiTime.
 
-        <div class="online-dot"></div>
+        </p>
 
-        <h2>Connected Successfully</h2>
+        <div class="details">
 
-        <p>You now have internet access.</p>
+            <div class="row">
 
-    </div>
+                <span>Phone Number</span>
 
-    <!-- User Card -->
+                <strong id="phone">
+                    Loading...
+                </strong>
 
-    <div class="info-card">
+            </div>
 
-        <div class="row">
+            <div class="row">
 
-            <span>📱 Phone</span>
+                <span>Package</span>
 
-            <strong id="phoneNumber"></strong>
+                <strong id="package">
+                    Loading...
+                </strong>
+
+            </div>
+
+            <div class="row">
+
+                <span>Connected At</span>
+
+                <strong id="connectedAt">
+                    Loading...
+                </strong>
+
+            </div>
+
+            <div class="row">
+
+                <span>Expires At</span>
+
+                <strong id="expiresAt">
+                    Loading...
+                </strong>
+
+            </div>
+
+            <div class="row">
+
+                <span>Time Remaining</span>
+
+                <strong id="remainingTime">
+
+                    00:00:00
+
+                </strong>
+
+            </div>
+
+            <div class="row">
+
+                <span>Status</span>
+
+                <strong class="connected">
+
+                    🟢 Connected
+
+                </strong>
+
+            </div>
 
         </div>
 
-        <div class="row">
+        <button
+        id="buyAgain">
 
-            <span>📦 Package</span>
-
-            <strong id="packageName">Loading...</strong>
-
-        </div>
-
-        <div class="row">
-
-            <span>⏳ Time Remaining</span>
-
-            <strong id="countdown">--:--:--</strong>
-
-        </div>
-
-    </div>
-
-    <!-- Buttons -->
-
-    <div class="button-group">
-
-        <button id="buyMore">
-
-            Buy More Time
-
-        </button>
-
-        <button id="disconnect">
-
-            Disconnect
+            Buy Another Package
 
         </button>
 

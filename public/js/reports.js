@@ -1,27 +1,90 @@
+// ======================================
+// WiTime Reports
+// Part 1
+// ======================================
+
+const reportsTable = document.getElementById("reportsTable");
+
+const totalRevenue = document.getElementById("totalRevenue");
 const todayRevenue = document.getElementById("todayRevenue");
 const monthRevenue = document.getElementById("monthRevenue");
-const totalRevenue = document.getElementById("totalRevenue");
+const totalPayments = document.getElementById("totalPayments");
 
-const reportTable = document.getElementById("reportTable");
+const startDate = document.getElementById("startDate");
+const endDate = document.getElementById("endDate");
 
-const exportBtn = document.getElementById("exportBtn");
+const filterBtn = document.getElementById("filterBtn");
+const refreshBtn = document.getElementById("refreshReports");
+const exportBtn = document.getElementById("exportCSV");
+const printBtn = document.getElementById("printReport");
 
-let reportData = [];
+let allReports = [];
 
-// Load reports
+let revenueChart;
+let statusChart;
+
+// ===============================
+// Load Reports
+// ===============================
+
 async function loadReports() {
 
     try {
 
         const response = await fetch("/api/reports");
 
+        allReports = await response.json();
+
+        renderReports(allReports);
+
+        loadSummary();
+
+    } catch (err) {
+
+        console.error(err);
+
+        reportsTable.innerHTML = `
+
+        <tr>
+
+            <td colspan="6">
+
+                Unable to load reports.
+
+            </td>
+
+        </tr>
+
+        `;
+
+    }
+
+}
+
+// ===============================
+// Load Summary
+// ===============================
+
+async function loadSummary() {
+
+    try {
+
+        const response =
+            await fetch("/api/reports/summary");
+
         const data = await response.json();
 
-        reportData = data;
+        totalRevenue.innerText =
+            `KES ${data.totalRevenue}`;
 
-        updateCards(data);
+        todayRevenue.innerText =
+            `KES ${data.todayRevenue}`;
 
-        displayReport(data);
+        monthRevenue.innerText =
+            `KES ${data.monthRevenue}`;
+
+        totalPayments.innerText =
+            data.totalPayments;
 
     } catch (err) {
 
@@ -31,74 +94,56 @@ async function loadReports() {
 
 }
 
-// Update summary cards
-function updateCards(data) {
+// ===============================
+// Render Reports Table
+// ===============================
 
-    let today = 0;
-    let month = 0;
-    let total = 0;
+function renderReports(reports) {
 
-    const currentDate = new Date();
+    reportsTable.innerHTML = "";
 
-    data.forEach(item => {
+    if (reports.length === 0) {
 
-        total += item.revenue;
+        reportsTable.innerHTML = `
 
-        const reportDate = new Date(item.date);
-
-        if (
-            reportDate.toDateString() === currentDate.toDateString()
-        ) {
-            today += item.revenue;
-        }
-
-        if (
-            reportDate.getMonth() === currentDate.getMonth() &&
-            reportDate.getFullYear() === currentDate.getFullYear()
-        ) {
-            month += item.revenue;
-        }
-
-    });
-
-    todayRevenue.textContent = "KES " + today.toLocaleString();
-
-    monthRevenue.textContent = "KES " + month.toLocaleString();
-
-    totalRevenue.textContent = "KES " + total.toLocaleString();
-
-}
-
-// Display report table
-function displayReport(data) {
-
-    reportTable.innerHTML = "";
-
-    if (data.length === 0) {
-
-        reportTable.innerHTML = `
         <tr>
-            <td colspan="3" style="text-align:center;">
-                No report available.
+
+            <td colspan="6">
+
+                No reports found.
+
             </td>
+
         </tr>
+
         `;
 
         return;
 
     }
 
-    data.forEach(item => {
+    reports.forEach(report => {
 
-        reportTable.innerHTML += `
+        reportsTable.innerHTML += `
 
         <tr>
 
-            <td>${item.packageName}</td>
+            <td>${report.phone}</td>
 
-            <td>${item.sales}</td>
+            <td>${report.packageName}</td>
 
-            <td>KES ${item.revenue.toLocaleString()}</td>
+            <td>KES ${report.amount}</td>
+
+            <td>${report.status}</td>
+
+            <td>${report.transactionId || "-"}</td>
+
+            <td>
+
+                ${new Date(report.createdAt)
+                    .toLocaleString()}
+
+            </td>
 
         </tr>
 
@@ -108,14 +153,183 @@ function displayReport(data) {
 
 }
 
+// ===============================
+// Date Filter
+// ===============================
+
+function filterReports() {
+
+    let filtered = [...allReports];
+
+    if (startDate.value) {
+
+        const start = new Date(startDate.value);
+
+        filtered = filtered.filter(report =>
+
+            new Date(report.createdAt) >= start
+
+        );
+
+    }
+
+    if (endDate.value) {
+
+        const end = new Date(endDate.value);
+
+        end.setHours(23,59,59,999);
+
+        filtered = filtered.filter(report =>
+
+            new Date(report.createdAt) <= end
+
+        );
+
+    }
+
+    renderReports(filtered);
+
+    updateCharts(filtered);
+
+}
+
+filterBtn.addEventListener("click", filterReports);
+
+refreshBtn.addEventListener("click", loadReports);
+
+// ======================================
+// WiTime Reports
+// Part 2
+// ======================================
+
+// ===============================
+// Revenue Chart
+// ===============================
+
+function drawRevenueChart(reports) {
+
+    const revenueByDay = {};
+
+    reports.forEach(report => {
+
+        if (report.status !== "success") return;
+
+        const date = new Date(report.createdAt)
+            .toLocaleDateString();
+
+        revenueByDay[date] =
+            (revenueByDay[date] || 0) + report.amount;
+
+    });
+
+    const labels = Object.keys(revenueByDay);
+    const values = Object.values(revenueByDay);
+
+    if (revenueChart) revenueChart.destroy();
+
+    revenueChart = new Chart(
+        document.getElementById("revenueChart"),
+        {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Revenue (KES)",
+                    data: values
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        }
+    );
+
+}
+
+// ===============================
+// Status Chart
+// ===============================
+
+function drawStatusChart(reports) {
+
+    let success = 0;
+    let pending = 0;
+    let failed = 0;
+
+    reports.forEach(report => {
+
+        switch (report.status) {
+
+            case "success":
+                success++;
+                break;
+
+            case "pending":
+                pending++;
+                break;
+
+            case "failed":
+                failed++;
+                break;
+
+        }
+
+    });
+
+    if (statusChart) statusChart.destroy();
+
+    statusChart = new Chart(
+        document.getElementById("statusChart"),
+        {
+            type: "pie",
+            data: {
+                labels: [
+                    "Success",
+                    "Pending",
+                    "Failed"
+                ],
+                datasets: [{
+                    data: [
+                        success,
+                        pending,
+                        failed
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        }
+    );
+
+}
+
+// ===============================
+// Update Charts
+// ===============================
+
+function updateCharts(reports) {
+
+    drawRevenueChart(reports);
+
+    drawStatusChart(reports);
+
+}
+
+// ===============================
 // Export CSV
+// ===============================
+
 exportBtn.addEventListener("click", () => {
 
-    let csv = "Package,Sales,Revenue\n";
+    let csv =
+        "Phone,Package,Amount,Status,Receipt,Date\n";
 
-    reportData.forEach(item => {
+    allReports.forEach(report => {
 
-        csv += `${item.packageName},${item.sales},${item.revenue}\n`;
+        csv += `"${report.phone}","${report.packageName}","${report.amount}","${report.status}","${report.transactionId || ""}","${new Date(report.createdAt).toLocaleString()}"\n`;
 
     });
 
@@ -127,16 +341,46 @@ exportBtn.addEventListener("click", () => {
 
     const url = URL.createObjectURL(blob);
 
-    const a = document.createElement("a");
+    const link = document.createElement("a");
 
-    a.href = url;
+    link.href = url;
 
-    a.download = "WiTime_Report.csv";
+    link.download = "reports.csv";
 
-    a.click();
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
 
 });
 
+// ===============================
+// Print Report
+// ===============================
+
+printBtn.addEventListener("click", () => {
+
+    window.print();
+
+});
+
+// ===============================
+// Auto Refresh
+// ===============================
+
+setInterval(loadReports, 10000);
+
+// ===============================
+// Start
+// ===============================
+
 loadReports();
+
+setTimeout(() => {
+
+    updateCharts(allReports);
+
+}, 500);

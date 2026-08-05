@@ -3,12 +3,14 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-<title>WiTime - Reports</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="css/reports.css">
+    <title>WiTime - Reports</title>
+
+    <link rel="stylesheet" href="css/reports.css">
 
 </head>
 
@@ -16,11 +18,13 @@
 
 <div class="container">
 
+    <!-- Sidebar -->
+
     <aside class="sidebar">
 
         <div class="logo">
 
-            <img src="images/logo.png">
+            <img src="images/logo.png" alt="WiTime">
 
             <h2>WiTime</h2>
 
@@ -30,69 +34,159 @@
 
         <ul>
 
-            <li onclick="location.href='dashboard.html'">🏠 Dashboard</li>
+            <li onclick="location.href='dashboard.html'">
+                🏠 Dashboard
+            </li>
 
-            <li onclick="location.href='packages.html'">📦 Packages</li>
+            <li onclick="location.href='packages.html'">
+                📦 Packages
+            </li>
 
-            <li onclick="location.href='users.html'">👥 Users</li>
+            <li onclick="location.href='users.html'">
+                👥 Users
+            </li>
 
-            <li onclick="location.href='payments.html'">💳 Payments</li>
+            <li onclick="location.href='payments.html'">
+                💳 Payments
+            </li>
 
-            <li class="active">📈 Reports</li>
+            <li class="active">
+                📈 Reports
+            </li>
 
-            <li onclick="location.href='settings.html'">⚙ Settings</li>
+            <li onclick="location.href='settings.html'">
+                ⚙ Settings
+            </li>
 
-            <li>🚪 Logout</li>
+            <li>
+                🚪 Logout
+            </li>
 
         </ul>
 
     </aside>
 
+    <!-- Main -->
+
     <main class="main">
+
+        <!-- Header -->
 
         <div class="header">
 
             <h1>Reports</h1>
 
-            <button id="exportBtn">
+            <div>
 
-                Export CSV
+                <button id="refreshReports" class="primary-btn">
+                    Refresh
+                </button>
+
+                <button id="exportCSV" class="primary-btn">
+                    Export CSV
+                </button>
+
+                <button id="printReport" class="primary-btn">
+                    Print
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- Statistics -->
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+
+                <h3>Total Revenue</h3>
+
+                <h2 id="totalRevenue">
+                    KES 0
+                </h2>
+
+            </div>
+
+            <div class="stat-card">
+
+                <h3>Today's Revenue</h3>
+
+                <h2 id="todayRevenue">
+                    KES 0
+                </h2>
+
+            </div>
+
+            <div class="stat-card">
+
+                <h3>This Month</h3>
+
+                <h2 id="monthRevenue">
+                    KES 0
+                </h2>
+
+            </div>
+
+            <div class="stat-card">
+
+                <h3>Total Payments</h3>
+
+                <h2 id="totalPayments">
+                    0
+                </h2>
+
+            </div>
+
+        </div>
+
+        <!-- Filters -->
+
+        <div class="toolbar">
+
+            <input
+                type="date"
+                id="startDate">
+
+            <input
+                type="date"
+                id="endDate">
+
+            <button
+                id="filterBtn"
+                class="primary-btn">
+
+                Filter
 
             </button>
 
         </div>
 
-        <div class="cards">
+        <!-- Charts -->
 
-            <div class="card">
+        <div class="chart-grid">
 
-                <h3>Today's Revenue</h3>
+            <div class="chart-card">
 
-                <h2 id="todayRevenue">KES 0</h2>
+                <h3>Revenue Trend</h3>
 
-            </div>
-
-            <div class="card">
-
-                <h3>This Month</h3>
-
-                <h2 id="monthRevenue">KES 0</h2>
+                <canvas id="revenueChart"></canvas>
 
             </div>
 
-            <div class="card">
+            <div class="chart-card">
 
-                <h3>Total Revenue</h3>
+                <h3>Payment Status</h3>
 
-                <h2 id="totalRevenue">KES 0</h2>
+                <canvas id="statusChart"></canvas>
 
             </div>
 
         </div>
 
-        <div class="table-card">
+        <!-- Reports Table -->
 
-            <h2>Package Sales</h2>
+        <div class="table-card">
 
             <table>
 
@@ -100,23 +194,29 @@
 
                     <tr>
 
+                        <th>Phone</th>
+
                         <th>Package</th>
 
-                        <th>Sales</th>
+                        <th>Amount</th>
 
-                        <th>Revenue</th>
+                        <th>Status</th>
+
+                        <th>Receipt</th>
+
+                        <th>Date</th>
 
                     </tr>
 
                 </thead>
 
-                <tbody id="reportTable">
+                <tbody id="reportsTable">
 
                     <tr>
 
-                        <td colspan="3" style="text-align:center;">
+                        <td colspan="6">
 
-                            No report available.
+                            Loading reports...
 
                         </td>
 
@@ -131,6 +231,8 @@
     </main>
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="js/reports.js"></script>
 

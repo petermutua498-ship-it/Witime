@@ -3,66 +3,93 @@ const router = express.Router();
 
 const Payment = require("../models/Payment");
 
-// Get Reports
+// ===================================
+// Get Report Data
+// ===================================
+
 router.get("/", async (req, res) => {
 
     try {
 
-        const report = await Payment.aggregate([
+        const payments = await Payment.find()
+            .sort({ createdAt: -1 });
 
-            {
-                $match: {
-                    status: "Success"
-                }
-            },
+        res.json(payments);
 
-            {
-                $group: {
+    } catch (err) {
 
-                    _id: "$packageName",
+        res.status(500).json({
 
-                    sales: {
-                        $sum: 1
-                    },
+            success: false,
 
-                    revenue: {
-                        $sum: "$amount"
-                    },
+            message: err.message
 
-                    date: {
-                        $max: "$createdAt"
-                    }
+        });
 
-                }
+    }
 
-            },
+});
 
-            {
-                $project: {
+// ===================================
+// Report Summary
+// ===================================
 
-                    _id: 0,
+router.get("/summary", async (req, res) => {
 
-                    packageName: "$_id",
+    try {
 
-                    sales: 1,
+        const payments = await Payment.find();
 
-                    revenue: 1,
+        let totalRevenue = 0;
+        let todayRevenue = 0;
+        let monthRevenue = 0;
 
-                    date: 1
+        const today = new Date();
+        const month = today.getMonth();
+        const year = today.getFullYear();
 
-                }
+        payments.forEach(payment => {
 
-            },
+            if (payment.status !== "success") return;
 
-            {
-                $sort: {
-                    revenue: -1
-                }
+            totalRevenue += payment.amount;
+
+            const date = new Date(payment.createdAt);
+
+            // Today's Revenue
+            if (
+                date.getDate() === today.getDate() &&
+                date.getMonth() === today.getMonth() &&
+                date.getFullYear() === today.getFullYear()
+            ) {
+
+                todayRevenue += payment.amount;
+
             }
 
-        ]);
+            // This Month Revenue
+            if (
+                date.getMonth() === month &&
+                date.getFullYear() === year
+            ) {
 
-        res.json(report);
+                monthRevenue += payment.amount;
+
+            }
+
+        });
+
+        res.json({
+
+            totalRevenue,
+
+            todayRevenue,
+
+            monthRevenue,
+
+            totalPayments: payments.length
+
+        });
 
     } catch (err) {
 

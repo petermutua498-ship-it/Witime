@@ -3,12 +3,12 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>WiTime - Payments</title>
+    <title>WiTime - Payments</title>
 
-<link rel="stylesheet" href="css/payments.css">
+    <link rel="stylesheet" href="css/payments.css">
 
 </head>
 
@@ -22,7 +22,7 @@
 
         <div class="logo">
 
-            <img src="images/logo.png" alt="WiTime Logo">
+            <img src="images/logo.png" alt="WiTime">
 
             <h2>WiTime</h2>
 
@@ -32,33 +32,19 @@
 
         <ul>
 
-            <li onclick="location.href='dashboard.html'">
-                🏠 Dashboard
-            </li>
+            <li onclick="location.href='dashboard.html'">🏠 Dashboard</li>
 
-            <li onclick="location.href='packages.html'">
-                📦 Packages
-            </li>
+            <li onclick="location.href='packages.html'">📦 Packages</li>
 
-            <li onclick="location.href='users.html'">
-                👥 Users
-            </li>
+            <li onclick="location.href='users.html'">👥 Users</li>
 
-            <li class="active">
-                💳 Payments
-            </li>
+            <li class="active">💳 Payments</li>
 
-            <li onclick="location.href='reports.html'">
-                📈 Reports
-            </li>
+            <li onclick="location.href='reports.html'">📈 Reports</li>
 
-            <li onclick="location.href='settings.html'">
-                ⚙ Settings
-            </li>
+            <li onclick="location.href='settings.html'">⚙ Settings</li>
 
-            <li>
-                🚪 Logout
-            </li>
+            <li>🚪 Logout</li>
 
         </ul>
 
@@ -68,25 +54,41 @@
 
     <main class="main">
 
-        <!-- Header -->
-
         <div class="header">
 
             <h1>Payments</h1>
 
-            <button id="refreshBtn">
+            <div>
 
-                🔄 Refresh
+                <button id="refreshPayments" class="primary-btn">
 
-            </button>
+                    Refresh
+
+                </button>
+
+                <button id="exportCSV" class="primary-btn">
+
+                    Export CSV
+
+                </button>
+
+            </div>
 
         </div>
 
-        <!-- Summary Cards -->
+        <!-- Statistics -->
 
-        <div class="cards">
+        <div class="stats-grid">
 
-            <div class="card">
+            <div class="stat-card">
+
+                <h3>Total Revenue</h3>
+
+                <h2 id="totalRevenue">KES 0</h2>
+
+            </div>
+
+            <div class="stat-card">
 
                 <h3>Total Payments</h3>
 
@@ -94,48 +96,57 @@
 
             </div>
 
-            <div class="card">
+            <div class="stat-card">
 
-                <h3>Today's Revenue</h3>
+                <h3>Successful</h3>
 
-                <h2 id="todayRevenue">KES 0</h2>
+                <h2 id="successPayments">0</h2>
 
             </div>
 
-            <div class="card">
+            <div class="stat-card">
 
-                <h3>Pending Payments</h3>
+                <h3>Pending</h3>
 
                 <h2 id="pendingPayments">0</h2>
 
             </div>
 
+            <div class="stat-card">
+
+                <h3>Failed</h3>
+
+                <h2 id="failedPayments">0</h2>
+
+            </div>
+
         </div>
 
-        <!-- Search -->
+        <!-- Toolbar -->
 
         <div class="toolbar">
 
             <input
-            type="text"
-            id="searchBox"
-            placeholder="Search phone or receipt number...">
+                type="text"
+                id="searchPayment"
+                placeholder="Search phone, package or transaction ID..."
+            >
 
             <select id="statusFilter">
 
-                <option value="">All Status</option>
+                <option value="all">All Status</option>
 
-                <option value="Success">Success</option>
+                <option value="success">Success</option>
 
-                <option value="Pending">Pending</option>
+                <option value="pending">Pending</option>
 
-                <option value="Failed">Failed</option>
+                <option value="failed">Failed</option>
 
             </select>
 
         </div>
 
-        <!-- Payments Table -->
+        <!-- Table -->
 
         <div class="table-card">
 
@@ -157,7 +168,7 @@
 
                         <th>Date</th>
 
-                        <th>Action</th>
+                        <th>Actions</th>
 
                     </tr>
 
@@ -167,9 +178,9 @@
 
                     <tr>
 
-                        <td colspan="7" style="text-align:center;">
+                        <td colspan="7">
 
-                            No payments found.
+                            Loading payments...
 
                         </td>
 
@@ -182,6 +193,22 @@
         </div>
 
     </main>
+
+</div>
+
+<!-- Payment Details Modal -->
+
+<div id="paymentModal" class="modal">
+
+    <div class="modal-content">
+
+        <span class="close">&times;</span>
+
+        <h2>Payment Details</h2>
+
+        <div id="paymentDetails"></div>
+
+    </div>
 
 </div>
 

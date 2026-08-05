@@ -13,6 +13,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const paymentAdminRoutes = require("./routes/paymentAdminRoutes");
 const usersRoutes = require("./routes/usersRoutes");
 const reportsRoutes = require("./routes/reportsRoutes");
+const connectedRoutes = require("./routes/connectedRoutes");
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/payments", paymentAdminRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/reports", reportsRoutes);
+app.use("/api/connected", connectedRoutes);
 
 app.listen(PORT, ()=>{
     console.log(`WiTime running on port ${PORT}`);

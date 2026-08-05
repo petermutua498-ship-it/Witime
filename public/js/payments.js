@@ -1,14 +1,31 @@
-const table = document.getElementById("paymentsTable");
+// ======================================
+// WiTime Payments
+// Part 1
+// ======================================
 
+const paymentsTable = document.getElementById("paymentsTable");
+
+const totalRevenue = document.getElementById("totalRevenue");
 const totalPayments = document.getElementById("totalPayments");
-const todayRevenue = document.getElementById("todayRevenue");
+const successPayments = document.getElementById("successPayments");
 const pendingPayments = document.getElementById("pendingPayments");
+const failedPayments = document.getElementById("failedPayments");
 
-const searchBox = document.getElementById("searchBox");
+const searchPayment = document.getElementById("searchPayment");
 const statusFilter = document.getElementById("statusFilter");
-const refreshBtn = document.getElementById("refreshBtn");
+
+const refreshBtn = document.getElementById("refreshPayments");
+const exportBtn = document.getElementById("exportCSV");
+
+const paymentModal = document.getElementById("paymentModal");
+const paymentDetails = document.getElementById("paymentDetails");
+const closeModal = document.querySelector(".close");
 
 let allPayments = [];
+
+// ===============================
+// Load Payments
+// ===============================
 
 async function loadPayments() {
 
@@ -16,42 +33,53 @@ async function loadPayments() {
 
         const response = await fetch("/api/payments");
 
-        const payments = await response.json();
+        allPayments = await response.json();
 
-        allPayments = payments;
-
-        displayPayments(payments);
-
-        updateCards(payments);
+        renderPayments(allPayments);
 
     } catch (err) {
 
         console.error(err);
 
+        paymentsTable.innerHTML = `
+            <tr>
+                <td colspan="7">
+                    Unable to load payments.
+                </td>
+            </tr>
+        `;
+
     }
 
 }
 
-function displayPayments(payments) {
+// ===============================
+// Render Payments
+// ===============================
 
-    table.innerHTML = "";
+function renderPayments(payments) {
+
+    paymentsTable.innerHTML = "";
 
     if (payments.length === 0) {
 
-        table.innerHTML = `
+        paymentsTable.innerHTML = `
         <tr>
-            <td colspan="7" style="text-align:center;">
+            <td colspan="7">
                 No payments found.
             </td>
         </tr>
         `;
 
+        updateCards([]);
+
         return;
+
     }
 
     payments.forEach(payment => {
 
-        table.innerHTML += `
+        paymentsTable.innerHTML += `
 
         <tr>
 
@@ -63,15 +91,25 @@ function displayPayments(payments) {
 
             <td>${payment.status}</td>
 
-            <td>${payment.mpesaReceiptNumber || "-"}</td>
+            <td>${payment.transactionId || "-"}</td>
 
             <td>${new Date(payment.createdAt).toLocaleString()}</td>
 
             <td>
 
-                <button class="viewBtn">
+                <button
+                    class="view-btn"
+                    onclick="viewPayment('${payment._id}')">
 
                     View
+
+                </button>
+
+                <button
+                    class="delete-btn"
+                    onclick="deletePayment('${payment._id}')">
+
+                    Delete
 
                 </button>
 
@@ -83,71 +121,266 @@ function displayPayments(payments) {
 
     });
 
+    updateCards(payments);
+
 }
+
+// ===============================
+// Dashboard Cards
+// ===============================
 
 function updateCards(payments) {
 
-    totalPayments.textContent = payments.length;
-
     let revenue = 0;
+
+    let success = 0;
 
     let pending = 0;
 
+    let failed = 0;
+
     payments.forEach(payment => {
 
-        if (payment.status === "Success") {
+        revenue += payment.amount || 0;
 
-            revenue += payment.amount;
+        switch (payment.status) {
 
-        }
+            case "success":
 
-        if (payment.status === "Pending") {
+                success++;
 
-            pending++;
+                break;
+
+            case "pending":
+
+                pending++;
+
+                break;
+
+            case "failed":
+
+                failed++;
+
+                break;
 
         }
 
     });
 
-    todayRevenue.textContent = "KES " + revenue;
+    totalRevenue.innerText = `KES ${revenue}`;
 
-    pendingPayments.textContent = pending;
+    totalPayments.innerText = payments.length;
+
+    successPayments.innerText = success;
+
+    pendingPayments.innerText = pending;
+
+    failedPayments.innerText = failed;
 
 }
 
-searchBox.addEventListener("input", filterPayments);
+// ===============================
+// Search + Filter
+// ===============================
 
-statusFilter.addEventListener("change", filterPayments);
+function applyFilters() {
 
-function filterPayments() {
-
-    const search = searchBox.value.toLowerCase();
+    const keyword = searchPayment.value.toLowerCase();
 
     const status = statusFilter.value;
 
     const filtered = allPayments.filter(payment => {
 
-        const phoneMatch =
-            payment.phone.toLowerCase().includes(search);
+        const searchMatch =
 
-        const receiptMatch =
-            (payment.mpesaReceiptNumber || "")
+            payment.phone.toLowerCase().includes(keyword)
+
+            ||
+
+            payment.packageName.toLowerCase().includes(keyword)
+
+            ||
+
+            (payment.transactionId || "")
             .toLowerCase()
-            .includes(search);
+            .includes(keyword);
 
         const statusMatch =
-            status === "" || payment.status === status;
 
-        return (phoneMatch || receiptMatch) && statusMatch;
+            status === "all"
+
+            ||
+
+            payment.status === status;
+
+        return searchMatch && statusMatch;
 
     });
 
-    displayPayments(filtered);
+    renderPayments(filtered);
 
 }
 
+searchPayment.addEventListener("keyup", applyFilters);
+
+statusFilter.addEventListener("change", applyFilters);
+
 refreshBtn.addEventListener("click", loadPayments);
 
-loadPayments();
+// ======================================
+// WiTime Payments
+// Part 2
+// ======================================
 
-setInterval(loadPayments,10000);
+// ===============================
+// View Payment
+// ===============================
+
+async function viewPayment(id) {
+
+    try {
+
+        const response = await fetch(`/api/payments/${id}`);
+
+        const payment = await response.json();
+
+        paymentDetails.innerHTML = `
+
+            <p><strong>Phone:</strong> ${payment.phone}</p>
+
+            <p><strong>Package:</strong> ${payment.packageName}</p>
+
+            <p><strong>Duration:</strong> ${payment.packageDuration || "-"}</p>
+
+            <p><strong>Amount:</strong> KES ${payment.amount}</p>
+
+            <p><strong>Status:</strong> ${payment.status}</p>
+
+            <p><strong>Transaction ID:</strong> ${payment.transactionId || "-"}</p>
+
+            <p><strong>Date:</strong> ${new Date(payment.createdAt).toLocaleString()}</p>
+
+        `;
+
+        paymentModal.style.display = "block";
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Unable to load payment details.");
+
+    }
+
+}
+
+// ===============================
+// Delete Payment
+// ===============================
+
+async function deletePayment(id) {
+
+    const confirmed = confirm("Delete this payment permanently?");
+
+    if (!confirmed) return;
+
+    try {
+
+        const response = await fetch(`/api/payments/${id}`, {
+
+            method: "DELETE"
+
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+
+            loadPayments();
+
+        } else {
+
+            alert(result.message || "Unable to delete payment.");
+
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Unable to contact the server.");
+
+    }
+
+}
+
+// ===============================
+// Export CSV
+// ===============================
+
+exportBtn.addEventListener("click", () => {
+
+    let csv =
+        "Phone,Package,Amount,Status,Transaction ID,Date\n";
+
+    allPayments.forEach(payment => {
+
+        csv += `"${payment.phone}","${payment.packageName}","${payment.amount}","${payment.status}","${payment.transactionId || ""}","${new Date(payment.createdAt).toLocaleString()}"\n`;
+
+    });
+
+    const blob = new Blob([csv], {
+
+        type: "text/csv"
+
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+
+    link.download = "payments.csv";
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+});
+
+// ===============================
+// Close Modal
+// ===============================
+
+closeModal.onclick = function () {
+
+    paymentModal.style.display = "none";
+
+};
+
+window.onclick = function (e) {
+
+    if (e.target === paymentModal) {
+
+        paymentModal.style.display = "none";
+
+    }
+
+};
+
+// ===============================
+// Auto Refresh
+// ===============================
+
+setInterval(loadPayments, 10000);
+
+// ===============================
+// Start
+// ===============================
+
+loadPayments();
