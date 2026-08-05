@@ -415,29 +415,24 @@ opacity:.9;
     background: #1D4ED8;
 }
 
-.watermark {
-    position: relative;
-    min-height: 100vh;
-    overflow: hidden;
-}
+.watermark{
+    position: fixed;
+    top: 20%;
+    left: 40%;
+    transform: translate(-56%, -50%);
 
-.watermark::before {
-    content: "WT";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 220px;
-    font-weight: bold;
-    color: rgba(37, 99, 235, 0.08);
-    z-index: 0;
+    width: 1200px;
+    height: 800px;
+
+    background-image: url("../images/logo.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+
+    opacity: 0.15;
+
+    z-index: -1;
     pointer-events: none;
-    user-select: none;
-}
-
-.watermark > * {
-    position: relative;
-    z-index: 1;
 }
 
 .connected-container{
@@ -1099,4 +1094,38 @@ body{
     width:380px;
     max-width:95%;
     height:auto;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.brand img{
+    width:80px;
+    height:80px;
+    object-fit:contain;
+}
+
+.brand-text{
+    display:flex;
+    flex-direction:column;
+}
+
+.brand-text h1{
+    margin:0;
+    font-size:48px;
+    font-weight:800;
+    font-family:"Poppins",sans-serif;
+    color:#1565C0;
+    line-height:1;
+}
+
+.brand-text p{
+    margin-top:8px;
+    font-size:15px;
+    letter-spacing:4px;
+    color:#0A2A66;
+    font-weight:600;
 }
