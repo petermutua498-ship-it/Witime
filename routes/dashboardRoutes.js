@@ -3,8 +3,15 @@ const router = express.Router();
 
 const Package = require("../models/Package");
 const Payment = require("../models/Payment");
+const requireAdmin = require("../middleware/auth");
 
-router.get("/stats", async (req, res) => {
+
+// =====================================
+// DASHBOARD STATS
+// ADMIN ONLY
+// =====================================
+
+router.get("/stats", requireAdmin, async (req, res) => {
 
     try {
 
@@ -16,26 +23,34 @@ router.get("/stats", async (req, res) => {
 
         today.setHours(0, 0, 0, 0);
 
+
         const paymentsToday = await Payment.countDocuments({
             createdAt: { $gte: today }
         });
 
+
         const revenue = await Payment.aggregate([
+
             {
                 $match: {
                     createdAt: { $gte: today },
                     status: "success"
                 }
             },
+
             {
                 $group: {
                     _id: null,
                     total: { $sum: "$amount" }
                 }
             }
+
         ]);
 
+
         res.json({
+
+            success: true,
 
             onlineUsers,
 
@@ -44,15 +59,21 @@ router.get("/stats", async (req, res) => {
             paymentsToday,
 
             revenueToday:
-                revenue.length > 0 ? revenue[0].total : 0
+                revenue.length > 0
+                    ? revenue[0].total
+                    : 0
 
         });
 
+
     } catch (err) {
+
+        console.error(err);
 
         res.status(500).json({
 
             success: false,
+
             message: err.message
 
         });
@@ -60,5 +81,6 @@ router.get("/stats", async (req, res) => {
     }
 
 });
+
 
 module.exports = router;

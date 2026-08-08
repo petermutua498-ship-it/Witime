@@ -13,6 +13,7 @@ exports.pay = async (req, res) => {
         } = req.body;
 
         const token = await mpesa.getAccessToken();
+        console.log("Access Token:", token);
 
         const timestamp = new Date()
             .toISOString()
@@ -70,6 +71,13 @@ exports.pay = async (req, res) => {
         res.json({
             success: true
         });
+
+        console.log({
+    shortcode: process.env.MPESA_SHORTCODE,
+    phone,
+    amount,
+    callback: process.env.HOST_URL + "/callback"
+});
 
     } catch (err) {
 

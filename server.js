@@ -9,7 +9,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const verifyRoutes = require("./routes/verifyRoutes");
 const callbackRoutes = require("./routes/callbackRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
-//const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const paymentAdminRoutes = require("./routes/paymentAdminRoutes");
 const usersRoutes = require("./routes/usersRoutes");
 const reportsRoutes = require("./routes/reportsRoutes");
@@ -42,11 +42,32 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => {
     console.error("MongoDB connection error:");
     console.error(err);
+
+    mongoose.connect(process.env.MONGO_URI)
+    .then(async () => {
+
+        console.log("✅ MongoDB Connected");
+
+        console.log("DATABASE:", mongoose.connection.name);
+
+        console.log(
+            "COLLECTIONS:",
+            Object.keys(mongoose.connection.collections)
+        );
+
+    })
+    .catch(err => {
+
+        console.error("MongoDB connection error:");
+        console.error(err);
+
+    });
 });
 
 app.get("/", (req,res)=>{
     res.sendFile(__dirname + "/public/index.html");
 });
+
 
 const PORT = process.env.PORT || 3000;
 
@@ -55,7 +76,7 @@ app.use("/", paymentRoutes);
 app.use("/", verifyRoutes);
 app.use(callbackRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-//app.use("/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/payments", paymentAdminRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/reports", reportsRoutes);

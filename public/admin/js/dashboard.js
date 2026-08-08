@@ -27,6 +27,46 @@ async function loadDashboard() {
 
 }
 
+// ==============================
+// ADMIN LOGOUT
+// ==============================
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+if (logoutBtn) {
+
+    logoutBtn.addEventListener("click", async () => {
+
+        try {
+
+            const response = await fetch("/api/admin/logout", {
+                method: "POST"
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+
+                window.location.href = "admin-login.html";
+
+            } else {
+
+                alert(data.message || "Logout failed.");
+
+            }
+
+        } catch (error) {
+
+            console.error("Logout error:", error);
+
+            alert("Unable to logout. Please try again.");
+
+        }
+
+    });
+
+}
+
 loadDashboard();
 
 setInterval(loadDashboard, 10000);

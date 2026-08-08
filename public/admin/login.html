@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>WiTime - Admin Login</title>
+
+<link rel="stylesheet" href="/css/admin-login.css">
+
+
+</head>
+
+<body>
+
+<div class="login-container">
+
+
+<div class="login-card">
+
+    <img
+        src="../images/logo.png"
+        class="logo"
+        alt="WiTime"
+    >
+
+    <h1>WiTime</h1>
+
+    <p class="subtitle" id="formTitle">
+        Administrator Login
+    </p>
+
+
+    <!-- ============================= -->
+    <!-- LOGIN FORM -->
+    <!-- ============================= -->
+
+    <form id="loginForm">
+
+        <div class="form-group">
+
+            <label for="loginUsername">
+                Username
+            </label>
+
+            <input
+                type="text"
+                id="loginUsername"
+                placeholder="Enter username"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="loginPassword">
+                Password
+            </label>
+
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Enter password"
+                required
+            >
+
+        </div>
+
+
+        <p id="loginMessage"></p>
+
+
+        <button type="submit" id="loginButton">
+            Login
+        </button>
+
+    </form>
+
+
+    <!-- ============================= -->
+    <!-- SIGNUP FORM -->
+    <!-- ============================= -->
+
+    <form id="signupForm" style="display:none;">
+
+        <div class="form-group">
+
+            <label for="signupUsername">
+                Username
+            </label>
+
+            <input
+                type="text"
+                id="signupUsername"
+                placeholder="Create username"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="signupPassword">
+                Password
+            </label>
+
+            <input
+                type="password"
+                id="signupPassword"
+                placeholder="Create password"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="confirmPassword">
+                Confirm Password
+            </label>
+
+            <input
+                type="password"
+                id="confirmPassword"
+                placeholder="Confirm password"
+                required
+            >
+
+        </div>
+
+
+        <p id="signupMessage"></p>
+
+
+        <button type="submit" id="signupButton">
+            Create Admin Account
+        </button>
+
+    </form>
+
+
+    <!-- ============================= -->
+    <!-- SWITCH LOGIN / SIGNUP -->
+    <!-- ============================= -->
+
+    <p style="margin-top:20px;">
+
+        <span id="switchText">
+            Don't have an account?
+        </span>
+
+        <button
+            type="button"
+            id="switchAuth"
+            style="
+                background:none;
+                border:none;
+                padding:0;
+                cursor:pointer;
+                font-weight:bold;
+            "
+        >
+            Sign Up
+        </button>
+
+    </p>
+
+
+    <p class="footer">
+        WiTime Administration
+    </p>
+
+</div>
+
+
+</div>
+
+<script src="js/admin-login.js"></script>
+
+</body>
+
+</html>
