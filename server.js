@@ -109,7 +109,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/payments", requireAdmin, paymentAdminRoutes);
 app.use("/api/users", requireAdmin, usersRoutes);
 app.use("/api/reports", requireAdmin, reportsRoutes);
-app.use("/api/connected", requireAdmin, connectedRoutes);
+app.use("/api/connected", connectedRoutes);
 
 // ======================================
 // ADMIN PAGE PROTECTION
