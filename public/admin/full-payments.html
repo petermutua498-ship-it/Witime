@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        WiTime - Full Payments
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/css/full-payments.css">
+
+</head>
+
+
+<body>
+
+    <!-- ============================= -->
+    <!-- HEADER -->
+    <!-- ============================= -->
+
+    <header class="page-header">
+
+        <div>
+
+            <h1>
+                Full Payments
+            </h1>
+
+            <p>
+                Complete WiTime payment records
+            </p>
+
+        </div>
+
+
+        <div class="header-actions">
+
+            <button
+                id="backBtn"
+                class="btn">
+
+                ← Back to Payments
+
+            </button>
+
+
+            <button
+                id="refreshBtn"
+                class="btn">
+
+                🔄 Refresh
+
+            </button>
+
+
+            <button
+                id="exportBtn"
+                class="btn">
+
+                📥 Export CSV
+
+            </button>
+
+
+            <button
+                id="printBtn"
+                class="btn">
+
+                🖨 Print
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ============================= -->
+    <!-- SEARCH -->
+    <!-- ============================= -->
+
+    <div class="search-card">
+
+        <input
+            type="text"
+            id="searchPayment"
+            placeholder="Search phone, package or transaction ID..."
+        >
+
+
+        <select id="statusFilter">
+
+            <option value="all">
+                All Status
+            </option>
+
+            <option value="success">
+                Success
+            </option>
+
+            <option value="pending">
+                Pending
+            </option>
+
+            <option value="failed">
+                Failed
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- TABLE -->
+    <!-- ============================= -->
+
+    <div class="table-card">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        #
+                    </th>
+
+                    <th>
+                        Phone
+                    </th>
+
+                    <th>
+                        Package
+                    </th>
+
+                    <th>
+                        Amount
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Receipt
+                    </th>
+
+                    <th>
+                        Date
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="fullPaymentsTable">
+
+                <tr>
+
+                    <td colspan="7">
+
+                        Loading payments...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+
+<script src="/js/full-payments.js"></script>
+
+</html>

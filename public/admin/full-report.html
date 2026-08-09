@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>WiTime - Full Report</title>
+
+    <link rel="stylesheet" href="/css/full-report.css">
+
+</head>
+
+<body>
+
+    <!-- Header -->
+
+    <div class="report-header">
+
+        <div>
+            <h1>Full Payment Report</h1>
+            <p>Complete WiTime payment records</p>
+        </div>
+
+        <div class="report-actions">
+
+            <button id="backBtn">
+                ← Back to Reports
+            </button>
+
+            <button id="refreshBtn">
+                🔄 Refresh
+            </button>
+
+            <button id="exportBtn">
+                📥 Export CSV
+            </button>
+
+            <button id="printBtn">
+                🖨 Print
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- Search -->
+
+    <div class="search-area">
+
+        <input
+            type="text"
+            id="searchReport"
+            placeholder="Search phone, package or receipt..."
+        >
+
+    </div>
+
+
+    <!-- Complete Table -->
+
+    <div class="table-card">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>#</th>
+
+                    <th>Phone</th>
+
+                    <th>Package</th>
+
+                    <th>Amount</th>
+
+                    <th>Status</th>
+
+                    <th>Receipt</th>
+
+                    <th>Date</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="fullReportTable">
+
+                <tr>
+
+                    <td colspan="7">
+                        Loading report...
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <script src="/js/full-report.js"></script>
+
+</body>
+
+</html>

@@ -1,182 +1,208 @@
-<!DOCTYPE html>
-<html lang="en">
+<meta charset="UTF-8">
 
-<head>
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-    <meta charset="UTF-8">
+<title>WiTime - Reports</title>
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/css/reports.css">
 
-    <title>WiTime - Reports</title>
 
-    <link rel="stylesheet" href="/css/reports.css">
+<!-- Sidebar -->
 
-</head>
+<aside class="sidebar">
 
-<body>
+    <div class="logo">
 
-<div class="container">
+        <img src="/images/logo.png" alt="WiTime">
 
-    <!-- Sidebar -->
+        <h2>WiTime</h2>
 
-    <aside class="sidebar">
+        <p>Fast • Affordable • Reliable</p>
 
-        <div class="logo">
+    </div>
 
-            <img src="/images/logo.png" alt="WiTime">
+    <ul>
 
-            <h2>WiTime</h2>
+        <li onclick="location.href='dashboard.html'">
+            🏠 Dashboard
+        </li>
 
-            <p>Fast • Affordable • Reliable</p>
+        <li onclick="location.href='packages.html'">
+            📦 Packages
+        </li>
 
-        </div>
+        <li onclick="location.href='users.html'">
+            👥 Users
+        </li>
 
-        <ul>
+        <li onclick="location.href='payments.html'">
+            💳 Payments
+        </li>
 
-            <li onclick="location.href='dashboard.html'">
-                🏠 Dashboard
-            </li>
+        <li class="active">
+            📈 Reports
+        </li>
 
-            <li onclick="location.href='packages.html'">
-                📦 Packages
-            </li>
+        <li onclick="location.href='settings.html'">
+            ⚙ Settings
+        </li>
 
-            <li onclick="location.href='users.html'">
-                👥 Users
-            </li>
+        <li id="logoutBtn">
+            🚪 Logout
+        </li>
 
-            <li onclick="location.href='payments.html'">
-                💳 Payments
-            </li>
+    </ul>
 
-            <li class="active">
-                📈 Reports
-            </li>
+</aside>
 
-            <li onclick="location.href='settings.html'">
-                ⚙ Settings
-            </li>
 
-            <li>
-                🚪 Logout
-            </li>
+<!-- Main -->
 
-        </ul>
+<main class="main">
 
-    </aside>
 
-    <!-- Main -->
+    <!-- Header -->
 
-    <main class="main">
+    <div class="header">
 
-        <!-- Header -->
+        <h1>Reports</h1>
 
-        <div class="header">
-
-            <h1>Reports</h1>
-
-            <div>
-
-                <button id="refreshReports" class="primary-btn">
-                    Refresh
-                </button>
-
-                <button id="exportCSV" class="primary-btn">
-                    Export CSV
-                </button>
-
-                <button id="printReport" class="primary-btn">
-                    Print
-                </button>
-
-            </div>
-
-        </div>
-
-        <!-- Statistics -->
-
-        <div class="stats-grid">
-
-            <div class="stat-card">
-
-                <h3>Total Revenue</h3>
-
-                <h2 id="totalRevenue">
-                    KES 0
-                </h2>
-
-            </div>
-
-            <div class="stat-card">
-
-                <h3>Today's Revenue</h3>
-
-                <h2 id="todayRevenue">
-                    KES 0
-                </h2>
-
-            </div>
-
-            <div class="stat-card">
-
-                <h3>This Month</h3>
-
-                <h2 id="monthRevenue">
-                    KES 0
-                </h2>
-
-            </div>
-
-            <div class="stat-card">
-
-                <h3>Total Payments</h3>
-
-                <h2 id="totalPayments">
-                    0
-                </h2>
-
-            </div>
-
-        </div>
-
-        <!-- Filters -->
-
-        <div class="toolbar">
-
-            <input
-                type="date"
-                id="startDate">
-
-            <input
-                type="date"
-                id="endDate">
+        <div>
 
             <button
-                id="filterBtn"
+                id="refreshReports"
                 class="primary-btn">
 
-                Filter
+                Refresh
+
+            </button>
+
+            <button
+                id="exportCSV"
+                class="primary-btn">
+
+                Export CSV
+
+            </button>
+
+            <button
+                id="printReport"
+                class="primary-btn">
+
+                Print
 
             </button>
 
         </div>
 
-        <!-- Charts -->
+    </div>
 
-        <div class="chart-grid">
 
-            <div class="chart-card">
+    <!-- Filters -->
 
-                <h3>Revenue Trend</h3>
+    <div class="toolbar">
+
+        <input
+            type="date"
+            id="startDate">
+
+        <input
+            type="date"
+            id="endDate">
+
+        <button
+            id="filterBtn"
+            class="primary-btn">
+
+            Filter
+
+        </button>
+
+    </div>
+
+
+    <!-- Payment Status -->
+
+    <div class="status-section">
+
+        <h2>Payment Status</h2>
+
+        <div class="status-grid">
+
+
+            <div class="status-card">
+
+                <span>Successful</span>
+
+                <strong id="successPayments">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="status-card">
+
+                <span>Pending</span>
+
+                <strong id="pendingPayments">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="status-card">
+
+                <span>Failed</span>
+
+                <strong id="failedPayments">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="status-card">
+
+                <span>Total Payments</span>
+
+                <strong id="totalPayments">
+                    0
+                </strong>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- Charts -->
+
+    <div class="chart-grid">
+
+
+        <div class="chart-card">
+
+            <h3>Revenue Trend</h3>
+
+            <div class="chart-wrapper">
 
                 <canvas id="revenueChart"></canvas>
 
             </div>
 
-            <div class="chart-card">
+        </div>
 
-                <h3>Payment Status</h3>
+
+        <div class="chart-card">
+
+            <h3>Payment Status</h3>
+
+            <div class="chart-wrapper">
 
                 <canvas id="statusChart"></canvas>
 
@@ -184,9 +210,25 @@
 
         </div>
 
-        <!-- Reports Table -->
 
-        <div class="table-card">
+    </div>
+
+
+    <!-- Recent Payments -->
+
+    <div class="table-card">
+
+
+        <div class="table-header">
+
+            <h2>
+                Recent Payments
+            </h2>
+
+        </div>
+
+
+        <div class="table-wrapper">
 
             <table>
 
@@ -210,6 +252,7 @@
 
                 </thead>
 
+
                 <tbody id="reportsTable">
 
                     <tr>
@@ -228,15 +271,23 @@
 
         </div>
 
-    </main>
 
-</div>
+        <!-- Full Report -->
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <div class="full-report-button">
 
-<script src="js/reports.js"></script>
-<script src="/admin/js/admin-auth.js"></script>
+            <button
+                id="viewFullReport"
+                class="primary-btn">
 
-</body>
+                View Full Report
 
-</html>
+            </button>
+
+        </div>
+
+
+    </div>
+
+
+</main>

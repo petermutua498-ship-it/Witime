@@ -4,216 +4,349 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>WiTime - Payments</title>
 
-   <link rel="stylesheet" href="/css/payments.css">
+    <link rel="stylesheet" href="/css/payments.css">
 
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <!-- Sidebar -->
+        <!-- ============================= -->
+        <!-- SIDEBAR -->
+        <!-- ============================= -->
 
-    <aside class="sidebar">
+        <aside class="sidebar">
 
-        <div class="logo">
+            <div class="logo">
 
-            <img src="/images/logo.png" alt="WiTime">
+                <img
+                    src="/images/logo.png"
+                    alt="WiTime"
+                >
 
-            <h2>WiTime</h2>
+                <h2>WiTime</h2>
 
-            <p>Fast • Affordable • Reliable</p>
-
-        </div>
-
-        <ul>
-
-            <li onclick="location.href='dashboard.html'">🏠 Dashboard</li>
-
-            <li onclick="location.href='packages.html'">📦 Packages</li>
-
-            <li onclick="location.href='users.html'">👥 Users</li>
-
-            <li class="active">💳 Payments</li>
-
-            <li onclick="location.href='reports.html'">📈 Reports</li>
-
-            <li onclick="location.href='settings.html'">⚙ Settings</li>
-
-            <li>🚪 Logout</li>
-
-        </ul>
-
-    </aside>
-
-    <!-- Main -->
-
-    <main class="main">
-
-        <div class="header">
-
-            <h1>Payments</h1>
-
-            <div>
-
-                <button id="refreshPayments" class="primary-btn">
-
-                    Refresh
-
-                </button>
-
-                <button id="exportCSV" class="primary-btn">
-
-                    Export CSV
-
-                </button>
+                <p>
+                    Fast • Affordable • Reliable
+                </p>
 
             </div>
 
-        </div>
 
-        <!-- Statistics -->
+            <ul>
 
-        <div class="stats-grid">
+                <li
+                    onclick="location.href='dashboard.html'">
+                    🏠 Dashboard
+                </li>
 
-            <div class="stat-card">
+                <li
+                    onclick="location.href='packages.html'">
+                    📦 Packages
+                </li>
 
-                <h3>Total Revenue</h3>
+                <li
+                    onclick="location.href='users.html'">
+                    👥 Users
+                </li>
 
-                <h2 id="totalRevenue">KES 0</h2>
+                <li class="active">
+                    💳 Payments
+                </li>
+
+                <li
+                    onclick="location.href='reports.html'">
+                    📈 Reports
+                </li>
+
+                <li
+                    onclick="location.href='settings.html'">
+                    ⚙ Settings
+                </li>
+
+                <li id="logoutBtn">
+                    🚪 Logout
+                </li>
+
+            </ul>
+
+        </aside>
+
+
+        <!-- ============================= -->
+        <!-- MAIN -->
+        <!-- ============================= -->
+
+        <main class="main">
+
+            <!-- HEADER -->
+
+            <div class="header">
+
+                <h1>
+                    Payments
+                </h1>
+
+
+                <div class="header-actions">
+
+                    <button
+                        id="refreshPayments"
+                        class="primary-btn">
+
+                        🔄 Refresh
+
+                    </button>
+
+
+                    <button
+                        id="exportCSV"
+                        class="primary-btn">
+
+                        📥 Export CSV
+
+                    </button>
+
+                </div>
 
             </div>
 
-            <div class="stat-card">
 
-                <h3>Total Payments</h3>
+            <!-- ============================= -->
+            <!-- STATISTICS -->
+            <!-- ============================= -->
 
-                <h2 id="totalPayments">0</h2>
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <h3>
+                        Total Revenue
+                    </h3>
+
+                    <h2 id="totalRevenue">
+                        KES 0
+                    </h2>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <h3>
+                        Total Payments
+                    </h3>
+
+                    <h2 id="totalPayments">
+                        0
+                    </h2>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <h3>
+                        Successful
+                    </h3>
+
+                    <h2 id="successPayments">
+                        0
+                    </h2>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <h3>
+                        Pending
+                    </h3>
+
+                    <h2 id="pendingPayments">
+                        0
+                    </h2>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <h3>
+                        Failed
+                    </h3>
+
+                    <h2 id="failedPayments">
+                        0
+                    </h2>
+
+                </div>
 
             </div>
 
-            <div class="stat-card">
 
-                <h3>Successful</h3>
+            <!-- ============================= -->
+            <!-- SEARCH / FILTER -->
+            <!-- ============================= -->
 
-                <h2 id="successPayments">0</h2>
+            <div class="toolbar">
+
+                <input
+                    type="text"
+                    id="searchPayment"
+                    placeholder="Search phone, package or transaction ID..."
+                >
+
+
+                <select id="statusFilter">
+
+                    <option value="all">
+                        All Status
+                    </option>
+
+                    <option value="success">
+                        Success
+                    </option>
+
+                    <option value="pending">
+                        Pending
+                    </option>
+
+                    <option value="failed">
+                        Failed
+                    </option>
+
+                </select>
 
             </div>
 
-            <div class="stat-card">
 
-                <h3>Pending</h3>
+            <!-- ============================= -->
+            <!-- PAYMENT TABLE -->
+            <!-- ============================= -->
 
-                <h2 id="pendingPayments">0</h2>
+            <div class="table-card">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Phone
+                            </th>
+
+                            <th>
+                                Package
+                            </th>
+
+                            <th>
+                                Amount
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Receipt
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="paymentsTable">
+
+                        <tr>
+
+                            <td colspan="7">
+
+                                Loading payments...
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+
+                <!-- ============================= -->
+                <!-- FULL PAYMENTS BUTTON -->
+                <!-- ============================= -->
+
+                <div class="full-payments-button">
+
+                    <button
+                        id="viewFullPayments"
+                        class="primary-btn">
+
+                        View Full Payments →
+
+                    </button>
+
+                </div>
 
             </div>
 
-            <div class="stat-card">
-
-                <h3>Failed</h3>
-
-                <h2 id="failedPayments">0</h2>
-
-            </div>
-
-        </div>
-
-        <!-- Toolbar -->
-
-        <div class="toolbar">
-
-            <input
-                type="text"
-                id="searchPayment"
-                placeholder="Search phone, package or transaction ID..."
-            >
-
-            <select id="statusFilter">
-
-                <option value="all">All Status</option>
-
-                <option value="success">Success</option>
-
-                <option value="pending">Pending</option>
-
-                <option value="failed">Failed</option>
-
-            </select>
-
-        </div>
-
-        <!-- Table -->
-
-        <div class="table-card">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>Phone</th>
-
-                        <th>Package</th>
-
-                        <th>Amount</th>
-
-                        <th>Status</th>
-
-                        <th>Receipt</th>
-
-                        <th>Date</th>
-
-                        <th>Actions</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="paymentsTable">
-
-                    <tr>
-
-                        <td colspan="7">
-
-                            Loading payments...
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </main>
-
-</div>
-
-<!-- Payment Details Modal -->
-
-<div id="paymentModal" class="modal">
-
-    <div class="modal-content">
-
-        <span class="close">&times;</span>
-
-        <h2>Payment Details</h2>
-
-        <div id="paymentDetails"></div>
+        </main>
 
     </div>
 
-</div>
 
-<script src="/js/payments.js"></script>
-<script src="/admin/js/admin-auth.js"></script>
+    <!-- ============================= -->
+    <!-- PAYMENT MODAL -->
+    <!-- ============================= -->
+
+    <div
+        id="paymentModal"
+        class="modal">
+
+        <div class="modal-content">
+
+            <span
+                class="close">
+
+                &times;
+
+            </span>
+
+
+            <h2>
+                Payment Details
+            </h2>
+
+
+            <div
+                id="paymentDetails">
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="/js/payments.js"></script>
 
 </body>
 

@@ -1,334 +1,495 @@
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
+/* =========================================
+   WiTime Payments
+   ========================================= */
+
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-body{
-    background:#f4f7fc;
+body {
+    background: #f4f6f9;
+    color: #1f2937;
+    min-height: 100vh;
 }
 
-.container{
-    display:flex;
-    min-height:100vh;
+/* =========================================
+   MAIN LAYOUT
+   ========================================= */
+
+.container {
+    display: flex;
+    min-height: 100vh;
 }
 
-/* Sidebar */
+/* =========================================
+   SIDEBAR
+   ========================================= */
 
-.sidebar{
-    width:250px;
-    background:#2563eb;
-    color:#fff;
-    display:flex;
-    flex-direction:column;
+.sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: #0d6efd;
+    color: white;
+    padding: 20px 0;
+    flex-shrink: 0;
 }
 
-.logo{
-    text-align:center;
-    padding:25px 20px;
-    border-bottom:1px solid rgba(255,255,255,.2);
+.logo {
+    text-align: center;
+    padding: 0 20px 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.logo img{
-    width:90px;
-    margin-bottom:10px;
+.logo img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 8px;
 }
 
-.logo h2{
-    font-size:28px;
-    margin-bottom:5px;
+.logo h2 {
+    font-size: 24px;
+    margin-bottom: 5px;
 }
 
-.logo p{
-    font-size:13px;
-    opacity:.8;
+.logo p {
+    font-size: 12px;
+    opacity: 0.8;
 }
 
-.sidebar ul{
-    list-style:none;
-    margin-top:20px;
+/* SIDEBAR MENU */
+
+.sidebar ul {
+    list-style: none;
+    margin-top: 20px;
 }
 
-.sidebar ul li{
-    padding:16px 25px;
-    cursor:pointer;
-    transition:.3s;
+.sidebar ul li {
+    padding: 14px 22px;
+    margin: 3px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s ease;
+    font-size: 15px;
 }
 
-.sidebar ul li:hover{
-    background:rgba(255,255,255,.15);
+.sidebar ul li:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
-.sidebar ul li.active{
-    background:#fff;
-    color:#2563eb;
-    font-weight:bold;
+.sidebar ul li.active {
+    background: white;
+    color: #0d6efd;
+    font-weight: bold;
 }
 
-/* Main */
+/* =========================================
+   MAIN CONTENT
+   ========================================= */
 
-.main{
-    flex:1;
-    padding:30px;
+.main {
+    flex: 1;
+    min-width: 0;
+    padding: 30px;
 }
 
-/* Header */
+/* =========================================
+   HEADER
+   ========================================= */
 
-.header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:25px;
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 20px;
 }
 
-.header h1{
-    color:#1f2937;
+.header h1 {
+    font-size: 30px;
+    color: #1f2937;
 }
 
-#refreshBtn{
-    background:#2563eb;
-    color:white;
-    border:none;
-    padding:10px 18px;
-    border-radius:8px;
-    cursor:pointer;
+.header > div {
+    display: flex;
+    gap: 10px;
 }
 
-#refreshBtn:hover{
-    background:#1d4ed8;
+/* =========================================
+   BUTTONS
+   ========================================= */
+
+.primary-btn {
+    background: #0d6efd;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s ease;
 }
 
-/* Cards */
-
-.cards{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:20px;
-    margin-bottom:25px;
+.primary-btn:hover {
+    background: #0b5ed7;
 }
 
-.card{
-    background:white;
-    border-radius:15px;
-    padding:25px;
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
+.primary-btn:active {
+    transform: scale(0.98);
 }
 
-.card h3{
-    color:#666;
-    margin-bottom:10px;
-    font-size:15px;
+/* =========================================
+   STATISTICS
+   ========================================= */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
 }
 
-.card h2{
-    color:#2563eb;
-    font-size:30px;
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+    border: 1px solid #eef0f3;
 }
 
-/* Toolbar */
-
-.toolbar{
-    display:flex;
-    gap:15px;
-    margin-bottom:25px;
+.stat-card h3 {
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: normal;
+    margin-bottom: 10px;
 }
 
-.toolbar input{
-    flex:1;
-    padding:12px;
-    border:1px solid #ddd;
-    border-radius:8px;
+.stat-card h2 {
+    color: #0d6efd;
+    font-size: 26px;
 }
 
-.toolbar select{
-    width:180px;
-    padding:12px;
-    border:1px solid #ddd;
-    border-radius:8px;
+/* =========================================
+   TOOLBAR
+   ========================================= */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
 }
 
-/* Table */
-
-.table-card{
-    background:white;
-    border-radius:15px;
-    padding:20px;
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
+.toolbar input {
+    flex: 1;
+    min-width: 250px;
+    padding: 11px 14px;
+    border: 1px solid #d8dde5;
+    border-radius: 7px;
+    outline: none;
+    font-size: 14px;
 }
 
-table{
-    width:100%;
-    border-collapse:collapse;
+.toolbar input:focus {
+    border-color: #0d6efd;
 }
 
-th{
-    background:#2563eb;
-    color:white;
-    padding:14px;
-    text-align:left;
+.toolbar select {
+    padding: 11px 14px;
+    border: 1px solid #d8dde5;
+    border-radius: 7px;
+    background: white;
+    outline: none;
+    cursor: pointer;
+    font-size: 14px;
 }
 
-td{
-    padding:14px;
-    border-bottom:1px solid #eee;
+.toolbar select:focus {
+    border-color: #0d6efd;
 }
 
-tr:hover{
-    background:#f9fafb;
+/* =========================================
+   TABLE CARD
+   ========================================= */
+
+.table-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
 }
 
-/* Buttons */
+/* TABLE SCROLLING */
 
-.viewBtn{
-    background:#2563eb;
-    color:white;
-    border:none;
-    padding:8px 14px;
-    border-radius:6px;
-    cursor:pointer;
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
 }
 
-.viewBtn:hover{
-    background:#1d4ed8;
+/* =========================================
+   TABLE
+   ========================================= */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
 }
 
-/* Responsive */
-
-@media(max-width:1000px){
-
-.cards{
-grid-template-columns:1fr;
+thead {
+    background: #0d6efd;
+    color: white;
 }
 
-.toolbar{
-flex-direction:column;
+th {
+    padding: 15px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
 }
 
+td {
+    padding: 14px 15px;
+    border-bottom: 1px solid #edf0f3;
+    font-size: 14px;
+    color: #374151;
 }
 
-@media(max-width:768px){
-
-.container{
-flex-direction:column;
+tbody tr {
+    transition: 0.15s ease;
 }
 
-.sidebar{
-width:100%;
+tbody tr:hover {
+    background: #f8fafc;
 }
 
+/* =========================================
+   PAYMENT STATUS
+   ========================================= */
+
+td:nth-child(4) {
+    font-weight: bold;
 }
 
-.stats-grid{
+/* =========================================
+   ACTION BUTTONS
+   ========================================= */
 
-    display:grid;
+.view-btn {
+    background: #0d6efd;
+    color: white;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-right: 5px;
+}
 
-    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+.view-btn:hover {
+    background: #0b5ed7;
+}
 
-    gap:20px;
+.delete-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+}
 
-    margin-bottom:25px;
+.delete-btn:hover {
+    background: #bb2d3b;
+}
+
+/* =========================================
+   VIEW ALL BUTTON
+   ========================================= */
+
+.view-all-container {
+    text-align: center;
+    padding: 18px;
+    border-top: 1px solid #edf0f3;
+}
+
+#viewAllPayments {
+    background: #0d6efd;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#viewAllPayments:hover {
+    background: #0b5ed7;
+}
+
+/* =========================================
+   MODAL
+   ========================================= */
+
+#paymentModal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 30px;
+}
+
+.modal-content {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    margin: 80px auto;
+    padding: 30px;
+    border-radius: 12px;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+    margin-bottom: 25px;
+    color: #1f2937;
+}
+
+#paymentDetails p {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+#paymentDetails p:last-child {
+    border-bottom: none;
+}
+
+.close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    color: #777;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+/* =========================================
+   EMPTY / LOADING
+   ========================================= */
+
+.empty {
+    text-align: center;
+    padding: 35px;
+    color: #777;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+
+@media (max-width: 1200px) {
+
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 
 }
 
-.stat-card{
+@media (max-width: 900px) {
 
-    background:#fff;
+    .container {
+        flex-direction: column;
+    }
 
-    border-radius:10px;
+    .sidebar {
+        width: 100%;
+        min-height: auto;
+    }
 
-    padding:20px;
+    .sidebar ul {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 0 10px;
+    }
 
-    box-shadow:0 3px 10px rgba(0,0,0,.08);
+    .sidebar ul li {
+        flex: 1 1 150px;
+        text-align: center;
+    }
 
-}
+    .main {
+        padding: 20px;
+    }
 
-.stat-card h3{
-
-    color:#666;
-
-    font-size:15px;
-
-    margin-bottom:10px;
-
-}
-
-.stat-card h2{
-
-    color:#1b8f3d;
-
-    font-size:30px;
-
-}
-
-.toolbar{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    margin-bottom:20px;
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
 }
 
-.toolbar input{
+@media (max-width: 600px) {
 
-    width:350px;
+    .main {
+        padding: 15px;
+    }
 
-    max-width:100%;
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-    padding:10px 15px;
+    .header > div {
+        width: 100%;
+    }
 
-    border:1px solid #ddd;
+    .header > div button {
+        flex: 1;
+    }
 
-    border-radius:8px;
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
 
-    outline:none;
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-}
+    .toolbar input {
+        min-width: 0;
+        width: 100%;
+    }
 
-.delete-btn{
+    .toolbar select {
+        width: 100%;
+    }
 
-    background:#dc3545;
+    #paymentModal {
+        padding: 15px;
+    }
 
-    color:white;
-
-    border:none;
-
-    padding:7px 12px;
-
-    border-radius:6px;
-
-    cursor:pointer;
-
-}
-
-.delete-btn:hover{
-
-    background:#b52a37;
-
-}
-
-.view-btn{
-
-    background:#0d6efd;
-
-    color:white;
-
-    border:none;
-
-    padding:7px 12px;
-
-    border-radius:6px;
-
-    cursor:pointer;
-
-    margin-right:6px;
-
-}
-
-.view-btn:hover{
-
-    background:#0b5ed7;
+    .modal-content {
+        margin: 40px auto;
+        padding: 20px;
+    }
 
 }

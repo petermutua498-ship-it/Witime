@@ -1,133 +1,281 @@
 // ======================================
 // WiTime Payments
-// Part 1
 // ======================================
 
-const paymentsTable = document.getElementById("paymentsTable");
 
-const totalRevenue = document.getElementById("totalRevenue");
-const totalPayments = document.getElementById("totalPayments");
-const successPayments = document.getElementById("successPayments");
-const pendingPayments = document.getElementById("pendingPayments");
-const failedPayments = document.getElementById("failedPayments");
+// ======================================
+// DOM ELEMENTS
+// ======================================
 
-const searchPayment = document.getElementById("searchPayment");
-const statusFilter = document.getElementById("statusFilter");
+const paymentsTable =
+    document.getElementById("paymentsTable");
 
-const refreshBtn = document.getElementById("refreshPayments");
-const exportBtn = document.getElementById("exportCSV");
 
-const paymentModal = document.getElementById("paymentModal");
-const paymentDetails = document.getElementById("paymentDetails");
-const closeModal = document.querySelector(".close");
+const totalRevenue =
+    document.getElementById("totalRevenue");
+
+
+const totalPayments =
+    document.getElementById("totalPayments");
+
+
+const successPayments =
+    document.getElementById("successPayments");
+
+
+const pendingPayments =
+    document.getElementById("pendingPayments");
+
+
+const failedPayments =
+    document.getElementById("failedPayments");
+
+
+const searchPayment =
+    document.getElementById("searchPayment");
+
+
+const statusFilter =
+    document.getElementById("statusFilter");
+
+
+const refreshBtn =
+    document.getElementById("refreshPayments");
+
+
+const exportBtn =
+    document.getElementById("exportCSV");
+
+
+const viewFullPayments =
+    document.getElementById("viewFullPayments");
+
+
+const paymentModal =
+    document.getElementById("paymentModal");
+
+
+const paymentDetails =
+    document.getElementById("paymentDetails");
+
+
+const closeModal =
+    document.querySelector(".close");
+
+
+const logoutBtn =
+    document.getElementById("logoutBtn");
+
+
+// ======================================
+// DATA
+// ======================================
 
 let allPayments = [];
 
-// ===============================
-// Load Payments
-// ===============================
+
+// ======================================
+// LOAD PAYMENTS
+// ======================================
 
 async function loadPayments() {
 
     try {
 
-        const response = await fetch("/api/payments");
+        paymentsTable.innerHTML = `
 
-        allPayments = await response.json();
+            <tr>
 
-        renderPayments(allPayments);
+                <td colspan="7">
+
+                    Loading payments...
+
+                </td>
+
+            </tr>
+
+        `;
+
+
+        const response =
+            await fetch("/api/payments");
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load payments."
+            );
+
+        }
+
+
+        allPayments =
+            await response.json();
+
+
+        // Update statistics
+        // using ALL payments
+
+        updateCards(allPayments);
+
+
+        // Show only first five
+        // payments in this page
+
+        renderPayments(
+            allPayments.slice(0, 5)
+        );
+
 
     } catch (err) {
 
-        console.error(err);
+        console.error(
+            "Load payments error:",
+            err
+        );
+
 
         paymentsTable.innerHTML = `
+
             <tr>
+
                 <td colspan="7">
+
                     Unable to load payments.
+
                 </td>
+
             </tr>
+
         `;
 
     }
 
 }
 
-// ===============================
-// Render Payments
-// ===============================
+
+// ======================================
+// RENDER PAYMENTS
+// ======================================
 
 function renderPayments(payments) {
 
     paymentsTable.innerHTML = "";
 
+
     if (payments.length === 0) {
 
         paymentsTable.innerHTML = `
-        <tr>
-            <td colspan="7">
-                No payments found.
-            </td>
-        </tr>
-        `;
 
-        updateCards([]);
+            <tr>
+
+                <td colspan="7">
+
+                    No payments found.
+
+                </td>
+
+            </tr>
+
+        `;
 
         return;
 
     }
 
+
     payments.forEach(payment => {
+
+        const status =
+            (payment.status || "")
+                .toLowerCase();
+
 
         paymentsTable.innerHTML += `
 
-        <tr>
+            <tr>
 
-            <td>${payment.phone}</td>
+                <td>
+                    ${payment.phone || "-"}
+                </td>
 
-            <td>${payment.packageName}</td>
 
-            <td>KES ${payment.amount}</td>
+                <td>
+                    ${payment.packageName || "-"}
+                </td>
 
-            <td>${payment.status}</td>
 
-            <td>${payment.transactionId || "-"}</td>
+                <td>
+                    KES ${payment.amount || 0}
+                </td>
 
-            <td>${new Date(payment.createdAt).toLocaleString()}</td>
 
-            <td>
+                <td>
 
-                <button
-                    class="view-btn"
-                    onclick="viewPayment('${payment._id}')">
+                    <span
+                        class="payment-status ${status}">
 
-                    View
+                        ${payment.status || "-"}
 
-                </button>
+                    </span>
 
-                <button
-                    class="delete-btn"
-                    onclick="deletePayment('${payment._id}')">
+                </td>
 
-                    Delete
 
-                </button>
+                <td>
+                    ${payment.transactionId || "-"}
+                </td>
 
-            </td>
 
-        </tr>
+                <td>
+
+                    ${
+                        payment.createdAt
+
+                        ? new Date(
+                            payment.createdAt
+                          ).toLocaleString()
+
+                        : "-"
+                    }
+
+                </td>
+
+
+                <td>
+
+                    <button
+                        class="view-btn"
+                        onclick="viewPayment('${payment._id}')">
+
+                        View
+
+                    </button>
+
+
+                    <button
+                        class="delete-btn"
+                        onclick="deletePayment('${payment._id}')">
+
+                        Delete
+
+                    </button>
+
+                </td>
+
+            </tr>
 
         `;
 
     });
 
-    updateCards(payments);
-
 }
 
-// ===============================
-// Dashboard Cards
-// ===============================
+
+// ======================================
+// UPDATE STATISTICS
+// ======================================
 
 function updateCards(payments) {
 
@@ -139,11 +287,16 @@ function updateCards(payments) {
 
     let failed = 0;
 
+
     payments.forEach(payment => {
 
-        revenue += payment.amount || 0;
+        revenue +=
+            Number(payment.amount) || 0;
 
-        switch (payment.status) {
+
+        switch (
+            (payment.status || "").toLowerCase()
+        ) {
 
             case "success":
 
@@ -151,11 +304,13 @@ function updateCards(payments) {
 
                 break;
 
+
             case "pending":
 
                 pending++;
 
                 break;
+
 
             case "failed":
 
@@ -167,220 +322,525 @@ function updateCards(payments) {
 
     });
 
-    totalRevenue.innerText = `KES ${revenue}`;
 
-    totalPayments.innerText = payments.length;
+    totalRevenue.innerText =
+        `KES ${revenue}`;
 
-    successPayments.innerText = success;
 
-    pendingPayments.innerText = pending;
+    totalPayments.innerText =
+        payments.length;
 
-    failedPayments.innerText = failed;
+
+    successPayments.innerText =
+        success;
+
+
+    pendingPayments.innerText =
+        pending;
+
+
+    failedPayments.innerText =
+        failed;
 
 }
 
-// ===============================
-// Search + Filter
-// ===============================
+
+// ======================================
+// SEARCH + FILTER
+// ======================================
 
 function applyFilters() {
 
-    const keyword = searchPayment.value.toLowerCase();
-
-    const status = statusFilter.value;
-
-    const filtered = allPayments.filter(payment => {
-
-        const searchMatch =
-
-            payment.phone.toLowerCase().includes(keyword)
-
-            ||
-
-            payment.packageName.toLowerCase().includes(keyword)
-
-            ||
-
-            (payment.transactionId || "")
+    const keyword =
+        searchPayment.value
             .toLowerCase()
-            .includes(keyword);
+            .trim();
 
-        const statusMatch =
 
-            status === "all"
+    const status =
+        statusFilter.value;
 
-            ||
 
-            payment.status === status;
+    const filtered =
+        allPayments.filter(payment => {
 
-        return searchMatch && statusMatch;
+            const phone =
+                (payment.phone || "")
+                    .toLowerCase();
 
-    });
 
-    renderPayments(filtered);
+            const packageName =
+                (payment.packageName || "")
+                    .toLowerCase();
+
+
+            const transactionId =
+                (payment.transactionId || "")
+                    .toLowerCase();
+
+
+            const searchMatch =
+
+                phone.includes(keyword)
+
+                ||
+
+                packageName.includes(keyword)
+
+                ||
+
+                transactionId.includes(keyword);
+
+
+            const statusMatch =
+
+                status === "all"
+
+                ||
+
+                (payment.status || "")
+                    .toLowerCase()
+                    === status;
+
+
+            return (
+                searchMatch &&
+                statusMatch
+            );
+
+        });
+
+
+    // Statistics use all
+    // matching records
+
+    updateCards(filtered);
+
+
+    // Table only shows
+    // first five matches
+
+    renderPayments(
+        filtered.slice(0, 5)
+    );
 
 }
 
-searchPayment.addEventListener("keyup", applyFilters);
-
-statusFilter.addEventListener("change", applyFilters);
-
-refreshBtn.addEventListener("click", loadPayments);
 
 // ======================================
-// WiTime Payments
-// Part 2
+// SEARCH EVENT
 // ======================================
 
-// ===============================
-// View Payment
-// ===============================
+searchPayment.addEventListener(
+    "input",
+    applyFilters
+);
+
+
+// ======================================
+// STATUS FILTER
+// ======================================
+
+statusFilter.addEventListener(
+    "change",
+    applyFilters
+);
+
+
+// ======================================
+// REFRESH
+// ======================================
+
+refreshBtn.addEventListener(
+    "click",
+    loadPayments
+);
+
+
+// ======================================
+// VIEW FULL PAYMENTS
+// ======================================
+
+viewFullPayments.addEventListener(
+    "click",
+    () => {
+
+        window.location.href =
+            "/admin/full-payments.html";
+
+    }
+);
+
+
+// ======================================
+// VIEW PAYMENT
+// ======================================
 
 async function viewPayment(id) {
 
     try {
 
-        const response = await fetch(`/api/payments/${id}`);
+        const response =
+            await fetch(
+                `/api/payments/${id}`
+            );
 
-        const payment = await response.json();
 
-        paymentDetails.innerHTML = `
+        if (!response.ok) {
 
-            <p><strong>Phone:</strong> ${payment.phone}</p>
-
-            <p><strong>Package:</strong> ${payment.packageName}</p>
-
-            <p><strong>Duration:</strong> ${payment.packageDuration || "-"}</p>
-
-            <p><strong>Amount:</strong> KES ${payment.amount}</p>
-
-            <p><strong>Status:</strong> ${payment.status}</p>
-
-            <p><strong>Transaction ID:</strong> ${payment.transactionId || "-"}</p>
-
-            <p><strong>Date:</strong> ${new Date(payment.createdAt).toLocaleString()}</p>
-
-        `;
-
-        paymentModal.style.display = "block";
-
-    } catch (err) {
-
-        console.error(err);
-
-        alert("Unable to load payment details.");
-
-    }
-
-}
-
-// ===============================
-// Delete Payment
-// ===============================
-
-async function deletePayment(id) {
-
-    const confirmed = confirm("Delete this payment permanently?");
-
-    if (!confirmed) return;
-
-    try {
-
-        const response = await fetch(`/api/payments/${id}`, {
-
-            method: "DELETE"
-
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-
-            loadPayments();
-
-        } else {
-
-            alert(result.message || "Unable to delete payment.");
+            throw new Error(
+                "Payment not found."
+            );
 
         }
 
+
+        const payment =
+            await response.json();
+
+
+        paymentDetails.innerHTML = `
+
+            <div class="payment-detail-row">
+
+                <strong>
+                    Phone:
+                </strong>
+
+                <span>
+                    ${payment.phone || "-"}
+                </span>
+
+            </div>
+
+
+            <div class="payment-detail-row">
+
+                <strong>
+                    Package:
+                </strong>
+
+                <span>
+                    ${payment.packageName || "-"}
+                </span>
+
+            </div>
+
+
+            <div class="payment-detail-row">
+
+                <strong>
+                    Duration:
+                </strong>
+
+                <span>
+                    ${payment.packageDuration || "-"}
+                </span>
+
+            </div>
+
+
+            <div class="payment-detail-row">
+
+                <strong>
+                    Amount:
+                </strong>
+
+                <span>
+                    KES ${payment.amount || 0}
+                </span>
+
+            </div>
+
+
+            <div class="payment-detail-row">
+
+                <strong>
+                    Status:
+                </strong>
+
+                <span>
+                    ${payment.status || "-"}
+                </span>
+
+            </div>
+
+
+            <div class="payment-detail-row">
+
+                <strong>
+                    Transaction ID:
+                </strong>
+
+                <span>
+                    ${payment.transactionId || "-"}
+                </span>
+
+            </div>
+
+
+            <div class="payment-detail-row">
+
+                <strong>
+                    Date:
+                </strong>
+
+                <span>
+
+                    ${
+                        payment.createdAt
+
+                        ? new Date(
+                            payment.createdAt
+                          ).toLocaleString()
+
+                        : "-"
+                    }
+
+                </span>
+
+            </div>
+
+        `;
+
+
+        paymentModal.style.display =
+            "flex";
+
+
     } catch (err) {
 
-        console.error(err);
+        console.error(
+            "View payment error:",
+            err
+        );
 
-        alert("Unable to contact the server.");
+
+        alert(
+            "Unable to load payment details."
+        );
 
     }
 
 }
 
-// ===============================
-// Export CSV
-// ===============================
 
-exportBtn.addEventListener("click", () => {
+// ======================================
+// DELETE PAYMENT
+// ======================================
 
-    let csv =
-        "Phone,Package,Amount,Status,Transaction ID,Date\n";
+async function deletePayment(id) {
 
-    allPayments.forEach(payment => {
+    const confirmed =
+        confirm(
+            "Delete this payment permanently?"
+        );
 
-        csv += `"${payment.phone}","${payment.packageName}","${payment.amount}","${payment.status}","${payment.transactionId || ""}","${new Date(payment.createdAt).toLocaleString()}"\n`;
 
-    });
+    if (!confirmed) {
 
-    const blob = new Blob([csv], {
-
-        type: "text/csv"
-
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-
-    link.download = "payments.csv";
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    document.body.removeChild(link);
-
-    URL.revokeObjectURL(url);
-
-});
-
-// ===============================
-// Close Modal
-// ===============================
-
-closeModal.onclick = function () {
-
-    paymentModal.style.display = "none";
-
-};
-
-window.onclick = function (e) {
-
-    if (e.target === paymentModal) {
-
-        paymentModal.style.display = "none";
+        return;
 
     }
 
-};
 
-// ===============================
-// Auto Refresh
-// ===============================
+    try {
 
-setInterval(loadPayments, 10000);
+        const response =
+            await fetch(
+                `/api/payments/${id}`,
+                {
+                    method: "DELETE"
+                }
+            );
 
-// ===============================
-// Start
-// ===============================
+
+        const result =
+            await response.json();
+
+
+        if (result.success) {
+
+            await loadPayments();
+
+        } else {
+
+            alert(
+                result.message ||
+                "Unable to delete payment."
+            );
+
+        }
+
+
+    } catch (err) {
+
+        console.error(
+            "Delete payment error:",
+            err
+        );
+
+
+        alert(
+            "Unable to contact the server."
+        );
+
+    }
+
+}
+
+
+// ======================================
+// EXPORT CSV
+// ======================================
+
+exportBtn.addEventListener(
+    "click",
+    () => {
+
+        let csv =
+            "Phone,Package,Amount,Status,Transaction ID,Date\n";
+
+
+        allPayments.forEach(payment => {
+
+            csv +=
+                `"${payment.phone || ""}",` +
+                `"${payment.packageName || ""}",` +
+                `"${payment.amount || 0}",` +
+                `"${payment.status || ""}",` +
+                `"${payment.transactionId || ""}",` +
+                `"${payment.createdAt
+                    ? new Date(
+                        payment.createdAt
+                      ).toLocaleString()
+                    : ""}"\n`;
+
+        });
+
+
+        const blob =
+            new Blob(
+                [csv],
+                {
+                    type: "text/csv"
+                }
+            );
+
+
+        const url =
+            URL.createObjectURL(blob);
+
+
+        const link =
+            document.createElement("a");
+
+
+        link.href = url;
+
+
+        link.download =
+            "witime-payments.csv";
+
+
+        document.body.appendChild(link);
+
+
+        link.click();
+
+
+        document.body.removeChild(link);
+
+
+        URL.revokeObjectURL(url);
+
+    }
+);
+
+
+// ======================================
+// CLOSE MODAL
+// ======================================
+
+closeModal.onclick =
+    function () {
+
+        paymentModal.style.display =
+            "none";
+
+    };
+
+
+// ======================================
+// CLOSE MODAL OUTSIDE
+// ======================================
+
+window.addEventListener(
+    "click",
+    function (event) {
+
+        if (
+            event.target ===
+            paymentModal
+        ) {
+
+            paymentModal.style.display =
+                "none";
+
+        }
+
+    }
+);
+
+
+// ======================================
+// LOGOUT
+// ======================================
+
+if (logoutBtn) {
+
+    logoutBtn.addEventListener(
+        "click",
+        async () => {
+
+            try {
+
+                await fetch(
+                    "/api/admin/logout",
+                    {
+                        method: "POST",
+                        credentials: "include"
+                    }
+                );
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
+
+
+            window.location.href =
+                "/admin/login.html";
+
+        }
+    );
+
+}
+
+
+// ======================================
+// AUTO REFRESH
+// ======================================
+
+setInterval(
+    loadPayments,
+    10000
+);
+
+
+// ======================================
+// START
+// ======================================
 
 loadPayments();

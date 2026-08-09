@@ -1,0 +1,205 @@
+/* =================================
+   WiTime Full Report
+================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background: #f4f6f9;
+    padding: 25px;
+    color: #1f2937;
+}
+
+
+/* ================================
+   HEADER
+================================ */
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 20px;
+}
+
+.report-header h1 {
+    font-size: 28px;
+    margin-bottom: 5px;
+}
+
+.report-header p {
+    color: #6b7280;
+}
+
+
+/* ================================
+   BUTTONS
+================================ */
+
+.report-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.report-actions button {
+    border: none;
+
+    background: #0d6efd;
+
+    color: white;
+
+    padding: 10px 15px;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+}
+
+.report-actions button:hover {
+    background: #0b5ed7;
+}
+
+
+/* ================================
+   SEARCH
+================================ */
+
+.search-area {
+    background: white;
+
+    padding: 15px;
+
+    border-radius: 10px;
+
+    margin-bottom: 20px;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, .06);
+}
+
+.search-area input {
+    width: 100%;
+
+    padding: 11px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 7px;
+
+    outline: none;
+}
+
+.search-area input:focus {
+    border-color: #0d6efd;
+}
+
+
+/* ================================
+   TABLE
+================================ */
+
+.table-card {
+    background: white;
+
+    border-radius: 10px;
+
+    overflow-x: auto;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, .08);
+}
+
+table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 850px;
+}
+
+thead {
+    background: #0d6efd;
+
+    color: white;
+}
+
+th,
+td {
+    padding: 14px;
+
+    text-align: left;
+
+    border-bottom: 1px solid #eee;
+}
+
+tbody tr:hover {
+    background: #f8f9fa;
+}
+
+
+/* ================================
+   STATUS
+================================ */
+
+.status {
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+
+    font-weight: bold;
+
+    text-transform: capitalize;
+}
+
+.status.success {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.status.pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.status.failed {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+
+/* ================================
+   PRINT
+================================ */
+
+@media print {
+
+    body {
+        padding: 0;
+        background: white;
+    }
+
+    .report-actions,
+    .search-area {
+        display: none;
+    }
+
+    .report-header {
+        margin-bottom: 15px;
+    }
+
+    .table-card {
+        box-shadow: none;
+    }
+
+}
