@@ -18,116 +18,151 @@
 
     <!-- Sidebar -->
 
-    <aside class="sidebar">
+   <!-- Sidebar -->
 
-        <div class="logo">
+<aside class="sidebar">
 
-            <img src="/images/logo.png" alt="WiTime">
+    <div class="logo">
 
-            <h2>WiTime</h2>
+        <img src="/images/logo.png" alt="WiTime">
 
-            <p>Admin Panel</p>
+        <h2>WiTime</h2>
 
-        </div>
+        <p>Admin Panel</p>
 
-        <ul>
+    </div>
 
-            <li onclick="location.href='dashboard.html'">
-                🏠 Dashboard
-            </li>
 
-            <li onclick="location.href='packages.html'">
-                📦 Packages
-            </li>
+    <ul>
 
-            <li class="active">
-                👥 Users
-            </li>
+        <li onclick="location.href='dashboard.html'">
+            🏠 Dashboard
+        </li>
 
-            <li onclick="location.href='payments.html'">
-                💳 Payments
-            </li>
+        <li onclick="location.href='packages.html'">
+            📦 Packages
+        </li>
 
-            <li onclick="location.href='reports.html'">
-                📈 Reports
-            </li>
+        <li class="active">
+            👥 Users
+        </li>
 
-            <li onclick="location.href='settings.html'">
-                ⚙ Settings
-            </li>
+        <li onclick="location.href='payments.html'">
+            💳 Payments
+        </li>
 
-        </ul>
+        <li onclick="location.href='reports.html'">
+            📈 Reports
+        </li>
 
-    </aside>
+        <li onclick="location.href='settings.html'">
+            ⚙ Settings
+        </li>
 
-    <!-- Main -->
+    </ul>
 
-    <main class="main">
+</aside>
 
-        <div class="header">
+
+<!-- Main -->
+
+<main class="main">
+
+    <div class="header">
+
+        <div>
 
             <h1>User Manager</h1>
 
-            <button id="refreshUsers" class="primary-btn">
-
-                Refresh
-
-            </button>
+            <p class="page-subtitle">
+                Manage connected and registered WiFi users
+            </p>
 
         </div>
 
-        <div class="toolbar">
 
-            <input
-                type="text"
-                id="searchUser"
-                placeholder="Search phone number...">
+        <button
+            id="refreshUsers"
+            class="primary-btn">
 
-        </div>
+            🔄 Refresh
 
-        <div class="table-card">
+        </button>
 
-            <table>
+    </div>
 
-                <thead>
 
-                    <tr>
+    <!-- Search -->
 
-                        <th>Phone</th>
-                        <th>Package</th>
-                        <th>Remaining</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+    <div class="toolbar">
 
-                    </tr>
+        <input
+            type="text"
+            id="searchUser"
+            placeholder="Search phone or package...">
 
-                </thead>
+    </div>
 
-                <tbody id="userTable">
 
-                    <tr>
+    <!-- Users Table -->
 
-                        <td colspan="5" class="empty">
+    <div class="table-card">
 
-                            Loading users...
+        <table>
 
-                        </td>
+            <thead>
 
-                    </tr>
+                <tr>
 
-                </tbody>
+                    <th>Phone</th>
 
-            </table>
+                    <th>Package</th>
 
-        </div>
+                    <th>Remaining</th>
 
-    </main>
+                    <th>Status</th>
 
-</div>
+                    <th>Action</th>
 
-<script src="js/users.js"></script>
-<script src="/admin/js/admin-auth.js"></script>
+                </tr>
 
-</body>
+            </thead>
 
-</html>
+
+            <tbody id="userTable">
+
+                <tr>
+
+                    <td
+                        colspan="5"
+                        class="empty">
+
+                        Loading users...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- View All -->
+
+    <div class="view-all-container">
+
+        <button
+            id="viewAllUsers"
+            class="view-all-btn"
+            style="display:none;">
+
+            View All Users
+
+        </button>
+
+    </div>
+
+</main>

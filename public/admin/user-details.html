@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>WiTime - User Details</title>
+
+    <link rel="stylesheet" href="/css/users.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <img src="/images/logo.png" alt="WiTime">
+
+            <h2>WiTime</h2>
+
+            <p>Admin Panel</p>
+
+        </div>
+
+        <ul>
+
+            <li onclick="location.href='dashboard.html'">
+                🏠 Dashboard
+            </li>
+
+            <li onclick="location.href='packages.html'">
+                📦 Packages
+            </li>
+
+            <li class="active">
+                👥 Users
+            </li>
+
+            <li onclick="location.href='payments.html'">
+                💳 Payments
+            </li>
+
+            <li onclick="location.href='reports.html'">
+                📈 Reports
+            </li>
+
+            <li onclick="location.href='settings.html'">
+                ⚙ Settings
+            </li>
+
+        </ul>
+
+    </aside>
+
+
+    <!-- Main -->
+
+    <main class="main">
+
+        <div class="header">
+
+            <div>
+
+                <h1>User Details</h1>
+
+                <p class="page-subtitle">
+                    View and manage this WiTime user
+                </p>
+
+            </div>
+
+            <button
+                class="primary-btn"
+                onclick="location.href='users.html'">
+
+                ← Back to Users
+
+            </button>
+
+        </div>
+
+
+        <!-- User Details Card -->
+
+        <div class="user-details-card">
+
+            <div class="user-details-header">
+
+                <div class="user-avatar">
+                    👤
+                </div>
+
+                <div>
+
+                    <h2 id="userPhone">
+                        Loading...
+                    </h2>
+
+                    <span
+                        id="userStatus"
+                        class="status-badge">
+
+                        Loading...
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="details-grid">
+
+                <div class="detail-item">
+
+                    <span>Phone Number</span>
+
+                    <strong id="detailPhone">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>Package</span>
+
+                    <strong id="detailPackage">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>Remaining Time</span>
+
+                    <strong id="detailRemaining">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>Status</span>
+
+                    <strong id="detailStatus">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>Start Time</span>
+
+                    <strong id="detailStart">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>Expiry Time</span>
+
+                    <strong id="detailExpiry">
+                        -
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- Actions -->
+
+            <div class="user-actions">
+
+                <button
+                    id="extendBtn"
+                    class="extendBtn">
+
+                    ➕ Extend Package
+
+                </button>
+
+
+                <button
+                    id="disconnectBtn"
+                    class="disconnectBtn">
+
+                    🔌 Disconnect User
+
+                </button>
+
+            </div>
+
+            <p id="actionMessage"></p>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="/js/user-details.js"></script>
+
+</body>
+
+</html>

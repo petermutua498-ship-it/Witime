@@ -5,8 +5,11 @@
 const table = document.getElementById("userTable");
 const searchBox = document.getElementById("searchUser");
 const refreshBtn = document.getElementById("refreshUsers");
+const viewAllBtn = document.getElementById("viewAllUsers");
 
 let users = [];
+
+const USERS_TO_SHOW = 5;
 
 // =======================================
 // Load Users
@@ -17,14 +20,18 @@ async function loadUsers() {
     try {
 
         table.innerHTML = `
-        <tr>
-            <td colspan="5" class="empty">
-                Loading users...
-            </td>
-        </tr>
+            <tr>
+                <td colspan="5" class="empty">
+                    Loading users...
+                </td>
+            </tr>
         `;
 
         const response = await fetch("/api/users");
+
+        if (!response.ok) {
+            throw new Error("Unable to load users");
+        }
 
         users = await response.json();
 
@@ -32,19 +39,20 @@ async function loadUsers() {
 
     } catch (err) {
 
-        console.error(err);
+        console.error("Load users error:", err);
 
         table.innerHTML = `
-        <tr>
-            <td colspan="5" class="empty">
-                Unable to load users.
-            </td>
-        </tr>
+            <tr>
+                <td colspan="5" class="empty">
+                    Unable to load users.
+                </td>
+            </tr>
         `;
 
     }
 
 }
+
 
 // =======================================
 // Display Users
@@ -57,68 +65,93 @@ function displayUsers(data) {
     if (data.length === 0) {
 
         table.innerHTML = `
-        <tr>
-            <td colspan="5" class="empty">
-                No users found.
-            </td>
-        </tr>
+            <tr>
+                <td colspan="5" class="empty">
+                    No users found.
+                </td>
+            </tr>
         `;
 
-        return;
+        viewAllBtn.style.display = "none";
 
+        return;
     }
 
-    data.forEach(user => {
+
+    // Only show first 5 users
+    const visibleUsers = data.slice(0, USERS_TO_SHOW);
+
+
+    visibleUsers.forEach(user => {
+
+        const statusClass =
+            user.status === "Online"
+                ? "online"
+                : "offline";
+
 
         table.innerHTML += `
 
-        <tr>
+            <tr>
 
-            <td>${user.phone}</td>
+                <td>
+                    ${user.phone || "-"}
+                </td>
 
-            <td>${user.packageName}</td>
+                <td>
+                    ${user.packageName || "-"}
+                </td>
 
-            <td>${user.remainingTime}</td>
+                <td>
+                    ${user.remainingTime || "-"}
+                </td>
 
-            <td>
+                <td>
 
-                <span class="${user.status === "Online"
-                    ? "online"
-                    : "offline"}">
+                    <span class="${statusClass}">
 
-                    ${user.status}
+                        ${user.status || "Offline"}
 
-                </span>
+                    </span>
 
-            </td>
+                </td>
 
-            <td>
+                <td>
 
-                <button
-                    class="extendBtn"
-                    data-id="${user._id}">
+                    <button
+                        class="viewBtn"
+                        data-id="${user._id}">
 
-                    ➕ Extend
+                        👁 View
 
-                </button>
+                    </button>
 
-                <button
-                    class="disconnectBtn"
-                    data-id="${user._id}">
+                </td>
 
-                    🔌 Disconnect
-
-                </button>
-
-            </td>
-
-        </tr>
+            </tr>
 
         `;
 
     });
 
+
+    // Show View All if there are more than 5 users
+
+    if (data.length > USERS_TO_SHOW) {
+
+        viewAllBtn.style.display = "block";
+
+        viewAllBtn.textContent =
+            `View All Users (${data.length})`;
+
+    } else {
+
+        viewAllBtn.style.display = "none";
+
+    }
+
 }
+
 
 // =======================================
 // Search Users
@@ -126,20 +159,33 @@ function displayUsers(data) {
 
 searchBox.addEventListener("keyup", () => {
 
-    const keyword = searchBox.value.toLowerCase();
+    const keyword =
+        searchBox.value.trim().toLowerCase();
 
-    const filtered = users.filter(user =>
 
-        user.phone.toLowerCase().includes(keyword)
+    const filtered = users.filter(user => {
 
-    );
+        const phone =
+            String(user.phone || "").toLowerCase();
+
+        const packageName =
+            String(user.packageName || "").toLowerCase();
+
+        return (
+            phone.includes(keyword) ||
+            packageName.includes(keyword)
+        );
+
+    });
+
 
     displayUsers(filtered);
 
 });
 
+
 // =======================================
-// Refresh Button
+// Refresh
 // =======================================
 
 refreshBtn.addEventListener("click", () => {
@@ -148,83 +194,47 @@ refreshBtn.addEventListener("click", () => {
 
 });
 
+
 // =======================================
-// Buttons
+// View User
 // =======================================
 
-document.addEventListener("click", async (e) => {
+document.addEventListener("click", (event) => {
 
-    // Disconnect
+    if (event.target.classList.contains("viewBtn")) {
 
-    if (e.target.classList.contains("disconnectBtn")) {
+        const id =
+            event.target.dataset.id;
 
-        const id = e.target.dataset.id;
 
-        if (!confirm("Disconnect this user?")) return;
+        if (!id) {
 
-        try {
+            alert("User ID not found.");
 
-            const response = await fetch(`/api/users/${id}/disconnect`, {
-
-                method: "POST"
-
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-
-                loadUsers();
-
-            } else {
-
-                alert(result.message);
-
-            }
-
-        } catch (err) {
-
-            console.error(err);
+            return;
 
         }
 
-    }
 
-    // Extend
-
-    if (e.target.classList.contains("extendBtn")) {
-
-        const id = e.target.dataset.id;
-
-        try {
-
-            const response = await fetch(`/api/users/${id}/extend`, {
-
-                method: "POST"
-
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-
-                loadUsers();
-
-            } else {
-
-                alert(result.message);
-
-            }
-
-        } catch (err) {
-
-            console.error(err);
-
-        }
+        window.location.href =
+            `/admin/user-details.html?id=${id}`;
 
     }
 
 });
+
+
+// =======================================
+// View All Users
+// =======================================
+
+viewAllBtn.addEventListener("click", () => {
+
+    window.location.href =
+        "/admin/all-users.html";
+
+});
+
 
 // =======================================
 // Initialize
