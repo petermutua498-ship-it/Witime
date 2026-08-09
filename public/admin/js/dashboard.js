@@ -26,46 +26,49 @@ async function loadDashboard() {
     }
 
 }
-
-// ==============================
+// ======================================
 // ADMIN LOGOUT
-// ==============================
+// ======================================
 
-const logoutBtn = document.getElementById("logoutBtn");
+document.addEventListener("click", async function (event) {
 
-if (logoutBtn) {
+    const logoutBtn = event.target.closest("#logoutBtn");
 
-    logoutBtn.addEventListener("click", async () => {
+    if (!logoutBtn) return;
 
-        try {
+    if (!confirm("Are you sure you want to logout?")) {
+        return;
+    }
 
-            const response = await fetch("/api/admin/logout", {
-                method: "POST"
-            });
+    try {
 
-            const data = await response.json();
+        const response = await fetch("/api/admin/logout", {
+            method: "POST",
+            credentials: "include"
+        });
 
-            if (data.success) {
+        const result = await response.json();
 
-                window.location.href = "admin-login.html";
+        if (!response.ok || !result.success) {
 
-            } else {
+            alert(result.message || "Logout failed.");
 
-                alert(data.message || "Logout failed.");
-
-            }
-
-        } catch (error) {
-
-            console.error("Logout error:", error);
-
-            alert("Unable to logout. Please try again.");
-
+            return;
         }
 
-    });
+        // Go back to login
+        window.location.replace("/admin/login.html");
 
-}
+    } catch (error) {
+
+        console.error("Logout error:", error);
+
+        alert("Unable to logout. Please try again.");
+
+    }
+
+});
+
 
 loadDashboard();
 

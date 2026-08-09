@@ -56,12 +56,6 @@ router.post("/signup", async (req, res) => {
         }
 
 
-        // Check whether an admin already exists
-        const adminCount = await Admin.countDocuments();
-        console.log("ADMIN COUNT:", adminCount);
-
-const adminInfo = await Admin.findOne()
-    .select("username createdAt");
 
 console.log("ADMIN ACCOUNT:", adminInfo); 
 
@@ -352,6 +346,132 @@ router.post("/logout", (req, res) => {
         });
 
     });
+
+});
+
+// ======================================
+// UPDATE ADMIN ACCOUNT
+// ======================================
+
+router.put("/update-account", async (req, res) => {
+
+    try {
+
+        // User must be logged in
+        if (!req.session.admin) {
+
+            return res.status(401).json({
+                success: false,
+                message: "You are not logged in."
+            });
+
+        }
+
+        const {
+            username,
+            currentPassword,
+            newPassword
+        } = req.body;
+
+        if (!username) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Username is required."
+            });
+
+        }
+
+        const admin = await Admin.findById(
+            req.session.admin.id
+        );
+
+        if (!admin) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Administrator account not found."
+            });
+
+        }
+
+        // ==================================
+        // PASSWORD CHANGE
+        // ==================================
+
+        if (newPassword) {
+
+            if (!currentPassword) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Current password is required."
+                });
+
+            }
+
+            const passwordCorrect =
+                await bcrypt.compare(
+                    currentPassword,
+                    admin.password
+                );
+
+            if (!passwordCorrect) {
+
+                return res.status(401).json({
+                    success: false,
+                    message: "Current password is incorrect."
+                });
+
+            }
+
+            if (newPassword.length < 6) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "New password must be at least 6 characters."
+                });
+
+            }
+
+            admin.password =
+                await bcrypt.hash(newPassword, 10);
+        }
+
+        // ==================================
+        // USERNAME
+        // ==================================
+
+        admin.username = username;
+
+        await admin.save();
+
+        // ==================================
+        // If username changed, update session
+        // ==================================
+
+        req.session.admin.username =
+            admin.username;
+
+        return res.json({
+            success: true,
+            message: "Administrator account updated successfully."
+        });
+
+    } catch (error) {
+
+        console.error(
+            "UPDATE ADMIN ACCOUNT ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to update administrator account."
+        });
+
+    }
 
 });
 

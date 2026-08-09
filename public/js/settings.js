@@ -1,87 +1,143 @@
-const saveBtn = document.getElementById("saveSettings");
+// ======================================
+// ADMIN ACCOUNT
+// ======================================
 
-async function loadSettings(){
+const adminForm = document.getElementById("adminSettingsForm");
 
-    try{
+if (adminForm) {
 
-        const response = await fetch("/api/settings");
+    adminForm.addEventListener("submit", async function (event) {
 
-        const settings = await response.json();
+        event.preventDefault();
 
-        if(settings){
+        const message = document.getElementById("adminMessage");
 
-            document.getElementById("businessName").value = settings.businessName || "";
-            document.getElementById("businessPhone").value = settings.businessPhone || "";
-            document.getElementById("businessEmail").value = settings.businessEmail || "";
-            document.getElementById("businessLocation").value = settings.businessLocation || "";
+        const username =
+            document.getElementById("adminUsername").value.trim();
 
-            document.getElementById("freeMinutes").value = settings.freeMinutes || "";
-            document.getElementById("sessionTimeout").value = settings.sessionTimeout || "";
-            document.getElementById("idleTimeout").value = settings.idleTimeout || "";
+        const currentPassword =
+            document.getElementById("currentPassword").value;
 
-            document.getElementById("shortcode").value = settings.shortcode || "";
-            document.getElementById("callbackUrl").value = settings.callbackUrl || "";
+        const newPassword =
+            document.getElementById("newPassword").value;
 
-            document.getElementById("routerIP").value = settings.routerIP || "";
-            document.getElementById("routerUser").value = settings.routerUser || "";
-            document.getElementById("routerPassword").value = settings.routerPassword || "";
+        const confirmPassword =
+            document.getElementById("confirmPassword").value;
 
+        message.textContent = "";
+        message.className = "message";
+
+        if (!username) {
+            message.textContent = "Username is required.";
+            message.classList.add("error");
+            return;
         }
 
-    }catch(err){
+        // If changing password, all password fields are required
+        if (newPassword || confirmPassword || currentPassword) {
 
-        console.error(err);
+            if (!currentPassword) {
+                message.textContent =
+                    "Enter your current password.";
+                message.classList.add("error");
+                return;
+            }
 
-    }
+            if (!newPassword) {
+                message.textContent =
+                    "Enter a new password.";
+                message.classList.add("error");
+                return;
+            }
 
-}
+            if (newPassword !== confirmPassword) {
+                message.textContent =
+                    "New passwords do not match.";
+                message.classList.add("error");
+                return;
+            }
 
-saveBtn.addEventListener("click",async()=>{
+            if (newPassword.length < 6) {
+                message.textContent =
+                    "New password must be at least 6 characters.";
+                message.classList.add("error");
+                return;
+            }
+        }
 
-    const settings = {
+        message.textContent =
+            "Saving account changes...";
 
-        businessName:businessName.value,
-        businessPhone:businessPhone.value,
-        businessEmail:businessEmail.value,
-        businessLocation:businessLocation.value,
+        try {
 
-        freeMinutes:freeMinutes.value,
-        sessionTimeout:sessionTimeout.value,
-        idleTimeout:idleTimeout.value,
+            const response = await fetch(
+                "/api/admin/update-account",
+                {
+                    method: "PUT",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        username,
+                        currentPassword,
+                        newPassword
+                    })
+                }
+            );
 
-        shortcode:shortcode.value,
-        callbackUrl:callbackUrl.value,
+            const result = await response.json();
 
-        routerIP:routerIP.value,
-        routerUser:routerUser.value,
-        routerPassword:routerPassword.value
+            if (!response.ok || !result.success) {
 
-    };
+                message.textContent =
+                    result.message ||
+                    "Unable to update account.";
 
-    const response = await fetch("/api/settings",{
+                message.classList.add("error");
 
-        method:"POST",
+                return;
+            }
 
-        headers:{
-            "Content-Type":"application/json"
-        },
+            message.textContent =
+                "Account updated successfully.";
 
-        body:JSON.stringify(settings)
+            message.classList.add("success");
+
+            // Clear password fields
+            document.getElementById("currentPassword").value = "";
+            document.getElementById("newPassword").value = "";
+            document.getElementById("confirmPassword").value = "";
+
+            /*
+             * If the password was changed, force a new login.
+             * This is safer than leaving the old session active.
+             */
+            if (newPassword) {
+
+                setTimeout(() => {
+
+                    window.location.replace(
+                        "/admin/login.html"
+                    );
+
+                }, 1500);
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Account update error:",
+                error
+            );
+
+            message.textContent =
+                "Unable to contact the server.";
+
+            message.classList.add("error");
+        }
 
     });
 
-    const data = await response.json();
-
-    if(data.success){
-
-        alert("Settings saved successfully.");
-
-    }else{
-
-        alert("Unable to save settings.");
-
-    }
-
-});
-
-loadSettings();
+}

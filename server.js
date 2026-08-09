@@ -4,6 +4,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const cors = require("cors");
+const requireAdmin = require("./middleware/adminAuth");
 const packageRoutes = require("./routes/packageRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const verifyRoutes = require("./routes/verifyRoutes");
@@ -26,7 +27,55 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static("public"));
+// ======================================
+// SESSION
+// ======================================
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || "witime-local-secret",
+    resave: false,
+    saveUninitialized: false
+}));
+
+// ======================================
+// STATIC FILES + ADMIN PROTECTION
+// ======================================
+
+app.use((req, res, next) => {
+
+    // Login page is PUBLIC
+    if (req.path === "/admin/login.html") {
+        return express.static("public", {
+            index: false
+        })(req, res, next);
+    }
+
+    // Other admin HTML pages require login
+    if (
+        req.path.startsWith("/admin/") &&
+        req.path.endsWith(".html")
+    ) {
+
+        if (
+            req.session &&
+            req.session.admin &&
+            req.session.admin.loggedIn === true
+        ) {
+            return express.static("public", {
+                index: false
+            })(req, res, next);
+        }
+
+        return res.redirect("/admin/login.html");
+    }
+
+    // Normal public files
+    express.static("public", {
+        index: false
+    })(req, res, next);
+
+});
+
 
 app.use(session({
     secret: process.env.SESSION_SECRET || "witime-local-secret",
@@ -42,26 +91,6 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => {
     console.error("MongoDB connection error:");
     console.error(err);
-
-    mongoose.connect(process.env.MONGO_URI)
-    .then(async () => {
-
-        console.log("✅ MongoDB Connected");
-
-        console.log("DATABASE:", mongoose.connection.name);
-
-        console.log(
-            "COLLECTIONS:",
-            Object.keys(mongoose.connection.collections)
-        );
-
-    })
-    .catch(err => {
-
-        console.error("MongoDB connection error:");
-        console.error(err);
-
-    });
 });
 
 app.get("/", (req,res)=>{
@@ -77,11 +106,104 @@ app.use("/", verifyRoutes);
 app.use(callbackRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/payments", paymentAdminRoutes);
-app.use("/api/users", usersRoutes);
-app.use("/api/reports", reportsRoutes);
-app.use("/api/connected", connectedRoutes);
+app.use("/api/payments", requireAdmin, paymentAdminRoutes);
+app.use("/api/users", requireAdmin, usersRoutes);
+app.use("/api/reports", requireAdmin, reportsRoutes);
+app.use("/api/connected", requireAdmin, connectedRoutes);
+
+// ======================================
+// ADMIN PAGE PROTECTION
+// ======================================
+
+function requireAdminPage(req, res, next) {
+
+    if (
+        req.session &&
+        req.session.admin &&
+        req.session.admin.loggedIn === true
+    ) {
+        return next();
+    }
+
+    return res.redirect("/admin/login.html");
+}
+
+
+// ======================================
+// PROTECTED ADMIN HTML PAGES
+// ======================================
+
+app.get(
+    "/admin/:page",
+    requireAdminPage,
+    (req, res, next) => {
+
+        const allowedPages = [
+            "dashboard.html",
+            "users.html",
+            "user-details.html",
+            "payments.html",
+            "reports.html",
+            "packages.html",
+            "settings.html"
+        ];
+
+        if (!allowedPages.includes(req.params.page)) {
+            return next();
+        }
+
+        res.sendFile(
+            __dirname + "/public/admin/" + req.params.page
+        );
+    }
+);
+
+// ======================================
+// Health Check
+// ======================================
+
+app.get("/api/health", (req, res) => {
+
+    res.json({
+        success: true,
+        status: "online",
+        service: "WiTime",
+        time: new Date().toISOString()
+    });
+
+});
 
 app.listen(PORT, ()=>{
     console.log(`WiTime running on port ${PORT}`);
 });
+
+// ======================================
+// WiTime Server Keep-Alive
+// ======================================
+
+const SERVER_URL =
+    process.env.RENDER_EXTERNAL_URL ||
+    `http://localhost:${PORT}`;
+
+setInterval(async () => {
+
+    try {
+
+        const response = await fetch(
+            `${SERVER_URL}/api/health`
+        );
+
+        console.log(
+            `🏓 Keep-alive ping: ${response.status}`
+        );
+
+    } catch (error) {
+
+        console.log(
+            "⚠ Keep-alive ping failed:",
+            error.message
+        );
+
+    }
+
+}, 10 * 60 * 1000); // every 10 minutes

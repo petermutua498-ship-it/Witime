@@ -1,156 +1,310 @@
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial,Helvetica,sans-serif;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-body{
-    background:#f4f7fc;
+body {
+    background: #f4f7fc;
+    color: #1f2937;
 }
 
-.container{
-    display:flex;
-    min-height:100vh;
+.container {
+    display: flex;
+    min-height: 100vh;
 }
 
-/* Sidebar */
 
-.sidebar{
-    width:250px;
-    background:#2563eb;
-    color:#fff;
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+    background: #2563eb;
+    color: white;
+    flex-shrink: 0;
 }
 
-.logo{
-    text-align:center;
-    padding:25px;
-    border-bottom:1px solid rgba(255,255,255,.2);
+.logo {
+    text-align: center;
+    padding: 25px;
+    border-bottom: 1px solid rgba(255,255,255,.2);
 }
 
-.logo img{
-    width:90px;
-    margin-bottom:10px;
+.logo img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 10px;
 }
 
-.logo h2{
-    margin-bottom:5px;
+.logo h2 {
+    margin-bottom: 5px;
 }
 
-.logo p{
-    font-size:13px;
-    opacity:.8;
+.logo p {
+    font-size: 13px;
+    opacity: .8;
 }
 
-.sidebar ul{
-    list-style:none;
-    margin-top:20px;
+.sidebar ul {
+    list-style: none;
+    margin-top: 20px;
 }
 
-.sidebar ul li{
-    padding:16px 25px;
-    cursor:pointer;
-    transition:.3s;
+.sidebar li {
+    padding: 15px 25px;
+    cursor: pointer;
+    transition: .2s;
 }
 
-.sidebar ul li:hover{
-    background:rgba(255,255,255,.15);
+.sidebar li:hover {
+    background: rgba(255,255,255,.15);
 }
 
-.sidebar ul li.active{
-    background:white;
-    color:#2563eb;
-    font-weight:bold;
+.sidebar li.active {
+    background: white;
+    color: #2563eb;
+    font-weight: bold;
 }
 
-/* Main */
 
-.main{
-    flex:1;
-    padding:30px;
+/* =========================
+   MAIN
+========================= */
+
+.main {
+    flex: 1;
+    padding: 30px;
+    max-width: 1400px;
 }
 
-.main h1{
-    margin-bottom:25px;
-    color:#1f2937;
+.header {
+    margin-bottom: 25px;
 }
 
-.settings-card{
-
-    background:white;
-
-    padding:25px;
-
-    border-radius:15px;
-
-    margin-bottom:25px;
-
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
-
+.header h1 {
+    font-size: 30px;
+    margin-bottom: 5px;
 }
 
-.settings-card h2{
-
-    margin-bottom:20px;
-
-    color:#2563eb;
-
+.header p {
+    color: #6b7280;
 }
 
-.settings-card input{
 
-    width:100%;
+/* =========================
+   SETTINGS CARDS
+========================= */
 
-    padding:14px;
-
-    margin-bottom:15px;
-
-    border:1px solid #ddd;
-
-    border-radius:8px;
-
-    font-size:15px;
-
+.settings-card {
+    background: white;
+    border-radius: 14px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 18px rgba(0,0,0,.07);
 }
 
-#saveSettings{
-
-    width:100%;
-
-    padding:15px;
-
-    background:#2563eb;
-
-    color:white;
-
-    border:none;
-
-    border-radius:10px;
-
-    font-size:16px;
-
-    cursor:pointer;
-
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
 }
 
-#saveSettings:hover{
-
-    background:#1d4ed8;
-
+.card-header h2 {
+    font-size: 20px;
+    margin-bottom: 5px;
 }
 
-@media(max-width:768px){
-
-.container{
-
-flex-direction:column;
-
+.card-header p {
+    color: #6b7280;
+    font-size: 14px;
 }
 
-.sidebar{
 
-width:100%;
+/* =========================
+   FORMS
+========================= */
 
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    outline: none;
+    font-size: 15px;
+}
+
+.form-group input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.1);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.button-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.primary-btn,
+.secondary-btn,
+.danger-btn {
+    border: none;
+    padding: 11px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.primary-btn {
+    background: #2563eb;
+    color: white;
+}
+
+.primary-btn:hover {
+    background: #1d4ed8;
+}
+
+.secondary-btn {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+.secondary-btn:hover {
+    background: #d1d5db;
+}
+
+.danger-btn {
+    background: #dc2626;
+    color: white;
+}
+
+.danger-btn:hover {
+    background: #b91c1c;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+.status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.status.connected {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status.disconnected {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.status-row:last-child {
+    border-bottom: none;
+}
+
+
+/* =========================
+   MESSAGES
+========================= */
+
+.message {
+    min-height: 20px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+
+/* =========================
+   DANGER
+========================= */
+
+.danger-card {
+    border: 1px solid #fecaca;
+}
+
+.danger-actions {
+    display: flex;
+    gap: 10px;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 800px) {
+
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-height: auto;
+    }
+
+    .main {
+        padding: 20px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .card-header {
+        align-items: flex-start;
+        gap: 15px;
+        flex-direction: column;
+    }
 
 }

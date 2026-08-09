@@ -3,7 +3,7 @@ const router = express.Router();
 
 const Package = require("../models/Package");
 const Payment = require("../models/Payment");
-const requireAdmin = require("../middleware/auth");
+const requireAdmin = require("../middleware/adminAuth");
 
 
 // =====================================
