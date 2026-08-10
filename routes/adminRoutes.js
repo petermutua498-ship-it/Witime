@@ -14,7 +14,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 // POST /api/admin/login
 // ======================================
 
-router.post("/login", async (req, res) => {
+router.post("/login", (req, res) => {
 
     try {
 
@@ -25,6 +25,17 @@ router.post("/login", async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Username and password are required."
+            });
+
+        }
+
+        if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+
+            console.error("❌ Admin credentials are not configured.");
+
+            return res.status(500).json({
+                success: false,
+                message: "Admin credentials are not configured on the server."
             });
 
         }
@@ -121,7 +132,8 @@ router.post("/logout", (req, res) => {
 });
 
 // ======================================
-// CHECK ADMIN AUTHENTICATION
+// CHECK ADMIN
+// GET /api/admin/check
 // ======================================
 
 router.get("/check", (req, res) => {
