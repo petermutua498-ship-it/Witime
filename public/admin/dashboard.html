@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-<title>Dashboard - WiTime</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="/css/admin.css">
-<link rel="stylesheet" href="/css/dashboard.css">
+    <title>WiTime - Dashboard</title>
+
+    <link rel="stylesheet" href="/css/dashboard.css">
 
 </head>
 
@@ -23,13 +25,16 @@
         <div class="logo">
 
             <img src="/images/logo.png" alt="WiTime Logo">
+
             <h2>WiTime</h2>
 
         </div>
 
         <ul>
 
-            <li class="active">🏠 Dashboard</li>
+            <li class="active">
+                🏠 Dashboard
+            </li>
 
             <li onclick="location.href='packages.html'">
                 📦 Packages
@@ -59,11 +64,10 @@
 
     </aside>
 
+
     <!-- Main -->
 
-    <div class="main">
-
-        <!-- Header -->
+    <main class="main">
 
         <div class="header">
 
@@ -73,100 +77,120 @@
 
                 <span>Administrator</span>
 
-                <img src="images/admin.png" alt="Admin">
+                <img
+                    src="/images/admin.png"
+                    alt="Admin"
+                >
 
             </div>
 
         </div>
 
-        <!-- Content -->
 
         <div class="content">
+
+            <!-- Statistics -->
 
             <div class="cards">
 
                 <div class="card">
 
-    <h3>👥 Online Users</h3>
+                    <h3>👥 Online Users</h3>
 
-    <h2 id="onlineUsers">0</h2>
+                    <h2 id="onlineUsers">0</h2>
 
-</div>
+                </div>
 
-<div class="card">
 
-    <h3>📦 Packages</h3>
+                <div class="card">
 
-    <h2 id="totalPackages">0</h2>
+                    <h3>📦 Packages</h3>
 
-</div>
+                    <h2 id="totalPackages">0</h2>
 
-<div class="card">
+                </div>
 
-    <h3>💳 Payments Today</h3>
 
-    <h2 id="paymentsToday">0</h2>
+                <div class="card">
 
-</div>
+                    <h3>💳 Payments Today</h3>
 
-<div class="card">
+                    <h2 id="paymentsToday">0</h2>
 
-    <h3>💰 Revenue Today</h3>
+                </div>
 
-    <h2 id="revenueToday">KES 0</h2>
 
-</div>
+                <div class="card">
 
-            <h2 style="margin-bottom:20px;">
-                Recent Payments
-            </h2>
+                    <h3>💰 Revenue Today</h3>
+
+                    <h2 id="revenueToday">
+                        KES 0
+                    </h2>
+
+                </div>
 
             </div>
 
-            <table>
 
-                <thead>
+            <!-- Recent Payments -->
 
-                    <tr>
+            <div class="table-card">
 
-                        <th>Phone</th>
+                <h2 style="margin-bottom:20px;">
+                    Recent Payments
+                </h2>
 
-                        <th>Package</th>
+                <table>
 
-                        <th>Amount</th>
+                    <thead>
 
-                        <th>Status</th>
+                        <tr>
 
-                        <th>Date</th>
+                            <th>Phone</th>
 
-                    </tr>
+                            <th>Package</th>
 
-                </thead>
+                            <th>Amount</th>
 
-                <tbody id="paymentTable">
+                            <th>Status</th>
 
-                    <tr>
+                            <th>Date</th>
 
-                        <td colspan="5" style="text-align:center;">
+                        </tr>
 
-                            No payments found.
+                    </thead>
 
-                        </td>
+                    <tbody id="paymentTable">
 
-                    </tr>
+                        <tr>
 
-                </tbody>
+                            <td
+                                colspan="5"
+                                style="text-align:center;"
+                            >
+                                No payments found.
+                            </td>
 
-            </table>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
-    </div>
+    </main>
 
 </div>
 
-<script src="js/dashboard.js"></script>
-<script src="js/admin-auth.js"></script>
+
+<!-- Dashboard JavaScript -->
+
+<script src="/admin/js/dashboard.js"></script>
 
 </body>
+
 </html>
