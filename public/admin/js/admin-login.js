@@ -1,187 +1,86 @@
+// ======================================
+// WiTime Admin Login
+// ======================================
+
 const loginForm = document.getElementById("loginForm");
-const signupForm = document.getElementById("signupForm");
-
-const formTitle = document.getElementById("formTitle");
-const switchAuth = document.getElementById("switchAuth");
-const switchText = document.getElementById("switchText");
-
 const loginMessage = document.getElementById("loginMessage");
-const signupMessage = document.getElementById("signupMessage");
 
-// SWITCH LOGIN / SIGN UP
-
-switchAuth.addEventListener("click", function () {
-
-
-if (loginForm.style.display !== "none") {
-
-    loginForm.style.display = "none";
-    signupForm.style.display = "block";
-
-    formTitle.textContent = "Create Administrator Account";
-
-    switchText.textContent = "Already have an account?";
-
-    switchAuth.textContent = "Login";
-
-    loginMessage.textContent = "";
-    signupMessage.textContent = "";
-
-} else {
-
-    loginForm.style.display = "block";
-    signupForm.style.display = "none";
-
-    formTitle.textContent = "Administrator Login";
-
-    switchText.textContent = "Don't have an account?";
-
-    switchAuth.textContent = "Sign Up";
-
-    loginMessage.textContent = "";
-    signupMessage.textContent = "";
-
-}
-
-
-});
-
+// ======================================
 // LOGIN
+// ======================================
 
 loginForm.addEventListener("submit", async function (event) {
 
+    event.preventDefault();
 
-event.preventDefault();
+    loginMessage.textContent = "Logging in...";
 
-loginMessage.textContent = "Logging in...";
+    const username =
+        document.getElementById("loginUsername").value.trim();
 
-const username =
-    document.getElementById("loginUsername").value.trim();
+    const password =
+        document.getElementById("loginPassword").value;
 
-const password =
-    document.getElementById("loginPassword").value;
-
-try {
-
-    const response = await fetch("/api/admin/login", {
-
-        method: "POST",
-
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        credentials: "include",
-
-        body: JSON.stringify({
-            username: username,
-            password: password
-        })
-
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
+    if (!username || !password) {
 
         loginMessage.textContent =
-            data.message || "Invalid username or password.";
+            "Enter username and password.";
 
         return;
 
     }
 
-    window.location.href = "/admin/dashboard.html";
+    try {
 
-} catch (error) {
+        const response = await fetch("/api/admin/login", {
 
-    console.error("Login error:", error);
+            method: "POST",
 
-    loginMessage.textContent =
-        "Unable to connect to server.";
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-}
+            credentials: "include",
 
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
 
-});
+        });
 
-// SIGN UP
+        const data = await response.json();
 
-signupForm.addEventListener("submit", async function (event) {
+        console.log("LOGIN RESPONSE:", data);
 
+        if (!response.ok || !data.success) {
 
-event.preventDefault();
+            loginMessage.textContent =
+                data.message || "Invalid username or password.";
 
-signupMessage.textContent = "Creating account...";
+            return;
 
-const username =
-    document.getElementById("signupUsername").value.trim();
+        }
 
-const password =
-    document.getElementById("signupPassword").value;
+        loginMessage.textContent =
+            "Login successful. Opening dashboard...";
 
-const confirmPassword =
-    document.getElementById("confirmPassword").value;
+        // Give browser a moment to store the session cookie
+        setTimeout(() => {
 
-if (password !== confirmPassword) {
+            window.location.replace(
+                "/admin/dashboard.html"
+            );
 
-    signupMessage.textContent =
-        "Passwords do not match.";
+        }, 300);
 
-    return;
+    } catch (error) {
 
-}
+        console.error("Login error:", error);
 
-if (password.length < 6) {
-
-    signupMessage.textContent =
-        "Password must be at least 6 characters.";
-
-    return;
-
-}
-
-try {
-
-    const response = await fetch("/api/admin/signup", {
-
-        method: "POST",
-
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        credentials: "include",
-
-        body: JSON.stringify({
-            username: username,
-            password: password,
-            confirmPassword: confirmPassword
-        })
-
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-
-        signupMessage.textContent =
-            data.message || "Unable to create account.";
-
-        return;
+        loginMessage.textContent =
+            "Unable to connect to server.";
 
     }
-
-    window.location.href = "/admin/dashboard.html";
-
-} catch (error) {
-
-    console.error("Signup error:", error);
-
-    signupMessage.textContent =
-        "Unable to connect to server.";
-
-}
-
 
 });

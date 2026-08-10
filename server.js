@@ -31,10 +31,18 @@ app.use((req, res, next) => {
 // SESSION
 // ======================================
 
+app.set("trust proxy", 1);
+
 app.use(session({
     secret: process.env.SESSION_SECRET || "witime-local-secret",
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: {
+        secure: true,
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000
+    }
 }));
 
 // ======================================
