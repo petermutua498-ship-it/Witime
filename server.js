@@ -194,7 +194,7 @@ setInterval(async () => {
         );
 
         console.log(
-            `🏓 Keep-alive ping: ${response.status}`
+            `Keep-alive ping: ${response.status}`
         );
 
     } catch (error) {

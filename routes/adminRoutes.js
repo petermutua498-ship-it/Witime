@@ -14,6 +14,9 @@ console.log(
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
+console.log("Admin username loaded:", ADMIN_USERNAME);
+console.log("Admin password configured:", !!process.env.ADMIN_PASSWORD);
+
 // ======================================
 // ADMIN LOGIN
 // POST /api/admin/login
