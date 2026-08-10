@@ -1,21 +1,25 @@
-const onlineUsers = document.getElementById("onlineUsers");
-const totalPackages = document.getElementById("totalPackages");
-const paymentsToday = document.getElementById("paymentsToday");
-const revenueToday = document.getElementById("revenueToday");
-
 // ======================================
-// CHECK ADMIN LOGIN
+// WiTime Admin Dashboard
 // ======================================
 
-async function checkAdmin() {
+
+// ======================================
+// CHECK ADMIN SESSION
+// ======================================
+
+async function checkAdminSession() {
 
     try {
 
         const response = await fetch("/api/admin/me", {
-            credentials: "include"
+            method: "GET",
+            credentials: "include",
+            cache: "no-store"
         });
 
         if (!response.ok) {
+
+            console.log("Admin session not found.");
 
             window.location.replace("/admin/login.html");
 
@@ -23,6 +27,8 @@ async function checkAdmin() {
         }
 
         const data = await response.json();
+
+        console.log("Admin session:", data);
 
         if (!data.success || !data.admin) {
 
@@ -35,13 +41,33 @@ async function checkAdmin() {
 
     } catch (error) {
 
-        console.error("Authentication check failed:", error);
+        console.error(
+            "Session check failed:",
+            error
+        );
 
         window.location.replace("/admin/login.html");
 
         return false;
     }
 }
+
+
+// ======================================
+// DASHBOARD ELEMENTS
+// ======================================
+
+const onlineUsers =
+    document.getElementById("onlineUsers");
+
+const totalPackages =
+    document.getElementById("totalPackages");
+
+const paymentsToday =
+    document.getElementById("paymentsToday");
+
+const revenueToday =
+    document.getElementById("revenueToday");
 
 
 // ======================================
@@ -52,18 +78,26 @@ async function loadDashboard() {
 
     try {
 
-        const response = await fetch("/api/dashboard/stats", {
-            credentials: "include"
-        });
+        const response =
+            await fetch(
+                "/api/dashboard/stats",
+                {
+                    credentials: "include",
+                    cache: "no-store"
+                }
+            );
 
         if (response.status === 401) {
 
-            window.location.replace("/admin/login.html");
+            window.location.replace(
+                "/admin/login.html"
+            );
 
             return;
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
         onlineUsers.textContent =
             data.onlineUsers ?? 0;
@@ -75,90 +109,127 @@ async function loadDashboard() {
             data.paymentsToday ?? 0;
 
         revenueToday.textContent =
-            "KES " + (data.revenueToday ?? 0);
-
-    } catch (err) {
-
-        console.error("Dashboard error:", err);
-
-    }
-
-}
-
-
-// ======================================
-// ADMIN LOGOUT
-// ======================================
-
-document.addEventListener("click", async function (event) {
-
-    const logoutBtn =
-        event.target.closest("#logoutBtn");
-
-    if (!logoutBtn) return;
-
-    if (!confirm("Are you sure you want to logout?")) {
-        return;
-    }
-
-    try {
-
-        const response = await fetch(
-            "/api/admin/logout",
-            {
-                method: "POST",
-                credentials: "include"
-            }
-        );
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-
-            alert(
-                result.message ||
-                "Logout failed."
-            );
-
-            return;
-        }
-
-        window.location.replace(
-            "/admin/login.html"
-        );
+            "KES " +
+            (data.revenueToday ?? 0);
 
     } catch (error) {
 
         console.error(
-            "Logout error:",
+            "Dashboard loading error:",
             error
         );
 
-        alert(
-            "Unable to logout. Please try again."
-        );
+    }
+}
+
+
+// ======================================
+// LOGOUT
+// ======================================
+
+document.addEventListener(
+    "click",
+    async function(event) {
+
+        const logoutBtn =
+            event.target.closest("#logoutBtn");
+
+        if (!logoutBtn) return;
+
+        if (
+            !confirm(
+                "Are you sure you want to logout?"
+            )
+        ) {
+
+            return;
+        }
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/admin/logout",
+                    {
+                        method: "POST",
+                        credentials: "include"
+                    }
+                );
+
+            const result =
+                await response.json();
+
+            if (
+                !response.ok ||
+                !result.success
+            ) {
+
+                alert(
+                    result.message ||
+                    "Logout failed."
+                );
+
+                return;
+            }
+
+            // Prevent browser from showing
+            // cached dashboard after logout.
+
+            window.location.replace(
+                "/admin/login.html"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Logout error:",
+                error
+            );
+
+            alert(
+                "Unable to logout. Please try again."
+            );
+
+        }
 
     }
+);
 
-});
+
+// ======================================
+// START
+// ======================================
+
+async function startDashboard() {
+
+    console.log(
+        "Checking administrator session..."
+    );
+
+    const authenticated =
+        await checkAdminSession();
+
+    if (!authenticated) {
+
+        return;
+    }
+
+    console.log(
+        "Administrator authenticated."
+    );
+
+    await loadDashboard();
+
+    setInterval(
+        loadDashboard,
+        10000
+    );
+
+}
 
 
 // ======================================
 // START DASHBOARD
 // ======================================
-
-async function startDashboard() {
-
-    const authenticated =
-        await checkAdmin();
-
-    if (!authenticated) {
-        return;
-    }
-
-    await loadDashboard();
-
-    setInterval(loadDashboard, 10000);
-}
 
 startDashboard();
