@@ -84,7 +84,6 @@ app.use((req, res, next) => {
 
 });
 
-
 // ======================================
 // SESSION CONFIGURATION
 // ======================================
@@ -98,15 +97,12 @@ app.use(session({
 
     saveUninitialized: false,
 
-    proxy: true,
+    rolling: true,
 
     cookie: {
         httpOnly: true,
-
         secure: process.env.NODE_ENV === "production",
-
         sameSite: "lax",
-
         maxAge: 24 * 60 * 60 * 1000
     }
 }));

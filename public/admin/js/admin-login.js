@@ -64,17 +64,21 @@ loginForm.addEventListener("submit", async function (event) {
         loginMessage.textContent =
             "Login successful. Opening dashboard...";
 
-        // Give the browser a moment to store
-        // the session cookie.
+       if (!response.ok || !data.success) {
 
-        setTimeout(() => {
+    loginMessage.textContent =
+        data.message || "Invalid username or password.";
 
-            window.location.replace(
-                "/admin/dashboard.html"
-            );
+    loginButton.disabled = false;
+    loginButton.textContent = "Login";
 
-        }, 300);
+    return;
+}
 
+loginMessage.textContent =
+    "Login successful. Proceeding to dashboard...";
+
+window.location.replace("/admin/dashboard.html");
     } catch (error) {
 
         console.error(

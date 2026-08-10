@@ -54,16 +54,12 @@ router.post("/login", async (req, res) => {
 
         }
 
-        // ======================================
-        // CREATE SESSION
-        // ======================================
-
         req.session.admin = {
             username: ADMIN_USERNAME
         };
 
-        // Explicitly save the session before
-        // sending the response.
+        // VERY IMPORTANT:
+        // Explicitly save the session before responding.
 
         req.session.save((error) => {
 
@@ -76,8 +72,7 @@ router.post("/login", async (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message:
-                        "Login succeeded, but administrator session was not created."
+                    message: "Administrator session could not be created."
                 });
 
             }
@@ -88,11 +83,15 @@ router.post("/login", async (req, res) => {
             );
 
             return res.json({
+
                 success: true,
+
                 message: "Login successful.",
+
                 admin: {
                     username: ADMIN_USERNAME
                 }
+
             });
 
         });
@@ -133,19 +132,24 @@ router.get("/me", (req, res) => {
     if (!req.session.admin) {
 
         return res.status(401).json({
+
             success: false,
+
             message: "Not authenticated."
+
         });
 
     }
 
     return res.json({
+
         success: true,
+
         admin: req.session.admin
+
     });
 
 });
-
 // ======================================
 // CHECK
 // GET /api/admin/check
