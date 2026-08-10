@@ -7,10 +7,10 @@ const router = express.Router();
 // ======================================
 
 const ADMIN_USERNAME =
-    process.env.ADMIN_USERNAME || "admin";
+    process.env.ADMIN_USERNAME 
 
 const ADMIN_PASSWORD =
-    process.env.ADMIN_PASSWORD || "admin123";
+    process.env.ADMIN_PASSWORD
 
 console.log("Admin username loaded:", ADMIN_USERNAME);
 console.log(
@@ -54,9 +54,10 @@ router.post("/login", async (req, res) => {
 
         }
 
-        req.session.admin = {
-            username: ADMIN_USERNAME
-        };
+       req.session.admin = {
+    username: ADMIN_USERNAME,
+    loggedIn: true
+};
 
         // VERY IMPORTANT:
         // Explicitly save the session before responding.
@@ -124,29 +125,23 @@ router.get("/me", (req, res) => {
         req.sessionID
     );
 
+    if (!req.session || !req.session.admin) {
+
+        return res.status(401).json({
+            success: false,
+            message: "Not authenticated."
+        });
+
+    }
+
     console.log(
         "Admin session:",
         req.session.admin
     );
 
-    if (!req.session.admin) {
-
-        return res.status(401).json({
-
-            success: false,
-
-            message: "Not authenticated."
-
-        });
-
-    }
-
     return res.json({
-
         success: true,
-
         admin: req.session.admin
-
     });
 
 });
