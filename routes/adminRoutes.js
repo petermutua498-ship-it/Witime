@@ -1,6 +1,11 @@
 const express = require("express");
 
 const router = express.Router();
+console.log("ADMIN USERNAME:", process.env.ADMIN_USERNAME);
+console.log(
+    "ADMIN PASSWORD SET:",
+    !!process.env.ADMIN_PASSWORD
+);
 
 // ======================================
 // ADMIN CREDENTIALS
