@@ -1,15 +1,14 @@
 // ======================================
-// WiTime Administrator Login
+// WiTime Admin Login
 // ======================================
 
-const loginForm =
-    document.getElementById("loginForm");
+const loginForm = document.getElementById("loginForm");
 
-const loginMessage =
-    document.getElementById("loginMessage");
+const loginUsername = document.getElementById("loginUsername");
+const loginPassword = document.getElementById("loginPassword");
 
-const loginButton =
-    document.getElementById("loginButton");
+const loginButton = document.getElementById("loginButton");
+const loginMessage = document.getElementById("loginMessage");
 
 
 // ======================================
@@ -20,15 +19,31 @@ loginForm.addEventListener("submit", async function (event) {
 
     event.preventDefault();
 
-    loginMessage.textContent = "Logging in...";
+    const username = loginUsername.value.trim();
+    const password = loginPassword.value;
 
-    const username =
-        document.getElementById("loginUsername").value.trim();
+    if (!username || !password) {
 
-    const password =
-        document.getElementById("loginPassword").value;
+        loginMessage.textContent =
+            "Enter username and password.";
+
+        return;
+    }
+
+
+    // Disable button
+
+    loginButton.disabled = true;
+
+    loginButton.textContent = "Logging in...";
+
+    loginMessage.textContent = "";
+
 
     try {
+
+        console.log("Sending administrator login...");
+
 
         const response = await fetch(
             "/api/admin/login",
@@ -41,16 +56,28 @@ loginForm.addEventListener("submit", async function (event) {
 
                 credentials: "include",
 
+                cache: "no-store",
+
                 body: JSON.stringify({
-                    username,
-                    password
+                    username: username,
+                    password: password
                 })
             }
         );
 
+
         const data = await response.json();
 
-        console.log("Login response:", data);
+
+        console.log(
+            "Login response:",
+            data
+        );
+
+
+        // ======================================
+        // LOGIN FAILED
+        // ======================================
 
         if (!response.ok || !data.success) {
 
@@ -58,37 +85,147 @@ loginForm.addEventListener("submit", async function (event) {
                 data.message ||
                 "Invalid username or password.";
 
+            loginButton.disabled = false;
+
+            loginButton.textContent = "Login";
+
             return;
         }
 
+
+        // ======================================
+        // LOGIN SUCCESS
+        // ======================================
+
+        console.log(
+            "Login successful."
+        );
+
+
         loginMessage.textContent =
-            "Login successful. Opening dashboard...";
+            "Login successful. Proceeding to dashboard...";
 
-       if (!response.ok || !data.success) {
 
-    loginMessage.textContent =
-        data.message || "Invalid username or password.";
+        // ======================================
+        // VERIFY SESSION
+        // ======================================
 
-    loginButton.disabled = false;
-    loginButton.textContent = "Login";
+        const sessionResponse = await fetch(
+            "/api/admin/me",
+            {
+                method: "GET",
 
-    return;
-}
+                credentials: "include",
 
-loginMessage.textContent =
-    "Login successful. Proceeding to dashboard...";
+                cache: "no-store"
+            }
+        );
 
-window.location.replace("/admin/dashboard.html");
+
+        console.log(
+            "Session verification status:",
+            sessionResponse.status
+        );
+
+
+        if (!sessionResponse.ok) {
+
+            console.error(
+                "Administrator session was not returned by server."
+            );
+
+
+            loginMessage.textContent =
+                "Login succeeded, but administrator session was not created in the browser.";
+
+
+            loginButton.disabled = false;
+
+            loginButton.textContent = "Login";
+
+            return;
+        }
+
+
+        const sessionData =
+            await sessionResponse.json();
+
+
+        console.log(
+            "Session verification:",
+            sessionData
+        );
+
+
+        if (
+            !sessionData.success ||
+            !sessionData.admin
+        ) {
+
+            loginMessage.textContent =
+                "Login succeeded, but administrator session could not be verified.";
+
+            loginButton.disabled = false;
+
+            loginButton.textContent = "Login";
+
+            return;
+        }
+
+
+        // ======================================
+        // EVERYTHING IS GOOD
+        // ======================================
+
+        console.log(
+            "✅ Administrator session verified."
+        );
+
+
+        console.log(
+            "➡️ Redirecting to dashboard..."
+        );
+
+
+        window.location.replace(
+            "/admin/dashboard.html"
+        );
+
+
     } catch (error) {
 
         console.error(
-            "Login error:",
+            "Administrator login error:",
             error
         );
 
+
         loginMessage.textContent =
-            "Unable to connect to server.";
+            "Unable to connect to the server.";
+
+
+        loginButton.disabled = false;
+
+        loginButton.textContent = "Login";
 
     }
 
 });
+
+
+// ======================================
+// PREVENT MULTIPLE SUBMISSIONS
+// ======================================
+
+loginPassword.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "Enter") {
+
+            loginForm.requestSubmit();
+
+        }
+
+    }
+);
