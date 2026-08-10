@@ -1,32 +1,35 @@
 const express = require("express");
 
 const router = express.Router();
-console.log("ADMIN USERNAME:", process.env.ADMIN_USERNAME);
-console.log(
-    "ADMIN PASSWORD SET:",
-    !!process.env.ADMIN_PASSWORD
-);
 
 // ======================================
 // ADMIN CREDENTIALS
 // ======================================
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_USERNAME =
+    process.env.ADMIN_USERNAME || "admin";
+
+const ADMIN_PASSWORD =
+    process.env.ADMIN_PASSWORD || "admin123";
 
 console.log("Admin username loaded:", ADMIN_USERNAME);
-console.log("Admin password configured:", !!process.env.ADMIN_PASSWORD);
+console.log(
+    "Admin password configured:",
+    !!process.env.ADMIN_PASSWORD
+);
 
 // ======================================
-// ADMIN LOGIN
+// LOGIN
 // POST /api/admin/login
 // ======================================
 
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
 
     try {
 
         const { username, password } = req.body;
+
+        console.log("Admin login attempt:", username);
 
         if (!username || !password) {
 
@@ -37,21 +40,12 @@ router.post("/login", (req, res) => {
 
         }
 
-        if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
-
-            console.error("Admin credentials are not configured.");
-
-            return res.status(500).json({
-                success: false,
-                message: "Admin credentials are not configured on the server."
-            });
-
-        }
-
         if (
             username !== ADMIN_USERNAME ||
             password !== ADMIN_PASSWORD
         ) {
+
+            console.log("❌ Invalid admin credentials");
 
             return res.status(401).json({
                 success: false,
@@ -60,21 +54,55 @@ router.post("/login", (req, res) => {
 
         }
 
+        // ======================================
+        // CREATE SESSION
+        // ======================================
+
         req.session.admin = {
             username: ADMIN_USERNAME
         };
 
-        return res.json({
-            success: true,
-            message: "Login successful.",
-            admin: {
-                username: ADMIN_USERNAME
+        // Explicitly save the session before
+        // sending the response.
+
+        req.session.save((error) => {
+
+            if (error) {
+
+                console.error(
+                    "❌ Session save error:",
+                    error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Login succeeded, but administrator session was not created."
+                });
+
             }
+
+            console.log(
+                "✅ Administrator session created:",
+                req.sessionID
+            );
+
+            return res.json({
+                success: true,
+                message: "Login successful.",
+                admin: {
+                    username: ADMIN_USERNAME
+                }
+            });
+
         });
 
     } catch (error) {
 
-        console.error("Admin login error:", error);
+        console.error(
+            "Admin login error:",
+            error
+        );
 
         return res.status(500).json({
             success: false,
@@ -85,7 +113,22 @@ router.post("/login", (req, res) => {
 
 });
 
+// ======================================
+// CURRENT ADMIN
+// GET /api/admin/me
+// ======================================
+
 router.get("/me", (req, res) => {
+
+    console.log(
+        "Checking admin session:",
+        req.sessionID
+    );
+
+    console.log(
+        "Admin session:",
+        req.session.admin
+    );
 
     if (!req.session.admin) {
 
@@ -103,31 +146,10 @@ router.get("/me", (req, res) => {
 
 });
 
-router.post("/logout", (req, res) => {
-
-    req.session.destroy((error) => {
-
-        if (error) {
-
-            console.error("Logout error:", error);
-
-            return res.status(500).json({
-                success: false,
-                message: "Unable to logout."
-            });
-
-        }
-
-        res.clearCookie("connect.sid");
-
-        return res.json({
-            success: true,
-            message: "Logged out successfully."
-        });
-
-    });
-
-});
+// ======================================
+// CHECK
+// GET /api/admin/check
+// ======================================
 
 router.get("/check", (req, res) => {
 
@@ -144,6 +166,49 @@ router.get("/check", (req, res) => {
         success: true,
         authenticated: true,
         admin: req.session.admin
+    });
+
+});
+
+// ======================================
+// LOGOUT
+// POST /api/admin/logout
+// ======================================
+
+router.post("/logout", (req, res) => {
+
+    console.log(
+        "Logging out session:",
+        req.sessionID
+    );
+
+    req.session.destroy((error) => {
+
+        if (error) {
+
+            console.error(
+                "Logout error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to logout."
+            });
+
+        }
+
+        res.clearCookie("connect.sid", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax"
+        });
+
+        return res.json({
+            success: true,
+            message: "Logged out successfully."
+        });
+
     });
 
 });

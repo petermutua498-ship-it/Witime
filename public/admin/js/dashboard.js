@@ -227,6 +227,22 @@ async function startDashboard() {
 
 }
 
+async function startDashboard() {
+
+    console.log("Checking administrator session...");
+
+    const authenticated = await checkAdminSession();
+
+    if (!authenticated) {
+        return;
+    }
+
+    console.log("Administrator authenticated.");
+
+    await loadDashboard();
+
+    setInterval(loadDashboard, 10000);
+}
 
 // ======================================
 // START DASHBOARD
