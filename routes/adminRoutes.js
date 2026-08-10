@@ -36,7 +36,7 @@ router.post("/login", (req, res) => {
 
         if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
 
-            console.error("❌ Admin credentials are not configured.");
+            console.error("Admin credentials are not configured.");
 
             return res.status(500).json({
                 success: false,
@@ -82,11 +82,6 @@ router.post("/login", (req, res) => {
 
 });
 
-// ======================================
-// CURRENT ADMIN
-// GET /api/admin/me
-// ======================================
-
 router.get("/me", (req, res) => {
 
     if (!req.session.admin) {
@@ -104,11 +99,6 @@ router.get("/me", (req, res) => {
     });
 
 });
-
-// ======================================
-// LOGOUT
-// POST /api/admin/logout
-// ======================================
 
 router.post("/logout", (req, res) => {
 
@@ -135,11 +125,6 @@ router.post("/logout", (req, res) => {
     });
 
 });
-
-// ======================================
-// CHECK ADMIN
-// GET /api/admin/check
-// ======================================
 
 router.get("/check", (req, res) => {
 
