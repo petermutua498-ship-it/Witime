@@ -95,11 +95,10 @@ router.post("/callback", async (req, res) => {
             // ======================================
 
             const packageData =
-                await Package.findOne({
-                    name: payment.packageName,
-                    status: "Active"
-                });
-
+    await Package.findOne({
+        name: payment.packageName,
+        active: true
+    });
             if (!packageData) {
 
                 console.error(
