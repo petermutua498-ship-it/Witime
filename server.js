@@ -17,6 +17,7 @@ const paymentAdminRoutes = require("./routes/paymentAdminRoutes");
 const usersRoutes = require("./routes/usersRoutes");
 const reportsRoutes = require("./routes/reportsRoutes");
 const connectedRoutes = require("./routes/connectedRoutes");
+const mikrotikRoutes = require("./routes/mikrotikRoutes");
 
 const app = express();
 
@@ -142,6 +143,7 @@ app.use(
     callbackRoutes
 );
 
+app.use("/api/admin/mikrotik", mikrotikRoutes);
 
 // ======================================
 // DASHBOARD API

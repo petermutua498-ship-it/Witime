@@ -1,6 +1,6 @@
-// =======================================
+// ======================================
 // WiTime Users Management
-// =======================================
+// ======================================
 
 const table = document.getElementById("userTable");
 const searchBox = document.getElementById("searchUser");
@@ -11,9 +11,10 @@ let users = [];
 
 const USERS_TO_SHOW = 5;
 
-// =======================================
-// Load Users
-// =======================================
+
+// ======================================
+// Load MongoDB Users
+// ======================================
 
 async function loadUsers() {
 
@@ -21,13 +22,15 @@ async function loadUsers() {
 
         table.innerHTML = `
             <tr>
-                <td colspan="5" class="empty">
+                <td colspan="6" class="empty">
                     Loading users...
                 </td>
             </tr>
         `;
 
-        const response = await fetch("/api/users");
+        const response = await fetch("/api/users", {
+            credentials: "include"
+        });
 
         if (!response.ok) {
             throw new Error("Unable to load users");
@@ -35,15 +38,101 @@ async function loadUsers() {
 
         users = await response.json();
 
+        // Load MikroTik active users
+        let activeUsers = [];
+
+        try {
+
+            const mikrotikResponse =
+                await fetch("/api/admin/mikrotik/active-users", {
+                    credentials: "include"
+                });
+
+            if (mikrotikResponse.ok) {
+
+                const mikrotikData =
+                    await mikrotikResponse.json();
+
+                if (mikrotikData.success) {
+                    activeUsers = mikrotikData.users || [];
+                }
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "Unable to load MikroTik active users:",
+                error
+            );
+
+        }
+
+
+        // ==================================
+        // Match MikroTik users
+        // ==================================
+
+        users = users.map(user => {
+
+            let connection = null;
+
+            // Match using saved MikroTik session ID
+            if (user.mikrotikSessionId) {
+
+                connection = activeUsers.find(
+                    active =>
+                        active.id === user.mikrotikSessionId
+                );
+
+            }
+
+
+            // Match using MAC address
+            if (!connection && user.macAddress) {
+
+                connection = activeUsers.find(
+                    active =>
+                        active.macAddress === user.macAddress
+                );
+
+            }
+
+
+            // Match using IP address
+            if (!connection && user.ipAddress) {
+
+                connection = activeUsers.find(
+                    active =>
+                        active.address === user.ipAddress
+                );
+
+            }
+
+
+            return {
+
+                ...user,
+
+                connection
+
+            };
+
+        });
+
+
         displayUsers(users);
 
     } catch (err) {
 
-        console.error("Load users error:", err);
+        console.error(
+            "Load users error:",
+            err
+        );
 
         table.innerHTML = `
             <tr>
-                <td colspan="5" class="empty">
+                <td colspan="6" class="empty">
                     Unable to load users.
                 </td>
             </tr>
@@ -54,9 +143,9 @@ async function loadUsers() {
 }
 
 
-// =======================================
+// ======================================
 // Display Users
-// =======================================
+// ======================================
 
 function displayUsers(data) {
 
@@ -66,7 +155,7 @@ function displayUsers(data) {
 
         table.innerHTML = `
             <tr>
-                <td colspan="5" class="empty">
+                <td colspan="6" class="empty">
                     No users found.
                 </td>
             </tr>
@@ -78,16 +167,56 @@ function displayUsers(data) {
     }
 
 
-    // Only show first 5 users
-    const visibleUsers = data.slice(0, USERS_TO_SHOW);
+    const visibleUsers =
+        data.slice(0, USERS_TO_SHOW);
 
 
     visibleUsers.forEach(user => {
 
+        const isConnected =
+            !!user.connection;
+
+
+        const status =
+            isConnected
+                ? "Online"
+                : (user.status || "Offline");
+
+
         const statusClass =
-            user.status === "Online"
+            status === "Online"
                 ? "online"
                 : "offline";
+
+
+        let connectionText = "Not Connected";
+
+
+        if (isConnected) {
+
+            connectionText = `
+                <div class="connection-info">
+
+                    <strong>
+                        🟢 Connected
+                    </strong>
+
+                    <small>
+                        IP: ${user.connection.address || "-"}
+                    </small>
+
+                    <small>
+                        MAC: ${user.connection.macAddress || "-"}
+                    </small>
+
+                    <small>
+                        Uptime: ${user.connection.uptime || "-"}
+                    </small>
+
+                </div>
+            `;
+
+        }
 
 
         table.innerHTML += `
@@ -109,11 +238,13 @@ function displayUsers(data) {
                 <td>
 
                     <span class="${statusClass}">
-
-                        ${user.status || "Offline"}
-
+                        ${status}
                     </span>
 
+                </td>
+
+                <td>
+                    ${connectionText}
                 </td>
 
                 <td>
@@ -135,8 +266,6 @@ function displayUsers(data) {
     });
 
 
-    // Show View All if there are more than 5 users
-
     if (data.length > USERS_TO_SHOW) {
 
         viewAllBtn.style.display = "block";
@@ -153,95 +282,124 @@ function displayUsers(data) {
 }
 
 
-// =======================================
-// Search Users
-// =======================================
+// ======================================
+// Search
+// ======================================
 
-searchBox.addEventListener("keyup", () => {
+searchBox.addEventListener(
+    "keyup",
+    () => {
 
-    const keyword =
-        searchBox.value.trim().toLowerCase();
-
-
-    const filtered = users.filter(user => {
-
-        const phone =
-            String(user.phone || "").toLowerCase();
-
-        const packageName =
-            String(user.packageName || "").toLowerCase();
-
-        return (
-            phone.includes(keyword) ||
-            packageName.includes(keyword)
-        );
-
-    });
+        const keyword =
+            searchBox.value
+                .trim()
+                .toLowerCase();
 
 
-    displayUsers(filtered);
+        const filtered =
+            users.filter(user => {
 
-});
+                const phone =
+                    String(
+                        user.phone || ""
+                    ).toLowerCase();
 
 
-// =======================================
+                const packageName =
+                    String(
+                        user.packageName || ""
+                    ).toLowerCase();
+
+
+                return (
+                    phone.includes(keyword) ||
+                    packageName.includes(keyword)
+                );
+
+            });
+
+
+        displayUsers(filtered);
+
+    }
+);
+
+
+// ======================================
 // Refresh
-// =======================================
+// ======================================
 
-refreshBtn.addEventListener("click", () => {
+refreshBtn.addEventListener(
+    "click",
+    () => {
 
-    loadUsers();
+        loadUsers();
 
-});
+    }
+);
 
 
-// =======================================
+// ======================================
 // View User
-// =======================================
+// ======================================
 
-document.addEventListener("click", (event) => {
+document.addEventListener(
+    "click",
+    event => {
 
-    if (event.target.classList.contains("viewBtn")) {
+        if (
+            event.target.classList
+                .contains("viewBtn")
+        ) {
 
-        const id =
-            event.target.dataset.id;
+            const id =
+                event.target.dataset.id;
 
 
-        if (!id) {
+            if (!id) {
 
-            alert("User ID not found.");
+                alert(
+                    "User ID not found."
+                );
 
-            return;
+                return;
+
+            }
+
+
+            window.location.href =
+                `/admin/user-details.html?id=${id}`;
 
         }
 
+    }
+);
+
+
+// ======================================
+// View All
+// ======================================
+
+viewAllBtn.addEventListener(
+    "click",
+    () => {
 
         window.location.href =
-            `/admin/user-details.html?id=${id}`;
+            "/admin/all-users.html";
 
     }
-
-});
-
-
-// =======================================
-// View All Users
-// =======================================
-
-viewAllBtn.addEventListener("click", () => {
-
-    window.location.href =
-        "/admin/all-users.html";
-
-});
+);
 
 
-// =======================================
+// ======================================
 // Initialize
-// =======================================
+// ======================================
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    loadUsers();
+        loadUsers();
 
-});
+    }
+);

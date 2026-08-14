@@ -29,12 +29,26 @@ const userSchema = new mongoose.Schema({
 
     expiryTime: {
         type: Date
+    },
+
+    // MikroTik connection information
+    ipAddress: {
+        type: String,
+        default: ""
+    },
+
+    macAddress: {
+        type: String,
+        default: ""
+    },
+
+    mikrotikSessionId: {
+        type: String,
+        default: ""
     }
 
 }, {
-
     timestamps: true
-
 });
 
 module.exports = mongoose.model("User", userSchema);

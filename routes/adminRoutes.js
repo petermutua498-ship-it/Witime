@@ -2,6 +2,12 @@ const express = require("express");
 
 const router = express.Router();
 
+const MikrotikSettings =
+    require("../models/mikrotikSettings");
+
+const RouterOSClient =
+    require("routeros-client").RouterOSClient;
+
 // ======================================
 // ADMIN CREDENTIALS
 // ======================================
@@ -209,6 +215,747 @@ router.post("/logout", (req, res) => {
         });
 
     });
+
+});
+
+// ======================================
+// TEST MIKROTIK CONNECTION
+// POST /api/admin/mikrotik/test
+// ======================================
+
+router.post("/mikrotik/test", async (req, res) => {
+
+    let client;
+
+    try {
+
+        const {
+            host,
+            username,
+            password,
+            port
+        } = req.body;
+
+        console.log("MikroTik test requested:", {
+            host,
+            username,
+            passwordEntered: !!password,
+            port
+        });
+
+
+        // ----------------------------------
+        // Get saved settings if password
+        // wasn't supplied
+        // ----------------------------------
+
+        let savedSettings = null;
+
+        if (!password) {
+
+            savedSettings =
+                await MikrotikSettings
+                    .findOne()
+                    .select("+password");
+
+        }
+
+
+        const finalHost =
+            host ||
+            savedSettings?.host;
+
+        const finalUsername =
+            username ||
+            savedSettings?.username;
+
+        const finalPassword =
+            password ||
+            savedSettings?.password;
+
+        const finalPort =
+            Number(port) ||
+            savedSettings?.port ||
+            8728;
+
+
+        if (
+            !finalHost ||
+            !finalUsername ||
+            !finalPassword
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "MikroTik host, username and password are required."
+            });
+
+        }
+
+
+        // ----------------------------------
+        // Connect to MikroTik
+        // ----------------------------------
+
+        client = new RouterOSClient({
+
+            host: finalHost,
+
+            user: finalUsername,
+
+            password: finalPassword,
+
+            port: finalPort,
+
+            timeout: 8000
+
+        });
+
+
+        await client.connect();
+
+
+        console.log(
+            "✅ MikroTik connection successful:",
+            finalHost
+        );
+
+
+        // ----------------------------------
+        // Close test connection
+        // ----------------------------------
+
+        try {
+
+            await client.close();
+
+        } catch (closeError) {
+
+            console.log(
+                "MikroTik close warning:",
+                closeError.message
+            );
+
+        }
+
+
+        return res.json({
+
+            success: true,
+
+            message:
+                "MikroTik connection successful.",
+
+            mikrotik: {
+                host: finalHost,
+                username: finalUsername,
+                port: finalPort
+            }
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ MikroTik connection failed:",
+            error.message
+        );
+
+
+        if (client) {
+
+            try {
+                await client.close();
+            } catch (_) {}
+
+        }
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "MikroTik connection failed: " +
+                error.message
+
+        });
+
+    }
+
+});
+
+// ======================================
+// SAVE MIKROTIK SETTINGS
+// POST /api/admin/mikrotik/save
+// ======================================
+
+router.post("/mikrotik/save", async (req, res) => {
+
+    let client;
+
+    try {
+
+        const {
+            host,
+            username,
+            password,
+            port
+        } = req.body;
+
+
+        if (!host || !username) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Router IP and username are required."
+
+            });
+
+        }
+
+
+        // ----------------------------------
+        // Get existing password if user
+        // didn't enter a new one
+        // ----------------------------------
+
+        let existingSettings = null;
+
+        if (!password) {
+
+            existingSettings =
+                await MikrotikSettings
+                    .findOne()
+                    .select("+password");
+
+        }
+
+
+        const finalPassword =
+            password ||
+            existingSettings?.password;
+
+
+        if (!finalPassword) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "MikroTik password is required."
+
+            });
+
+        }
+
+
+        const finalPort =
+            Number(port) || 8728;
+
+
+        // ----------------------------------
+        // TEST BEFORE SAVING
+        // ----------------------------------
+
+        client = new RouterOSClient({
+
+            host,
+
+            user: username,
+
+            password: finalPassword,
+
+            port: finalPort,
+
+            timeout: 8000
+
+        });
+
+
+        await client.connect();
+
+
+        console.log(
+            "✅ MikroTik credentials verified."
+        );
+
+
+        // ----------------------------------
+        // Close connection
+        // ----------------------------------
+
+        try {
+
+            await client.close();
+
+        } catch (_) {}
+
+
+        client = null;
+
+
+        // ----------------------------------
+        // Save to MongoDB
+        // ----------------------------------
+
+        let settings =
+            await MikrotikSettings.findOne();
+
+
+        if (settings) {
+
+            settings.host =
+                host;
+
+            settings.username =
+                username;
+
+            settings.password =
+                finalPassword;
+
+            settings.port =
+                finalPort;
+
+            await settings.save();
+
+        } else {
+
+            settings =
+                await MikrotikSettings.create({
+
+                    host,
+
+                    username,
+
+                    password:
+                        finalPassword,
+
+                    port:
+                        finalPort
+
+                });
+
+        }
+
+
+        console.log(
+            "✅ MikroTik settings saved."
+        );
+
+
+        return res.json({
+
+            success: true,
+
+            message:
+                "MikroTik settings saved successfully.",
+
+            mikrotik: {
+
+                host,
+
+                username,
+
+                port:
+                    finalPort
+
+            }
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ MikroTik save error:",
+            error.message
+        );
+
+
+        if (client) {
+
+            try {
+                await client.close();
+            } catch (_) {}
+
+        }
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "MikroTik settings could not be saved: " +
+                error.message
+
+        });
+
+    }
+
+});
+
+// ======================================
+// GET MIKROTIK SETTINGS
+// GET /api/admin/mikrotik/settings
+// ======================================
+
+router.get("/mikrotik/settings", async (req, res) => {
+
+    try {
+
+        const settings =
+            await MikrotikSettings.findOne();
+
+
+        if (!settings) {
+
+            return res.json({
+
+                success: true,
+
+                configured: false
+
+            });
+
+        }
+
+
+        return res.json({
+
+            success: true,
+
+            configured: true,
+
+            mikrotik: {
+
+                host:
+                    settings.host,
+
+                username:
+                    settings.username,
+
+                port:
+                    settings.port
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "MikroTik settings loading error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to load MikroTik settings."
+
+        });
+
+    }
+
+});
+
+// ======================================
+// GET ACTIVE MIKROTIK HOTSPOT USERS
+// ======================================
+
+router.get("/mikrotik/active-users", async (req, res) => {
+
+    let client;
+
+    try {
+
+        const settings =
+            await MikrotikSettings
+                .findOne()
+                .select("+password");
+
+        if (!settings) {
+
+            return res.status(400).json({
+                success: false,
+                message: "MikroTik is not configured."
+            });
+
+        }
+
+        client = new RouterOSClient({
+
+            host: settings.host,
+            user: settings.username,
+            password: settings.password,
+            port: settings.port || 8728,
+            timeout: 8000
+
+        });
+
+        await client.connect();
+
+        console.log(
+            "✅ Connected to MikroTik for active users."
+        );
+
+        // Get all active hotspot sessions
+        const users =
+            await client
+                .api()
+                .menu("/ip/hotspot/active")
+                .getAll();
+
+        console.log(
+            "MikroTik active users:",
+            users
+        );
+
+        try {
+            await client.close();
+        } catch (_) {}
+
+        client = null;
+
+        return res.json({
+
+            success: true,
+
+            count: users.length,
+
+            users: users
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "❌ Unable to get MikroTik active users:",
+            error.message
+        );
+
+        if (client) {
+
+            try {
+                await client.close();
+            } catch (_) {}
+        }
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to get active MikroTik users: " +
+                error.message
+
+        });
+
+    }
+
+});
+
+// ======================================
+// DISCONNECT MIKROTIK ACTIVE USER
+// POST /api/admin/mikrotik/disconnect
+// ======================================
+
+router.post("/mikrotik/disconnect", async (req, res) => {
+
+    let client;
+
+    try {
+
+        const { sessionId } = req.body;
+
+        if (!sessionId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Active MikroTik session ID is required."
+            });
+
+        }
+
+        console.log(
+            "Disconnect request for session:",
+            sessionId
+        );
+
+        // ----------------------------------
+        // Load saved MikroTik settings
+        // ----------------------------------
+
+        const settings =
+            await MikrotikSettings
+                .findOne()
+                .select("+password");
+
+        if (!settings) {
+
+            return res.status(400).json({
+                success: false,
+                message: "MikroTik is not configured."
+            });
+
+        }
+
+        // ----------------------------------
+        // Connect to MikroTik
+        // ----------------------------------
+
+        client = new RouterOSClient({
+
+            host: settings.host,
+            user: settings.username,
+            password: settings.password,
+            port: settings.port || 8728,
+            timeout: 8000
+
+        });
+
+        // ----------------------------------
+        // Prevent unhandled RouterOS errors
+        // ----------------------------------
+
+        client.on("error", (error) => {
+
+            console.error(
+                "MikroTik client error:",
+                error.message
+            );
+
+        });
+
+        await client.connect();
+
+        console.log(
+            "✅ Connected to MikroTik for disconnect."
+        );
+
+        // ----------------------------------
+        // Find active session
+        // ----------------------------------
+
+        const activeMenu =
+            client
+                .api()
+                .menu("/ip/hotspot/active");
+
+        const users =
+            await activeMenu.get();
+
+        console.log(
+            "Active sessions:",
+            users
+        );
+
+        const session =
+            users.find(
+                user => user.id === sessionId
+            );
+
+        if (!session) {
+
+            try {
+                await client.close();
+            } catch (_) {}
+
+            client = null;
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "MikroTik active session was not found. It may already be disconnected."
+
+            });
+
+        }
+
+        console.log(
+            "Disconnecting MikroTik session:",
+            session
+        );
+
+        // ----------------------------------
+        // Remove active session
+        // ----------------------------------
+
+        await activeMenu
+            .where(".id", sessionId)
+            .remove();
+
+        console.log(
+            "✅ MikroTik session disconnected:",
+            sessionId
+        );
+
+        // ----------------------------------
+        // Close connection
+        // ----------------------------------
+
+        try {
+            await client.close();
+        } catch (closeError) {
+
+            console.log(
+                "MikroTik close warning:",
+                closeError.message
+            );
+
+        }
+
+        client = null;
+
+        return res.json({
+
+            success: true,
+
+            message:
+                "User disconnected successfully.",
+
+            sessionId
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "❌ MikroTik disconnect error:",
+            error
+        );
+
+        if (client) {
+
+            try {
+                await client.close();
+            } catch (_) {}
+
+        }
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to disconnect MikroTik user: " +
+                error.message
+
+        });
+
+    }
 
 });
 

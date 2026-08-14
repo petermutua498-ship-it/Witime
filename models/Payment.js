@@ -46,10 +46,27 @@ const paymentSchema = new mongoose.Schema({
     paymentDate: {
         type: Date,
         default: Date.now
-    }
+    },
+
+    ipAddress: {
+    type: String,
+    default: ""
+},
+
+macAddress: {
+    type: String,
+    default: ""
+},
+
+mikrotikSessionId: {
+    type: String,
+    default: ""
+}
 
 }, {
     timestamps: true
 });
+
+
 
 module.exports = mongoose.model("Payment", paymentSchema);

@@ -141,3 +141,402 @@ if (adminForm) {
     });
 
 }
+
+// ======================================
+// MIKROTIK
+// ======================================
+
+const mikrotikForm =
+    document.getElementById("mikrotikForm");
+
+const testMikrotik =
+    document.getElementById("testMikrotik");
+
+
+// ======================================
+// LOAD SAVED MIKROTIK SETTINGS
+// ======================================
+
+async function loadMikrotikSettings() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/admin/mikrotik/settings",
+                {
+                    credentials: "include",
+                    cache: "no-store"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            data.configured &&
+            data.mikrotik
+        ) {
+
+            document.getElementById(
+                "mikrotikHost"
+            ).value =
+                data.mikrotik.host || "";
+
+
+            document.getElementById(
+                "mikrotikUsername"
+            ).value =
+                data.mikrotik.username || "";
+
+
+            document.getElementById(
+                "mikrotikPort"
+            ).value =
+                data.mikrotik.port || 8728;
+
+
+            const status =
+                document.getElementById(
+                    "mikrotikStatus"
+                );
+
+
+            if (status) {
+
+                status.textContent =
+                    "Configured";
+
+                status.className =
+                    "status connected";
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load MikroTik settings:",
+            error
+        );
+
+    }
+
+}
+
+
+// ======================================
+// TEST MIKROTIK
+// ======================================
+
+if (testMikrotik) {
+
+    testMikrotik.addEventListener(
+        "click",
+        async function () {
+
+            const message =
+                document.getElementById(
+                    "mikrotikMessage"
+                );
+
+
+            const host =
+                document.getElementById(
+                    "mikrotikHost"
+                ).value.trim();
+
+
+            const username =
+                document.getElementById(
+                    "mikrotikUsername"
+                ).value.trim();
+
+
+            const password =
+                document.getElementById(
+                    "mikrotikPassword"
+                ).value;
+
+
+            const port =
+                document.getElementById(
+                    "mikrotikPort"
+                ).value.trim();
+
+
+            if (!host || !username) {
+
+                message.textContent =
+                    "Enter the MikroTik host and username.";
+
+                return;
+
+            }
+
+
+            message.textContent =
+                "Testing MikroTik connection...";
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/admin/mikrotik/test",
+                        {
+
+                            method: "POST",
+
+                            credentials: "include",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    host,
+
+                                    username,
+
+                                    password,
+
+                                    port:
+                                        Number(port) ||
+                                        8728
+
+                                })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    message.textContent =
+                        data.message ||
+                        "MikroTik connection failed.";
+
+                    return;
+
+                }
+
+
+                message.textContent =
+                    "✅ MikroTik connection successful.";
+
+
+                const status =
+                    document.getElementById(
+                        "mikrotikStatus"
+                    );
+
+
+                if (status) {
+
+                    status.textContent =
+                        "Connected";
+
+                    status.className =
+                        "status connected";
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "MikroTik test error:",
+                    error
+                );
+
+                message.textContent =
+                    "Unable to connect to MikroTik.";
+
+            }
+
+        }
+    );
+
+}
+
+
+// ======================================
+// SAVE MIKROTIK
+// ======================================
+
+if (mikrotikForm) {
+
+    mikrotikForm.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+
+            const message =
+                document.getElementById(
+                    "mikrotikMessage"
+                );
+
+
+            const host =
+                document.getElementById(
+                    "mikrotikHost"
+                ).value.trim();
+
+
+            const username =
+                document.getElementById(
+                    "mikrotikUsername"
+                ).value.trim();
+
+
+            const password =
+                document.getElementById(
+                    "mikrotikPassword"
+                ).value;
+
+
+            const port =
+                document.getElementById(
+                    "mikrotikPort"
+                ).value.trim();
+
+
+            if (!host || !username) {
+
+                message.textContent =
+                    "Enter the MikroTik host and username.";
+
+                return;
+
+            }
+
+
+            message.textContent =
+                "Saving MikroTik settings...";
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/admin/mikrotik/save",
+                        {
+
+                            method: "POST",
+
+                            credentials: "include",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    host,
+
+                                    username,
+
+                                    password,
+
+                                    port:
+                                        Number(port) ||
+                                        8728
+
+                                })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    message.textContent =
+                        data.message ||
+                        "Unable to save MikroTik settings.";
+
+                    return;
+
+                }
+
+
+                message.textContent =
+                    "✅ MikroTik settings saved successfully.";
+
+
+                const status =
+                    document.getElementById(
+                        "mikrotikStatus"
+                    );
+
+
+                if (status) {
+
+                    status.textContent =
+                        "Connected";
+
+                    status.className =
+                        "status connected";
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "MikroTik save error:",
+                    error
+                );
+
+                message.textContent =
+                    "Unable to save MikroTik settings.";
+
+            }
+
+        }
+    );
+
+}
+
+window.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        loadAdmin();
+
+        loadMikrotikSettings();
+
+    }
+);
