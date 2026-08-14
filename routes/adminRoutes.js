@@ -740,9 +740,24 @@ router.get("/mikrotik/active-users", async (req, res) => {
     } catch (error) {
 
         console.error(
-            "❌ Unable to get MikroTik active users:",
-            error.message
-        );
+    "❌ Unable to get MikroTik active users:",
+    error
+);
+
+console.error(
+    "Error name:",
+    error?.name
+);
+
+console.error(
+    "Error message:",
+    error?.message
+);
+
+console.error(
+    "Error stack:",
+    error?.stack
+);
 
         if (client) {
 
