@@ -43,21 +43,13 @@ async function loadUsers() {
 
         try {
 
-            const mikrotikResponse =
-                await fetch("/api/admin/mikrotik/active-users", {
-                    credentials: "include"
-                });
+            // MikroTik users are synchronized to WiTime
+// through /api/mikrotik/sync.
+// Do not connect directly from Render to MikroTik.
 
-            if (mikrotikResponse.ok) {
-
-                const mikrotikData =
-                    await mikrotikResponse.json();
-
-                if (mikrotikData.success) {
-                    activeUsers = mikrotikData.users || [];
-                }
-
-            }
+activeUsers = users.filter(user =>
+    user.status === "Online"
+);
 
         } catch (error) {
 
