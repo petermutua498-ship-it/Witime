@@ -96,10 +96,17 @@ router.post("/sync", async (req, res) => {
 
             await witimeUser.save();
 
-            console.log(
-                "✅ WiTime user marked Offline:",
-                user
-            );
+const verifiedUser = await User.findOne({
+    phone: user
+});
+
+console.log("✅ AFTER SAVE:", {
+    phone: verifiedUser.phone,
+    status: verifiedUser.status,
+    ipAddress: verifiedUser.ipAddress,
+    macAddress: verifiedUser.macAddress,
+    mikrotikSessionId: verifiedUser.mikrotikSessionId
+});
 
         }
 
