@@ -38,82 +38,32 @@ async function loadUsers() {
 
         users = await response.json();
 
-        // Load MikroTik active users
-        let activeUsers = [];
+       // ==================================
+// MikroTik status
+// ==================================
+// MikroTik synchronizes the user's
+// Online/Offline status directly into
+// the WiTime MongoDB user record.
+//
+// Therefore /api/users already contains
+// the current connection information.
 
-        try {
+users = users.map(user => {
 
-            // MikroTik users are synchronized to WiTime
-// through /api/mikrotik/sync.
-// Do not connect directly from Render to MikroTik.
+    return {
+        ...user,
 
-activeUsers = users.filter(user =>
-    user.status === "Online"
-);
+        connection:
+            user.status === "Online"
+                ? {
+                    address: user.ipAddress || "",
+                    macAddress: user.macAddress || "",
+                    sessionId: user.mikrotikSessionId || ""
+                }
+                : null
+    };
 
-        } catch (error) {
-
-            console.warn(
-                "Unable to load MikroTik active users:",
-                error
-            );
-
-        }
-
-
-        // ==================================
-        // Match MikroTik users
-        // ==================================
-
-        users = users.map(user => {
-
-            let connection = null;
-
-            // Match using saved MikroTik session ID
-            if (user.mikrotikSessionId) {
-
-                connection = activeUsers.find(
-                    active =>
-                        active.id === user.mikrotikSessionId
-                );
-
-            }
-
-
-            // Match using MAC address
-            if (!connection && user.macAddress) {
-
-                connection = activeUsers.find(
-                    active =>
-                        active.macAddress === user.macAddress
-                );
-
-            }
-
-
-            // Match using IP address
-            if (!connection && user.ipAddress) {
-
-                connection = activeUsers.find(
-                    active =>
-                        active.address === user.ipAddress
-                );
-
-            }
-
-
-            return {
-
-                ...user,
-
-                connection
-
-            };
-
-        });
-
-
-        displayUsers(users);
+});
 
     } catch (err) {
 

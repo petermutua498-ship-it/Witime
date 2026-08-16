@@ -37,15 +37,18 @@ router.post("/sync", async (req, res) => {
 
         }
 
-        // Find the WiTime user by phone.
+        // ======================================
+        // FIND USER
+        // ======================================
+
         const witimeUser = await User.findOne({
-            phone: user
+            phone: String(user)
         });
 
         if (!witimeUser) {
 
             console.log(
-                "WiTime user not found:",
+                "❌ WiTime user not found:",
                 user
             );
 
@@ -57,12 +60,15 @@ router.post("/sync", async (req, res) => {
         }
 
         // ======================================
-        // USER IS ONLINE
+        // UPDATE CONNECTION INFORMATION
         // ======================================
 
-        if (status === "Online") {
+        witimeUser.status =
+            status === "Online"
+                ? "Online"
+                : "Offline";
 
-            witimeUser.status = "Online";
+        if (status === "Online") {
 
             witimeUser.ipAddress =
                 address || "";
@@ -73,42 +79,21 @@ router.post("/sync", async (req, res) => {
             witimeUser.mikrotikSessionId =
                 sessionId || "";
 
-            await witimeUser.save();
-
-            console.log(
-                "✅ WiTime user marked Online:",
-                user
-            );
-
-        }
-
-        // ======================================
-        // USER IS OFFLINE
-        // ======================================
-
-        else {
-
-            witimeUser.status = "Offline";
+        } else {
 
             witimeUser.ipAddress = "";
             witimeUser.macAddress = "";
             witimeUser.mikrotikSessionId = "";
 
-            await witimeUser.save();
-
-const verifiedUser = await User.findOne({
-    phone: user
-});
-
-console.log("✅ AFTER SAVE:", {
-    phone: verifiedUser.phone,
-    status: verifiedUser.status,
-    ipAddress: verifiedUser.ipAddress,
-    macAddress: verifiedUser.macAddress,
-    mikrotikSessionId: verifiedUser.mikrotikSessionId
-});
-
         }
+
+        await witimeUser.save();
+
+        console.log(
+            "✅ WiTime user updated:",
+            witimeUser.phone,
+            witimeUser.status
+        );
 
         return res.json({
 
@@ -119,9 +104,11 @@ console.log("✅ AFTER SAVE:", {
 
             user: {
 
-                phone: witimeUser.phone,
+                phone:
+                    witimeUser.phone,
 
-                status: witimeUser.status,
+                status:
+                    witimeUser.status,
 
                 ipAddress:
                     witimeUser.ipAddress,
