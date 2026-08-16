@@ -5,26 +5,38 @@ const Payment = require("../models/Payment");
 const Package = require("../models/Package");
 const User = require("../models/Users");
 
+
+// ======================================
+// M-PESA STK CALLBACK
+// POST /callback
+// ======================================
+
 router.post("/callback", async (req, res) => {
 
     try {
 
-        console.log("========== CALLBACK RECEIVED ==========");
-        console.log(JSON.stringify(req.body, null, 2));
+        console.log(
+            "========== CALLBACK RECEIVED =========="
+        );
 
-        const callback = req.body.Body.stkCallback;
+        console.log(
+            JSON.stringify(req.body, null, 2)
+        );
 
-        const checkoutRequestID =
-            callback.CheckoutRequestID;
 
-        const payment =
-            await Payment.findOne({
-                checkoutRequestID
-            });
+        // ======================================
+        // VALIDATE CALLBACK
+        // ======================================
 
-        if (!payment) {
+        const callback =
+            req.body?.Body?.stkCallback;
 
-            console.log("Payment not found.");
+
+        if (!callback) {
+
+            console.error(
+                "❌ Invalid M-Pesa callback structure"
+            );
 
             return res.json({
                 ResultCode: 0,
@@ -33,33 +45,80 @@ router.post("/callback", async (req, res) => {
 
         }
 
+
+        const checkoutRequestID =
+            callback.CheckoutRequestID;
+
+
+        // ======================================
+        // FIND PAYMENT
+        // ======================================
+
+        const payment =
+            await Payment.findOne({
+                checkoutRequestID
+            });
+
+
+        if (!payment) {
+
+            console.log(
+                "⚠️ Payment not found:",
+                checkoutRequestID
+            );
+
+            return res.json({
+                ResultCode: 0,
+                ResultDesc: "Accepted"
+            });
+
+        }
+
+
+        // ======================================
+        // PREVENT DUPLICATE CALLBACK
+        // ======================================
+
+        if (payment.status === "success") {
+
+            console.log(
+                "⚠️ Payment already processed:",
+                checkoutRequestID
+            );
+
+            return res.json({
+                ResultCode: 0,
+                ResultDesc: "Accepted"
+            });
+
+        }
+
+
         // ======================================
         // SUCCESSFUL PAYMENT
         // ======================================
 
         if (callback.ResultCode === 0) {
 
-            // Prevent duplicate processing
-            if (payment.status === "success") {
+            console.log(
+                "✅ M-Pesa payment successful"
+            );
 
-                console.log(
-                    "Payment already processed:",
-                    checkoutRequestID
-                );
 
-                return res.json({
-                    ResultCode: 0,
-                    ResultDesc: "Accepted"
-                });
-
-            }
+            // ======================================
+            // UPDATE PAYMENT
+            // ======================================
 
             payment.status = "success";
+
 
             const items =
                 callback.CallbackMetadata?.Item || [];
 
+
             for (const item of items) {
+
+                // M-Pesa receipt
 
                 if (
                     item.Name ===
@@ -70,6 +129,9 @@ router.post("/callback", async (req, res) => {
                         item.Value;
 
                 }
+
+
+                // Phone number
 
                 if (
                     item.Name ===
@@ -83,7 +145,9 @@ router.post("/callback", async (req, res) => {
 
             }
 
+
             await payment.save();
+
 
             console.log(
                 "✅ Payment Updated Successfully"
@@ -95,10 +159,17 @@ router.post("/callback", async (req, res) => {
             // ======================================
 
             const packageData =
-    await Package.findOne({
-        name: payment.packageName,
-        active: true
-    });
+                await Package.findOne({
+
+                    name:
+                        payment.packageName,
+
+                    active:
+                        true
+
+                });
+
+
             if (!packageData) {
 
                 console.error(
@@ -107,24 +178,34 @@ router.post("/callback", async (req, res) => {
                 );
 
                 return res.json({
+
                     ResultCode: 0,
-                    ResultDesc: "Accepted"
+
+                    ResultDesc:
+                        "Accepted"
+
                 });
 
             }
 
 
             // ======================================
-            // CALCULATE EXPIRY
+            // CALCULATE PACKAGE EXPIRY
             // ======================================
 
-            const loginTime = new Date();
+            const loginTime =
+                new Date();
+
 
             const expiryTime =
                 new Date(loginTime);
 
+
             const duration =
-                Number(packageData.duration);
+                Number(
+                    packageData.duration
+                );
+
 
             switch (
                 packageData.durationUnit
@@ -188,8 +269,12 @@ router.post("/callback", async (req, res) => {
                     );
 
                     return res.json({
+
                         ResultCode: 0,
-                        ResultDesc: "Accepted"
+
+                        ResultDesc:
+                            "Accepted"
+
                     });
 
             }
@@ -200,6 +285,7 @@ router.post("/callback", async (req, res) => {
             // ======================================
 
             let remainingTime;
+
 
             if (
                 packageData.durationUnit ===
@@ -218,108 +304,159 @@ router.post("/callback", async (req, res) => {
 
 
             // ======================================
-            // CREATE USER
+            // FIND EXISTING WITIME USER
             // ======================================
 
+            let existingUser =
+                await User.findOne({
+
+                    phone:
+                        payment.phone
+
+                }).sort({
+
+                    updatedAt: -1
+
+                });
+
+
             // ======================================
-// FIND EXISTING WITIME USER
-// ======================================
+            // UPDATE EXISTING USER
+            // ======================================
 
-let existingUser = await User.findOne({
-    phone: payment.phone
-}).sort({
-    updatedAt: -1
-});
+            if (existingUser) {
 
-
-// ======================================
-// UPDATE EXISTING USER
-// ======================================
-
-if (existingUser) {
-
-    existingUser.packageName =
-        payment.packageName;
-
-    existingUser.remainingTime =
-        remainingTime;
-
-    existingUser.loginTime =
-        loginTime;
-
-    existingUser.expiryTime =
-        expiryTime;
-
-    // Keep connection information if
-    // the user is currently connected.
-    if (existingUser.status !== "Online") {
-
-        existingUser.status = "Offline";
-
-        existingUser.ipAddress = "";
-        existingUser.macAddress = "";
-        existingUser.mikrotikSessionId = "";
-
-    }
-
-    await existingUser.save();
-
-    console.log(
-        "✅ Existing WiTime user updated:",
-        existingUser._id,
-        payment.phone
-    );
-
-}
+                console.log(
+                    "👤 Existing WiTime user found:",
+                    existingUser._id,
+                    payment.phone
+                );
 
 
-// ======================================
-// CREATE NEW USER
-// ======================================
+                existingUser.packageName =
+                    payment.packageName;
 
-else {
 
-    const user =
-        await User.create({
+                existingUser.remainingTime =
+                    remainingTime;
 
-            phone:
-                payment.phone,
 
-            packageName:
-                payment.packageName,
+                existingUser.loginTime =
+                    loginTime;
 
-            remainingTime:
-                remainingTime,
 
-            status:
-                "Offline",
+                existingUser.expiryTime =
+                    expiryTime;
 
-            loginTime:
-                loginTime,
 
-            expiryTime:
-                expiryTime,
+                // ======================================
+                // PRESERVE ACTIVE CONNECTION
+                // ======================================
 
-            ipAddress:
-                "",
+                if (
+                    existingUser.status !==
+                    "Online"
+                ) {
 
-            macAddress:
-                "",
+                    existingUser.status =
+                        "Offline";
 
-            mikrotikSessionId:
-                "",
 
-            lastSeen:
-                null
+                    existingUser.ipAddress =
+                        "";
 
-        });
 
-    console.log(
-        "✅ New WiTime user created:",
-        user._id
-    );
+                    existingUser.macAddress =
+                        "";
 
-}
+
+                    existingUser.mikrotikSessionId =
+                        "";
+
+
+                    existingUser.lastSeen =
+                        null;
+
+                }
+
+
+                await existingUser.save();
+
+
+                console.log(
+                    "✅ Existing WiTime user updated:",
+                    existingUser._id,
+                    payment.phone
+                );
+
+            }
+
+
+            // ======================================
+            // CREATE NEW USER
+            // ======================================
+
+            else {
+
+                const user =
+                    await User.create({
+
+                        phone:
+                            payment.phone,
+
+                        packageName:
+                            payment.packageName,
+
+                        remainingTime:
+                            remainingTime,
+
+                        status:
+                            "Offline",
+
+                        loginTime:
+                            loginTime,
+
+                        expiryTime:
+                            expiryTime,
+
+                        ipAddress:
+                            "",
+
+                        macAddress:
+                            "",
+
+                        mikrotikSessionId:
+                            "",
+
+                        lastSeen:
+                            null
+
+                    });
+
+
+                console.log(
+                    "✅ New WiTime user created:",
+                    user._id,
+                    payment.phone
+                );
+
+            }
+
+
+        }
+
+
+        // ======================================
+        // FAILED / CANCELLED PAYMENT
+        // ======================================
+
+        else {
+
+            payment.status =
+                "failed";
+
+
+            await payment.save();
 
 
             console.log(
@@ -338,31 +475,36 @@ else {
 
             ResultCode: 0,
 
-            ResultDesc: "Accepted"
+            ResultDesc:
+                "Accepted"
 
         });
 
 
-    } catch (err) {
+    } catch (error) {
 
         console.error(
             "❌ CALLBACK ERROR:",
-            err
+            error
         );
 
-        // Always acknowledge callback
-        // so Safaricom does not keep retrying.
+
+        // ======================================
+        // ALWAYS ACKNOWLEDGE SAFARICOM
+        // ======================================
 
         return res.json({
 
             ResultCode: 0,
 
-            ResultDesc: "Accepted"
+            ResultDesc:
+                "Accepted"
 
         });
 
     }
 
 });
+
 
 module.exports = router;
