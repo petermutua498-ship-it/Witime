@@ -221,116 +221,106 @@ router.post("/callback", async (req, res) => {
             // CREATE USER
             // ======================================
 
-            const existingUser =
-                await User.findOne({
-                    phone: payment.phone,
-                    packageName: payment.packageName,
-                    status: "Online"
-                });
+            // ======================================
+// FIND EXISTING WITIME USER
+// ======================================
 
-
-            if (existingUser) {
-
-                console.log(
-                    "⚠️ User already has an active session:",
-                    payment.phone
-                );
-
-            } else {
-
-                const user =
-                    await User.create({
-
-                        phone:
-                            payment.phone,
-
-                        packageName:
-                            payment.packageName,
-
-                        remainingTime:
-                            remainingTime,
-
-                        status:
-                            "Offline",
-
-                        loginTime:
-                            loginTime,
-
-                        expiryTime:
-                            expiryTime,
-
-                        ipAddress:
-                            "",
-
-                        macAddress:
-                            "",
-
-                        mikrotikSessionId:
-                            ""
-
-                    });
-
-
-                console.log(
-                    "✅ WiTime user created:",
-                    user._id
-                );
-
-            }
-
-        }
-
-        // ======================================
-        // FAILED PAYMENT
-        // ======================================
-
-        else {
-
-            payment.status = "failed";
-
-            await payment.save();
-
-            // Create WiTime User after successful payment
-
-const existingUser = await User.findOne({
+let existingUser = await User.findOne({
     phone: payment.phone
+}).sort({
+    updatedAt: -1
 });
 
-if (!existingUser) {
 
-    await User.create({
+// ======================================
+// UPDATE EXISTING USER
+// ======================================
 
-        phone: payment.phone,
-
-        packageName: payment.packageName,
-
-        remainingTime: payment.packageDuration,
-
-        status: "Offline"
-
-    });
-
-    console.log(
-        "✅ WiTime User created:",
-        payment.phone
-    );
-
-} else {
+if (existingUser) {
 
     existingUser.packageName =
         payment.packageName;
 
     existingUser.remainingTime =
-        payment.packageDuration;
+        remainingTime;
+
+    existingUser.loginTime =
+        loginTime;
+
+    existingUser.expiryTime =
+        expiryTime;
+
+    // Keep connection information if
+    // the user is currently connected.
+    if (existingUser.status !== "Online") {
+
+        existingUser.status = "Offline";
+
+        existingUser.ipAddress = "";
+        existingUser.macAddress = "";
+        existingUser.mikrotikSessionId = "";
+
+    }
 
     await existingUser.save();
 
     console.log(
-        "✅ Existing user package updated:",
+        "✅ Existing WiTime user updated:",
+        existingUser._id,
         payment.phone
     );
 
 }
+
+
+// ======================================
+// CREATE NEW USER
+// ======================================
+
+else {
+
+    const user =
+        await User.create({
+
+            phone:
+                payment.phone,
+
+            packageName:
+                payment.packageName,
+
+            remainingTime:
+                remainingTime,
+
+            status:
+                "Offline",
+
+            loginTime:
+                loginTime,
+
+            expiryTime:
+                expiryTime,
+
+            ipAddress:
+                "",
+
+            macAddress:
+                "",
+
+            mikrotikSessionId:
+                "",
+
+            lastSeen:
+                null
+
+        });
+
+    console.log(
+        "✅ New WiTime user created:",
+        user._id
+    );
+
+}
+
 
             console.log(
                 "❌ Payment failed:",
