@@ -45,7 +45,12 @@ const userSchema = new mongoose.Schema({
     mikrotikSessionId: {
         type: String,
         default: ""
-    }
+    },
+
+    lastSeen: {
+    type: Date,
+    default: null
+    },
 
 }, {
     timestamps: true

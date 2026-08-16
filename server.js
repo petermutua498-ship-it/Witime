@@ -372,6 +372,60 @@ app.listen(
     }
 );
 
+// ======================================
+// AUTOMATIC MIKROTIK OFFLINE DETECTION
+// ======================================
+
+const User = require("./models/Users");
+
+setInterval(async () => {
+
+    try {
+
+        const timeout =
+            new Date(Date.now() - 90 * 1000);
+
+        const result =
+            await User.updateMany(
+
+                {
+                    status: "Online",
+
+                    lastSeen: {
+                        $lt: timeout
+                    }
+                },
+
+                {
+                    $set: {
+                        status: "Offline",
+                        ipAddress: "",
+                        macAddress: "",
+                        mikrotikSessionId: ""
+                    }
+                }
+
+            );
+
+        if (result.modifiedCount > 0) {
+
+            console.log(
+                `🔴 ${result.modifiedCount} user(s) automatically marked Offline`
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ Offline cleanup error:",
+            error
+        );
+
+    }
+
+}, 30 * 1000);
+
 
 // ======================================
 // KEEP ALIVE

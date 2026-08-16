@@ -79,6 +79,8 @@ router.post("/sync", async (req, res) => {
             witimeUser.mikrotikSessionId =
                 sessionId || "";
 
+            witimeUser.lastSeen = new Date();
+
         } else {
 
             witimeUser.ipAddress = "";
