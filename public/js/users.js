@@ -345,3 +345,5 @@ window.addEventListener(
 
     }
 );
+
+displayUsers(users);
