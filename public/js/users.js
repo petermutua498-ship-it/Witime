@@ -1,5 +1,5 @@
 // ======================================
-// WiTime Users Management
+// WiTime - Users Management
 // ======================================
 
 const table = document.getElementById("userTable");
@@ -13,7 +13,7 @@ const USERS_TO_SHOW = 5;
 
 
 // ======================================
-// Load MongoDB Users
+// LOAD USERS
 // ======================================
 
 async function loadUsers() {
@@ -29,53 +29,58 @@ async function loadUsers() {
         `;
 
         const response = await fetch("/api/users", {
-            credentials: "include"
+            method: "GET",
+            credentials: "include",
+            cache: "no-store"
         });
 
         if (!response.ok) {
-            throw new Error("Unable to load users");
+            throw new Error(
+                `Server returned ${response.status}`
+            );
         }
 
-        users = await response.json();
+        const data = await response.json();
 
-       // ==================================
-// MikroTik status
-// ==================================
-// MikroTik synchronizes the user's
-// Online/Offline status directly into
-// the WiTime MongoDB user record.
-//
-// Therefore /api/users already contains
-// the current connection information.
+        console.log("WiTime Users:", data);
 
-users = users.map(user => {
+        // Support both:
+        // [users]
+        // { users: [users] }
 
-    return {
-        ...user,
+        if (Array.isArray(data)) {
 
-        connection:
-            user.status === "Online"
-                ? {
-                    address: user.ipAddress || "",
-                    macAddress: user.macAddress || "",
-                    sessionId: user.mikrotikSessionId || ""
-                }
-                : null
-    };
+            users = data;
 
-});
+        } else if (Array.isArray(data.users)) {
 
-    } catch (err) {
+            users = data.users;
+
+        } else {
+
+            throw new Error(
+                "Invalid users response"
+            );
+
+        }
+
+        displayUsers(users);
+
+    } catch (error) {
 
         console.error(
-            "Load users error:",
-            err
+            "❌ Users loading error:",
+            error
         );
 
         table.innerHTML = `
             <tr>
-                <td colspan="6" class="empty">
+                <td colspan="6" class="empty error">
                     Unable to load users.
+                    <br>
+                    <small>
+                        ${escapeHtml(error.message)}
+                    </small>
                 </td>
             </tr>
         `;
@@ -86,14 +91,14 @@ users = users.map(user => {
 
 
 // ======================================
-// Display Users
+// DISPLAY USERS
 // ======================================
 
 function displayUsers(data) {
 
     table.innerHTML = "";
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
 
         table.innerHTML = `
             <tr>
@@ -108,35 +113,66 @@ function displayUsers(data) {
         return;
     }
 
+    // ======================================
+    // PUT ONLINE USERS FIRST
+    // ======================================
+
+    const sortedUsers = [...data].sort((a, b) => {
+
+        // Online users first
+        if (a.status === "Online" && b.status !== "Online") {
+            return -1;
+        }
+
+        if (a.status !== "Online" && b.status === "Online") {
+            return 1;
+        }
+
+        // Then newest updated user
+        const dateA =
+            new Date(a.updatedAt || a.createdAt || 0);
+
+        const dateB =
+            new Date(b.updatedAt || b.createdAt || 0);
+
+        return dateB - dateA;
+    });
+
+
+    // ======================================
+    // SHOW FIRST 5
+    // ======================================
 
     const visibleUsers =
-        data.slice(0, USERS_TO_SHOW);
+        sortedUsers.slice(0, USERS_TO_SHOW);
 
 
     visibleUsers.forEach(user => {
 
-        const isConnected =
-            !!user.connection;
+        const isOnline =
+            user.status === "Online";
 
 
         const status =
-            isConnected
+            isOnline
                 ? "Online"
-                : (user.status || "Offline");
+                : "Offline";
 
 
         const statusClass =
-            status === "Online"
+            isOnline
                 ? "online"
                 : "offline";
 
 
-        let connectionText = "Not Connected";
+        let connectionText =
+            "Not Connected";
 
 
-        if (isConnected) {
+        if (isOnline) {
 
             connectionText = `
+
                 <div class="connection-info">
 
                     <strong>
@@ -144,20 +180,22 @@ function displayUsers(data) {
                     </strong>
 
                     <small>
-                        IP: ${user.connection.address || "-"}
+                        IP:
+                        ${escapeHtml(
+                            user.ipAddress || "-"
+                        )}
                     </small>
 
                     <small>
-                        MAC: ${user.connection.macAddress || "-"}
-                    </small>
-
-                    <small>
-                        Uptime: ${user.connection.uptime || "-"}
+                        MAC:
+                        ${escapeHtml(
+                            user.macAddress || "-"
+                        )}
                     </small>
 
                 </div>
-            `;
 
+            `;
         }
 
 
@@ -166,28 +204,44 @@ function displayUsers(data) {
             <tr>
 
                 <td>
-                    ${user.phone || "-"}
+                    <strong>
+                        ${escapeHtml(
+                            user.phone || "-"
+                        )}
+                    </strong>
                 </td>
 
+
                 <td>
-                    ${user.packageName || "-"}
+                    ${escapeHtml(
+                        user.packageName || "-"
+                    )}
                 </td>
 
+
                 <td>
-                    ${user.remainingTime || "-"}
+                    ${escapeHtml(
+                        user.remainingTime || "-"
+                    )}
                 </td>
 
+
                 <td>
 
-                    <span class="${statusClass}">
+                    <span
+                        class="status ${statusClass}">
+
                         ${status}
+
                     </span>
 
                 </td>
 
+
                 <td>
                     ${connectionText}
                 </td>
+
 
                 <td>
 
@@ -208,16 +262,22 @@ function displayUsers(data) {
     });
 
 
-    if (data.length > USERS_TO_SHOW) {
+    // ======================================
+    // VIEW ALL
+    // ======================================
 
-        viewAllBtn.style.display = "block";
+    if (sortedUsers.length > USERS_TO_SHOW) {
+
+        viewAllBtn.style.display =
+            "inline-block";
 
         viewAllBtn.textContent =
-            `View All Users (${data.length})`;
+            `View All Users (${sortedUsers.length})`;
 
     } else {
 
-        viewAllBtn.style.display = "none";
+        viewAllBtn.style.display =
+            "none";
 
     }
 
@@ -225,17 +285,26 @@ function displayUsers(data) {
 
 
 // ======================================
-// Search
+// SEARCH
 // ======================================
 
 searchBox.addEventListener(
-    "keyup",
+    "input",
     () => {
 
         const keyword =
             searchBox.value
                 .trim()
                 .toLowerCase();
+
+
+        if (!keyword) {
+
+            displayUsers(users);
+
+            return;
+
+        }
 
 
         const filtered =
@@ -253,9 +322,20 @@ searchBox.addEventListener(
                     ).toLowerCase();
 
 
+                const status =
+                    String(
+                        user.status || ""
+                    ).toLowerCase();
+
+
                 return (
+
                     phone.includes(keyword) ||
-                    packageName.includes(keyword)
+
+                    packageName.includes(keyword) ||
+
+                    status.includes(keyword)
+
                 );
 
             });
@@ -268,58 +348,74 @@ searchBox.addEventListener(
 
 
 // ======================================
-// Refresh
+// REFRESH
 // ======================================
 
 refreshBtn.addEventListener(
     "click",
-    () => {
+    async () => {
 
-        loadUsers();
+        refreshBtn.disabled = true;
+
+        refreshBtn.textContent =
+            "Refreshing...";
+
+
+        await loadUsers();
+
+
+        refreshBtn.disabled = false;
+
+        refreshBtn.textContent =
+            "↻ Refresh";
 
     }
 );
 
 
 // ======================================
-// View User
+// VIEW USER
 // ======================================
 
 document.addEventListener(
     "click",
     event => {
 
-        if (
-            event.target.classList
-                .contains("viewBtn")
-        ) {
-
-            const id =
-                event.target.dataset.id;
+        const button =
+            event.target.closest(
+                ".viewBtn"
+            );
 
 
-            if (!id) {
-
-                alert(
-                    "User ID not found."
-                );
-
-                return;
-
-            }
+        if (!button) {
+            return;
+        }
 
 
-            window.location.href =
-                `/admin/user-details.html?id=${id}`;
+        const id =
+            button.dataset.id;
+
+
+        if (!id) {
+
+            alert(
+                "User ID not found."
+            );
+
+            return;
 
         }
+
+
+        window.location.href =
+            `/admin/user-details.html?id=${encodeURIComponent(id)}`;
 
     }
 );
 
 
 // ======================================
-// View All
+// VIEW ALL
 // ======================================
 
 viewAllBtn.addEventListener(
@@ -334,16 +430,28 @@ viewAllBtn.addEventListener(
 
 
 // ======================================
-// Initialize
+// HTML ESCAPE
 // ======================================
 
-window.addEventListener(
-    "DOMContentLoaded",
-    () => {
+function escapeHtml(value) {
 
-        loadUsers();
+    return String(value)
 
-    }
-);
+        .replaceAll("&", "&amp;")
 
-displayUsers(users);
+        .replaceAll("<", "&lt;")
+
+        .replaceAll(">", "&gt;")
+
+        .replaceAll('"', "&quot;")
+
+        .replaceAll("'", "&#039;");
+
+}
+
+
+// ======================================
+// INITIAL LOAD
+// ======================================
+
+loadUsers();

@@ -9,9 +9,9 @@
         name="viewport"
         content="width=device-width, initial-scale=1.0">
 
-    <title>WiTime - Users</title>
+    <title>WiTime - All Users</title>
 
-  <link rel="stylesheet" href="/css/users.css">
+    <link rel="stylesheet" href="/css/users.css">
 
 </head>
 
@@ -48,11 +48,15 @@
                 📦 Packages
             </a>
 
+            <a href="/admin/users.html">
+                👥 Users
+            </a>
+
             <a
-                href="/admin/users.html"
+                href="/admin/all-users.html"
                 class="active">
 
-                👥 Users
+                👥 All Users
 
             </a>
 
@@ -82,10 +86,10 @@
 
             <div>
 
-                <h1>Users</h1>
+                <h1>All Users</h1>
 
                 <p>
-                    Manage WiTime customers and connections.
+                    Complete WiTime customer list.
                 </p>
 
             </div>
@@ -93,45 +97,86 @@
         </div>
 
 
-        <!-- CONTROLS -->
+        <!-- SEARCH -->
 
-        <div class="controls">
+        <div class="topbar">
 
             <input
                 type="search"
-                id="searchUser"
+                id="searchAllUsers"
                 placeholder="Search phone, package or status...">
 
 
-            <button
-                id="refreshUsers"
-                class="refresh">
-
+            <button id="refreshAllUsers">
                 ↻ Refresh
-
             </button>
 
 
-            <button
-                id="viewAllUsers"
-                class="all-users">
-
-                View All Users
-
+            <button id="backUsers">
+                ← Users
             </button>
+
+        </div>
+
+
+        <!-- SUMMARY -->
+
+        <div class="summary">
+
+            <div class="summary-card">
+
+                <strong id="totalUsers">
+                    0
+                </strong>
+
+                <span>
+                    Total Users
+                </span>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <strong id="onlineUsers">
+                    0
+                </strong>
+
+                <span>
+                    Online
+                </span>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <strong id="offlineUsers">
+                    0
+                </strong>
+
+                <span>
+                    Offline
+                </span>
+
+            </div>
 
         </div>
 
 
         <!-- TABLE -->
 
-        <div class="card">
+        <div class="table-card">
 
             <table>
 
                 <thead>
 
                     <tr>
+
+                        <th>
+                            #
+                        </th>
 
                         <th>
                             Phone
@@ -150,7 +195,15 @@
                         </th>
 
                         <th>
-                            Connection
+                            IP Address
+                        </th>
+
+                        <th>
+                            MAC Address
+                        </th>
+
+                        <th>
+                            Created
                         </th>
 
                         <th>
@@ -162,12 +215,12 @@
                 </thead>
 
 
-                <tbody id="userTable">
+                <tbody id="allUsersTable">
 
                     <tr>
 
                         <td
-                            colspan="6"
+                            colspan="9"
                             class="empty">
 
                             Loading users...
@@ -188,7 +241,7 @@
 </div>
 
 
-<script src="/js/users.js"></script>
+<script src="/js/all-users.js"></script>
 
 </body>
 
