@@ -1129,3 +1129,188 @@ body{
     color:#0A2A66;
     font-weight:600;
 }
+
+/* =========================================
+   WiTime PACKAGE DISPLAY
+   ========================================= */
+
+.package-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    width: 100%;
+    margin: 15px auto 25px;
+}
+
+/* Package card */
+.package-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.08);
+    border: 2px solid transparent;
+    transition: .2s ease;
+    text-align: center;
+}
+
+.package-card h3 {
+    margin: 0 0 8px;
+    color: #0D6EFD;
+    font-size: 18px;
+}
+
+.package-card p {
+    margin: 5px 0;
+    font-size: 24px;
+    font-weight: bold;
+    color: #00a651;
+}
+
+.package-card small {
+    display: block;
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.package-card button {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 8px;
+    background: #0D6EFD;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.package-card button:hover {
+    background: #0056d6;
+}
+
+/* Selected package */
+.package-card.selected {
+    border-color: #0D6EFD;
+    box-shadow: 0 6px 18px rgba(13,110,253,.2);
+}
+
+/* =========================================
+   TABLET
+   ========================================= */
+
+@media (max-width: 900px) {
+
+    .package-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .package-card {
+        padding: 14px 10px;
+    }
+
+}
+
+/* =========================================
+   PHONE
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    body {
+        align-items: flex-start;
+    }
+
+    .landing {
+        width: 100%;
+        max-width: 100%;
+        padding: 12px;
+    }
+
+    /* Smaller header */
+    .brand {
+        margin: 8px 0 12px;
+        gap: 10px;
+    }
+
+    .brand img {
+        width: 55px;
+        height: 55px;
+    }
+
+    .brand-text h1 {
+        font-size: 32px;
+    }
+
+    .brand-text p {
+        font-size: 10px;
+        letter-spacing: 2px;
+    }
+
+    .welcome {
+        margin-bottom: 15px;
+    }
+
+    .welcome h2 {
+        font-size: 21px;
+    }
+
+    .welcome p {
+        font-size: 13px;
+        margin-top: 5px;
+    }
+
+    /* Two packages per row */
+    .package-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .package-card {
+        padding: 12px 8px;
+        border-radius: 12px;
+    }
+
+    .package-card h3 {
+        font-size: 15px;
+        margin-bottom: 5px;
+    }
+
+    .package-card p {
+        font-size: 20px;
+        margin: 4px 0;
+    }
+
+    .package-card small {
+        font-size: 11px;
+        margin-bottom: 5px;
+    }
+
+    .package-card button {
+        padding: 8px 5px;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    /* Payment card */
+    .payment-card {
+        width: 100%;
+        max-width: 100%;
+        margin: 20px auto;
+        padding: 20px 15px;
+        border-radius: 15px;
+    }
+
+    .payment-card h2 {
+        font-size: 21px;
+    }
+
+    .payment-card input {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+
+}

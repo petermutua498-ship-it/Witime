@@ -2,30 +2,49 @@
 // WiTime Reports
 // ======================================
 
-const reportsTable = document.getElementById("reportsTable");
+const reportsTable =
+    document.getElementById("reportsTable");
 
-const successPayments = document.getElementById("successPayments");
-const pendingPayments = document.getElementById("pendingPayments");
-const failedPayments = document.getElementById("failedPayments");
-const totalPayments = document.getElementById("totalPayments");
+const totalRevenue =
+    document.getElementById("totalRevenue");
 
-const startDate = document.getElementById("startDate");
-const endDate = document.getElementById("endDate");
+const totalPayments =
+    document.getElementById("totalPayments");
 
-const filterBtn = document.getElementById("filterBtn");
-const refreshBtn = document.getElementById("refreshReports");
-const exportBtn = document.getElementById("exportCSV");
-const printBtn = document.getElementById("printReport");
-const viewFullReportBtn = document.getElementById("viewFullReport");
+const successfulPayments =
+    document.getElementById("successfulPayments");
 
-let allReports = [];
+const pendingPayments =
+    document.getElementById("pendingPayments");
+
+const failedPayments =
+    document.getElementById("failedPayments");
+
+const refreshReports =
+    document.getElementById("refreshReports");
+
+const exportReport =
+    document.getElementById("exportReport");
+
+const revenueCanvas =
+    document.getElementById("revenueChart");
+
+const statusCanvas =
+    document.getElementById("statusChart");
+
+const packageCanvas =
+    document.getElementById("packageChart");
+
+
+let payments = [];
 
 let revenueChart = null;
 let statusChart = null;
+let packageChart = null;
 
 
 // ======================================
-// LOAD REPORTS
+// LOAD PAYMENTS
 // ======================================
 
 async function loadReports() {
@@ -34,34 +53,67 @@ async function loadReports() {
 
         reportsTable.innerHTML = `
             <tr>
-                <td colspan="6">
+                <td colspan="6" class="empty">
                     Loading reports...
                 </td>
             </tr>
         `;
 
-        const response = await fetch("/api/reports");
+        const response =
+            await fetch("/api/payments", {
+                credentials: "include",
+                cache: "no-store"
+            });
 
         if (!response.ok) {
-            throw new Error("Unable to load reports.");
+
+            throw new Error(
+                `Server returned ${response.status}`
+            );
+
         }
 
-        allReports = await response.json();
+        const data =
+            await response.json();
 
-        renderReports(allReports);
 
-        updateSummary(allReports);
+        if (Array.isArray(data)) {
 
-        updateCharts(allReports);
+            payments = data;
 
-    } catch (err) {
+        } else if (Array.isArray(data.payments)) {
 
-        console.error("Reports error:", err);
+            payments = data.payments;
+
+        } else {
+
+            throw new Error(
+                "Invalid payments response"
+            );
+
+        }
+
+
+        updateSummary();
+
+        renderCharts();
+
+        renderTable();
+
+
+    } catch (error) {
+
+        console.error(
+            "Reports error:",
+            error
+        );
 
         reportsTable.innerHTML = `
             <tr>
-                <td colspan="6">
+                <td colspan="6" class="empty">
                     Unable to load reports.
+                    <br>
+                    <small>${error.message}</small>
                 </td>
             </tr>
         `;
@@ -72,203 +124,138 @@ async function loadReports() {
 
 
 // ======================================
-// UPDATE PAYMENT STATUS SUMMARY
+// SUMMARY
 // ======================================
 
-function updateSummary(reports) {
+function updateSummary() {
 
-    let success = 0;
+    let revenue = 0;
+
+    let successful = 0;
+
     let pending = 0;
+
     let failed = 0;
 
-    reports.forEach(report => {
 
-        switch (report.status) {
+    payments.forEach(payment => {
 
-            case "success":
-                success++;
-                break;
+        const status =
+            String(
+                payment.status || ""
+            ).toLowerCase();
 
-            case "pending":
-                pending++;
-                break;
 
-            case "failed":
-                failed++;
-                break;
+        /*
+         * Revenue is counted from
+         * successful payments only.
+         */
+
+        if (status === "success") {
+
+            revenue +=
+                Number(payment.amount) || 0;
+
+            successful++;
+
+        }
+
+        else if (status === "pending") {
+
+            pending++;
+
+        }
+
+        else if (status === "failed") {
+
+            failed++;
 
         }
 
     });
 
-    successPayments.textContent = success;
-    pendingPayments.textContent = pending;
-    failedPayments.textContent = failed;
-    totalPayments.textContent = reports.length;
+
+    totalRevenue.textContent =
+        `KES ${revenue.toLocaleString()}`;
+
+    totalPayments.textContent =
+        payments.length;
+
+    successfulPayments.textContent =
+        successful;
+
+    pendingPayments.textContent =
+        pending;
+
+    failedPayments.textContent =
+        failed;
 
 }
 
 
 // ======================================
-// RENDER ONLY FIRST 5 PAYMENTS
+// CHARTS
 // ======================================
 
-function renderReports(reports) {
+function renderCharts() {
 
-    reportsTable.innerHTML = "";
+    renderRevenueChart();
 
-    if (reports.length === 0) {
+    renderStatusChart();
 
-        reportsTable.innerHTML = `
-            <tr>
-                <td colspan="6">
-                    No reports found.
-                </td>
-            </tr>
-        `;
-
-        return;
-    }
-
-
-    // Only show the first five
-    const recentReports = reports.slice(0, 5);
-
-
-    recentReports.forEach(report => {
-
-        reportsTable.innerHTML += `
-
-            <tr>
-
-                <td>
-                    ${report.phone}
-                </td>
-
-                <td>
-                    ${report.packageName}
-                </td>
-
-                <td>
-                    KES ${report.amount}
-                </td>
-
-                <td>
-                    <span class="status ${report.status}">
-                        ${report.status}
-                    </span>
-                </td>
-
-                <td>
-                    ${report.transactionId || "-"}
-                </td>
-
-                <td>
-                    ${new Date(report.createdAt)
-                        .toLocaleString()}
-                </td>
-
-            </tr>
-
-        `;
-
-    });
+    renderPackageChart();
 
 }
-
-
-// ======================================
-// DATE FILTER
-// ======================================
-
-function filterReports() {
-
-    let filtered = [...allReports];
-
-
-    if (startDate.value) {
-
-        const start = new Date(startDate.value);
-
-        start.setHours(0, 0, 0, 0);
-
-        filtered = filtered.filter(report => {
-
-            return new Date(report.createdAt) >= start;
-
-        });
-
-    }
-
-
-    if (endDate.value) {
-
-        const end = new Date(endDate.value);
-
-        end.setHours(23, 59, 59, 999);
-
-        filtered = filtered.filter(report => {
-
-            return new Date(report.createdAt) <= end;
-
-        });
-
-    }
-
-
-    renderReports(filtered);
-
-    updateSummary(filtered);
-
-    updateCharts(filtered);
-
-}
-
-
-filterBtn.addEventListener("click", filterReports);
-
-
-// ======================================
-// REFRESH
-// ======================================
-
-refreshBtn.addEventListener("click", () => {
-
-    loadReports();
-
-});
 
 
 // ======================================
 // REVENUE CHART
 // ======================================
 
-function drawRevenueChart(reports) {
+function renderRevenueChart() {
 
-    const revenueByDay = {};
+    const dailyRevenue = {};
 
 
-    reports.forEach(report => {
+    payments.forEach(payment => {
 
-        if (report.status !== "success") {
+        const status =
+            String(
+                payment.status || ""
+            ).toLowerCase();
+
+
+        if (status !== "success") {
             return;
         }
 
 
-        const date = new Date(report.createdAt)
-            .toLocaleDateString();
+        const date =
+            payment.createdAt
+                ? new Date(
+                    payment.createdAt
+                  ).toLocaleDateString()
+                : "Unknown";
 
 
-        revenueByDay[date] =
-            (revenueByDay[date] || 0)
-            + Number(report.amount || 0);
+        if (!dailyRevenue[date]) {
+
+            dailyRevenue[date] = 0;
+
+        }
+
+
+        dailyRevenue[date] +=
+            Number(payment.amount) || 0;
 
     });
 
 
-    const labels = Object.keys(revenueByDay);
+    const labels =
+        Object.keys(dailyRevenue);
 
-    const values = Object.values(revenueByDay);
+    const values =
+        Object.values(dailyRevenue);
 
 
     if (revenueChart) {
@@ -278,80 +265,106 @@ function drawRevenueChart(reports) {
     }
 
 
-    revenueChart = new Chart(
+    revenueChart =
+        new Chart(
+            revenueCanvas,
+            {
+                type: "line",
 
-        document.getElementById("revenueChart"),
+                data: {
 
-        {
+                    labels: labels,
 
-            type: "bar",
+                    datasets: [
 
-            data: {
+                        {
 
-                labels: labels,
+                            label: "Revenue (KES)",
 
-                datasets: [{
+                            data: values,
 
-                    label: "Revenue (KES)",
+                            borderColor: "#2563eb",
 
-                    data: values
+                            backgroundColor:
+                                "rgba(37,99,235,.12)",
 
-                }]
+                            fill: true,
 
-            },
+                            tension: 0.35,
 
-            options: {
+                            borderWidth: 3,
 
-                responsive: true,
+                            pointRadius: 4
 
-                maintainAspectRatio: false,
+                        }
 
-                plugins: {
+                    ]
 
-                    legend: {
+                },
 
-                        display: true
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+                            display: true
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true
+
+                        }
 
                     }
 
                 }
 
             }
-
-        }
-
-    );
+        );
 
 }
 
 
 // ======================================
-// PAYMENT STATUS CHART
+// STATUS CHART
 // ======================================
 
-function drawStatusChart(reports) {
+function renderStatusChart() {
 
     let success = 0;
+
     let pending = 0;
+
     let failed = 0;
 
 
-    reports.forEach(report => {
+    payments.forEach(payment => {
 
-        switch (report.status) {
+        const status =
+            String(
+                payment.status || ""
+            ).toLowerCase();
 
-            case "success":
-                success++;
-                break;
 
-            case "pending":
-                pending++;
-                break;
+        if (status === "success") {
+            success++;
+        }
 
-            case "failed":
-                failed++;
-                break;
+        else if (status === "pending") {
+            pending++;
+        }
 
+        else if (status === "failed") {
+            failed++;
         }
 
     });
@@ -364,162 +377,387 @@ function drawStatusChart(reports) {
     }
 
 
-    statusChart = new Chart(
+    statusChart =
+        new Chart(
+            statusCanvas,
+            {
+                type: "doughnut",
 
-        document.getElementById("statusChart"),
+                data: {
 
-        {
+                    labels: [
+                        "Successful",
+                        "Pending",
+                        "Failed"
+                    ],
 
-            type: "pie",
+                    datasets: [
 
-            data: {
+                        {
 
-                labels: [
+                            data: [
+                                success,
+                                pending,
+                                failed
+                            ]
 
-                    "Success",
-
-                    "Pending",
-
-                    "Failed"
-
-                ],
-
-                datasets: [{
-
-                    data: [
-
-                        success,
-
-                        pending,
-
-                        failed
+                        }
 
                     ]
 
-                }]
+                },
 
-            },
+                options: {
 
-            options: {
+                    responsive: true,
 
-                responsive: true,
+                    maintainAspectRatio: false,
 
-                maintainAspectRatio: false
+                    plugins: {
+
+                        legend: {
+
+                            position: "bottom"
+
+                        }
+
+                    }
+
+                }
 
             }
+        );
+
+}
+
+
+// ======================================
+// PACKAGE REVENUE CHART
+// ======================================
+
+function renderPackageChart() {
+
+    const packageRevenue = {};
+
+
+    payments.forEach(payment => {
+
+        const status =
+            String(
+                payment.status || ""
+            ).toLowerCase();
+
+
+        if (status !== "success") {
+            return;
+        }
+
+
+        const packageName =
+            payment.packageName ||
+            "Unknown";
+
+
+        if (!packageRevenue[packageName]) {
+
+            packageRevenue[packageName] = 0;
 
         }
 
-    );
+
+        packageRevenue[packageName] +=
+            Number(payment.amount) || 0;
+
+    });
+
+
+    const labels =
+        Object.keys(packageRevenue);
+
+    const values =
+        Object.values(packageRevenue);
+
+
+    if (packageChart) {
+
+        packageChart.destroy();
+
+    }
+
+
+    packageChart =
+        new Chart(
+            packageCanvas,
+            {
+                type: "bar",
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [
+
+                        {
+
+                            label: "Revenue (KES)",
+
+                            data: values,
+
+                            backgroundColor: "#2563eb",
+
+                            borderRadius: 7
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
 
 }
 
 
 // ======================================
-// UPDATE CHARTS
+// REPORT TABLE
 // ======================================
 
-function updateCharts(reports) {
+function renderTable() {
 
-    drawRevenueChart(reports);
+    reportsTable.innerHTML = "";
 
-    drawStatusChart(reports);
+
+    const recent =
+        payments.slice(0, 10);
+
+
+    if (recent.length === 0) {
+
+        reportsTable.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty">
+                    No payment records found.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    recent.forEach(payment => {
+
+        const status =
+            String(
+                payment.status || ""
+            ).toLowerCase();
+
+
+        let statusClass =
+            "status-" + status;
+
+
+        reportsTable.innerHTML += `
+
+            <tr>
+
+                <td>
+                    ${escapeHtml(
+                        payment.phone || "-"
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        payment.packageName || "-"
+                    )}
+                </td>
+
+                <td>
+                    KES ${Number(
+                        payment.amount || 0
+                    ).toLocaleString()}
+                </td>
+
+                <td>
+
+                    <span class="${statusClass}">
+                        ${escapeHtml(
+                            payment.status || "-"
+                        )}
+                    </span>
+
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        payment.transactionId || "-"
+                    )}
+                </td>
+
+                <td>
+                    ${
+                        payment.createdAt
+                            ? new Date(
+                                payment.createdAt
+                              ).toLocaleString()
+                            : "-"
+                    }
+                </td>
+
+            </tr>
+
+        `;
+
+    });
 
 }
-
-
-// ======================================
-// VIEW FULL REPORT
-// ======================================
-
-viewFullReportBtn.addEventListener("click", () => {
-
-    window.location.href =
-        "/admin/full-report.html";
-
-});
 
 
 // ======================================
 // EXPORT CSV
 // ======================================
 
-exportBtn.addEventListener("click", () => {
+exportReport.addEventListener(
+    "click",
+    () => {
 
-    let csv =
-        "Phone,Package,Amount,Status,Receipt,Date\n";
-
-
-    allReports.forEach(report => {
-
-        csv +=
-            `"${report.phone}",` +
-            `"${report.packageName}",` +
-            `"${report.amount}",` +
-            `"${report.status}",` +
-            `"${report.transactionId || ""}",` +
-            `"${new Date(report.createdAt)
-                .toLocaleString()}"\n`;
-
-    });
+        let csv =
+            "Phone,Package,Amount,Status,Transaction ID,Date\n";
 
 
-    const blob = new Blob(
+        payments.forEach(payment => {
 
-        [csv],
+            csv +=
+                `"${payment.phone || ""}",` +
+                `"${payment.packageName || ""}",` +
+                `"${payment.amount || 0}",` +
+                `"${payment.status || ""}",` +
+                `"${payment.transactionId || ""}",` +
+                `"${payment.createdAt
+                    ? new Date(
+                        payment.createdAt
+                      ).toLocaleString()
+                    : ""}"\n`;
 
-        {
-            type: "text/csv"
-        }
-
-    );
-
-
-    const url =
-        URL.createObjectURL(blob);
-
-
-    const link =
-        document.createElement("a");
+        });
 
 
-    link.href = url;
-
-    link.download = "reports.csv";
-
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    document.body.removeChild(link);
+        const blob =
+            new Blob(
+                [csv],
+                {
+                    type: "text/csv"
+                }
+            );
 
 
-    URL.revokeObjectURL(url);
+        const url =
+            URL.createObjectURL(blob);
 
-});
+
+        const link =
+            document.createElement("a");
 
 
-// ======================================
-// PRINT
-// ======================================
+        link.href = url;
 
-printBtn.addEventListener("click", () => {
+        link.download =
+            "witime-reports.csv";
 
-    window.print();
 
-});
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+
+    }
+);
 
 
 // ======================================
-// AUTO REFRESH
+// REFRESH
 // ======================================
 
-setInterval(loadReports, 10000);
+refreshReports.addEventListener(
+    "click",
+    async () => {
+
+        refreshReports.disabled = true;
+
+        refreshReports.textContent =
+            "Refreshing...";
+
+
+        await loadReports();
+
+
+        refreshReports.disabled = false;
+
+        refreshReports.textContent =
+            "↻ Refresh";
+
+    }
+);
+
+
+// ======================================
+// ESCAPE HTML
+// ======================================
+
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replaceAll("&", "&amp;")
+
+        .replaceAll("<", "&lt;")
+
+        .replaceAll(">", "&gt;")
+
+        .replaceAll('"', "&quot;")
+
+        .replaceAll("'", "&#039;");
+
+}
 
 
 // ======================================
 // START
 // ======================================
 
-loadReports();
+document.addEventListener(
+    "DOMContentLoaded",
+    loadReports
+);

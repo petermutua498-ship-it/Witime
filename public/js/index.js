@@ -83,25 +83,36 @@ loadPackages();
 window.selectPackage = function(name, price, duration) {
 
     currentPackage = {
-
         name,
         price,
         duration
-
     };
 
+    // Display selected package
     selectedPackage.innerText = name;
     selectedPrice.innerText = `${price} • ${duration}`;
 
+    // Show payment section
     paymentSection.style.display = "block";
 
-    paymentSection.scrollIntoView({
+    // Scroll to payment section
+    setTimeout(() => {
 
-        behavior: "smooth"
+        paymentSection.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
 
-    });
+        // Automatically place cursor in phone number box
+        setTimeout(() => {
 
-};
+            phoneInput.focus();
+
+        }, 500);
+
+    }, 100);
+
+}; 
 
 // --------------------------
 // Pay Button

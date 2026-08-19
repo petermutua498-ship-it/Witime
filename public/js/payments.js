@@ -272,75 +272,67 @@ function renderPayments(payments) {
 
 }
 
-
 // ======================================
-// UPDATE STATISTICS
+// UPDATE PAYMENT SUMMARY CARDS
 // ======================================
 
 function updateCards(payments) {
 
-    let revenue = 0;
-
-    let success = 0;
-
-    let pending = 0;
-
-    let failed = 0;
-
+    let successfulAmount = 0;
+    let pendingAmount = 0;
+    let failedAmount = 0;
 
     payments.forEach(payment => {
 
-        revenue +=
+        const amount =
             Number(payment.amount) || 0;
 
+        const status =
+            String(payment.status || "")
+                .toLowerCase();
 
-        switch (
-            (payment.status || "").toLowerCase()
-        ) {
+        if (status === "success") {
 
-            case "success":
+            successfulAmount += amount;
 
-                success++;
+        }
 
-                break;
+        else if (status === "pending") {
 
+            pendingAmount += amount;
 
-            case "pending":
+        }
 
-                pending++;
+        else if (status === "failed") {
 
-                break;
-
-
-            case "failed":
-
-                failed++;
-
-                break;
+            failedAmount += amount;
 
         }
 
     });
 
 
+    // Total revenue means
+    // successful money only
+
+    const totalRevenueAmount =
+        successfulAmount;
+
+
     totalRevenue.innerText =
-        `KES ${revenue}`;
-
-
-    totalPayments.innerText =
-        payments.length;
+        `KES ${totalRevenueAmount.toLocaleString()}`;
 
 
     successPayments.innerText =
-        success;
+        `KES ${successfulAmount.toLocaleString()}`;
 
 
     pendingPayments.innerText =
-        pending;
+        `KES ${pendingAmount.toLocaleString()}`;
 
 
     failedPayments.innerText =
-        failed;
+        `KES ${failedAmount.toLocaleString()}`;
 
 }
 

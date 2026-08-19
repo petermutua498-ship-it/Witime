@@ -2,7 +2,6 @@
 // WiTime Package Management
 // =======================================
 
-// Elements
 const modal = document.getElementById("packageModal");
 const addBtn = document.getElementById("addPackageBtn");
 const closeBtn = document.querySelector(".close");
@@ -14,17 +13,19 @@ const searchBox = document.getElementById("searchPackage");
 let editingId = null;
 let packages = [];
 
+
 // =======================================
-// Modal
+// MODAL
 // =======================================
 
 addBtn.addEventListener("click", () => {
 
     editingId = null;
 
-    document.querySelector(".modal-content h2").innerText = "Add Package";
+    document.querySelector(".modal-content h2").textContent =
+        "Add Package";
 
-    saveBtn.innerText = "Save Package";
+    saveBtn.textContent = "Save Package";
 
     document.getElementById("packageName").value = "";
     document.getElementById("packagePrice").value = "";
@@ -33,241 +34,352 @@ addBtn.addEventListener("click", () => {
     document.getElementById("packageStatus").value = "Active";
 
     modal.style.display = "flex";
-
 });
+
 
 closeBtn.addEventListener("click", () => {
-
     modal.style.display = "none";
-
 });
 
-window.addEventListener("click", (e) => {
 
-    if (e.target === modal) {
+window.addEventListener("click", (event) => {
 
+    if (event.target === modal) {
         modal.style.display = "none";
-
     }
 
 });
 
+
+document.addEventListener("keydown", (event) => {
+
+    if (event.key === "Escape") {
+        modal.style.display = "none";
+    }
+
+});
+
+
 // =======================================
-// Load Packages
+// LOAD PACKAGES
 // =======================================
 
 async function loadPackages() {
 
+    table.innerHTML = `
+        <tr>
+            <td colspan="5" class="empty">
+                Loading packages...
+            </td>
+        </tr>
+    `;
+
     try {
 
-        table.innerHTML = `
+        const response = await fetch("/api/packages", {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store"
+        });
 
-        <tr>
+        if (!response.ok) {
 
-            <td colspan="5" class="empty">
+            throw new Error(
+                `Server returned ${response.status}`
+            );
 
-                Loading packages...
+        }
 
-            </td>
+        const data = await response.json();
 
-        </tr>
+        console.log("WiTime packages:", data);
 
-        `;
 
-        const response = await fetch("/api/packages");
+        // Support both:
+        // [...]
+        // and { packages: [...] }
 
-        packages = await response.json();
+        if (Array.isArray(data)) {
+
+            packages = data;
+
+        } else if (Array.isArray(data.packages)) {
+
+            packages = data.packages;
+
+        } else {
+
+            throw new Error(
+                "Invalid packages response from server"
+            );
+
+        }
+
 
         displayPackages(packages);
 
-    } catch (err) {
 
-        console.error(err);
+    } catch (error) {
+
+        console.error(
+            "Unable to load packages:",
+            error
+        );
 
         table.innerHTML = `
-
-        <tr>
-
-            <td colspan="5" class="empty">
-
-                Unable to load packages.
-
-            </td>
-
-        </tr>
-
+            <tr>
+                <td colspan="5" class="empty error">
+                    Unable to load packages.
+                    <br>
+                    <small>${escapeHtml(error.message)}</small>
+                </td>
+            </tr>
         `;
 
     }
 
 }
 
+
 // =======================================
-// Display Packages
+// DISPLAY PACKAGES
 // =======================================
 
 function displayPackages(data) {
 
     table.innerHTML = "";
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
 
         table.innerHTML = `
-
-        <tr>
-
-            <td colspan="5" class="empty">
-
-                No packages found.
-
-            </td>
-
-        </tr>
-
+            <tr>
+                <td colspan="5" class="empty">
+                    No packages found.
+                </td>
+            </tr>
         `;
 
         return;
-
     }
+
 
     data.forEach(pkg => {
 
+        const status =
+            pkg.status || "Inactive";
+
+        const statusClass =
+            status.toLowerCase() === "active"
+                ? "status-active"
+                : "status-inactive";
+
+
         table.innerHTML += `
+            <tr>
 
-        <tr>
+                <td>
+                    <strong>
+                        ${escapeHtml(pkg.name || "-")}
+                    </strong>
+                </td>
 
-            <td>${pkg.name}</td>
+                <td>
+                    KES ${Number(pkg.price) || 0}
+                </td>
 
-            <td>KES ${pkg.price}</td>
+                <td>
+                    ${escapeHtml(pkg.duration || "-")}
+                    ${escapeHtml(pkg.durationUnit || "")}
+                </td>
 
-            <td>${pkg.duration} ${pkg.durationUnit}</td>
+                <td>
+                    <span class="${statusClass}">
+                        ${escapeHtml(status)}
+                    </span>
+                </td>
 
-            <td>
+                <td>
 
-                <span class="${pkg.status === "Active"
-                    ? "status-active"
-                    : "status-inactive"}">
+                    <button
+                        class="editBtn"
+                        data-id="${pkg._id}">
+                        ✏ Edit
+                    </button>
 
-                    ${pkg.status}
+                    <button
+                        class="deleteBtn"
+                        data-id="${pkg._id}">
+                        🗑 Delete
+                    </button>
 
-                </span>
+                </td>
 
-            </td>
-
-            <td>
-
-                <button
-                    class="editBtn"
-                    data-id="${pkg._id}">
-
-                    ✏ Edit
-
-                </button>
-
-                <button
-                    class="deleteBtn"
-                    data-id="${pkg._id}">
-
-                    🗑 Delete
-
-                </button>
-
-            </td>
-
-        </tr>
-
+            </tr>
         `;
 
     });
 
 }
 
+
 // =======================================
-// Search
+// SEARCH
 // =======================================
 
-searchBox.addEventListener("keyup", () => {
+searchBox.addEventListener("input", () => {
 
-    const keyword = searchBox.value.toLowerCase();
+    const keyword =
+        searchBox.value
+            .trim()
+            .toLowerCase();
 
-    const filtered = packages.filter(pkg =>
 
-        pkg.name.toLowerCase().includes(keyword)
+    if (!keyword) {
 
-    );
+        displayPackages(packages);
+
+        return;
+    }
+
+
+    const filtered =
+        packages.filter(pkg => {
+
+            const name =
+                String(pkg.name || "")
+                    .toLowerCase();
+
+            const duration =
+                String(pkg.duration || "")
+                    .toLowerCase();
+
+            const unit =
+                String(pkg.durationUnit || "")
+                    .toLowerCase();
+
+            return (
+                name.includes(keyword) ||
+                duration.includes(keyword) ||
+                unit.includes(keyword)
+            );
+
+        });
+
 
     displayPackages(filtered);
 
 });
 
+
 // =======================================
-// EDIT & DELETE BUTTONS
+// EDIT / DELETE
 // =======================================
 
-document.addEventListener("click", async (e) => {
+document.addEventListener("click", async (event) => {
 
-    // ==========================
-    // EDIT PACKAGE
-    // ==========================
 
-    if (e.target.classList.contains("editBtn")) {
+    // EDIT
 
-        const id = e.target.dataset.id;
+    const editBtn =
+        event.target.closest(".editBtn");
 
-        const pkg = packages.find(p => p._id === id);
+    if (editBtn) {
 
-        if (!pkg) return;
+        const id = editBtn.dataset.id;
+
+        const pkg =
+            packages.find(
+                item => item._id === id
+            );
+
+        if (!pkg) {
+
+            alert("Package not found.");
+
+            return;
+        }
+
 
         editingId = id;
 
-        document.querySelector(".modal-content h2").innerText =
-            "Edit Package";
+        document.querySelector(".modal-content h2")
+            .textContent = "Edit Package";
 
-        saveBtn.innerText = "Update Package";
+        saveBtn.textContent = "Update Package";
 
-        document.getElementById("packageName").value = pkg.name;
-        document.getElementById("packagePrice").value = pkg.price;
-        document.getElementById("packageDuration").value = pkg.duration;
-        document.getElementById("durationUnit").value = pkg.durationUnit;
-        document.getElementById("packageStatus").value = pkg.status;
+
+        document.getElementById("packageName").value =
+            pkg.name || "";
+
+        document.getElementById("packagePrice").value =
+            pkg.price || "";
+
+        document.getElementById("packageDuration").value =
+            pkg.duration || "";
+
+        document.getElementById("durationUnit").value =
+            pkg.durationUnit || "Hours";
+
+        document.getElementById("packageStatus").value =
+            pkg.status || "Active";
+
 
         modal.style.display = "flex";
 
+        return;
     }
 
-    // ==========================
-    // DELETE PACKAGE
-    // ==========================
 
-    if (e.target.classList.contains("deleteBtn")) {
+    // DELETE
 
-        const id = e.target.dataset.id;
+    const deleteBtn =
+        event.target.closest(".deleteBtn");
 
-        if (!confirm("Delete this package?")) return;
+    if (deleteBtn) {
+
+        const id = deleteBtn.dataset.id;
+
+        if (!id) return;
+
+
+        if (!confirm("Delete this package?")) {
+            return;
+        }
+
 
         try {
 
-            const response = await fetch(`/api/packages/${id}`, {
+            const response =
+                await fetch(
+                    `/api/packages/${encodeURIComponent(id)}`,
+                    {
+                        method: "DELETE",
+                        credentials: "include"
+                    }
+                );
 
-                method: "DELETE"
 
-            });
+            const result =
+                await response.json();
 
-            const result = await response.json();
 
-            if (result.success) {
+            if (!response.ok || !result.success) {
 
-                loadPackages();
+                alert(
+                    result.message ||
+                    "Unable to delete package."
+                );
 
-            } else {
-
-                alert(result.message || "Unable to delete package.");
-
+                return;
             }
 
-        } catch (err) {
 
-            console.error(err);
+            await loadPackages();
+
+
+        } catch (error) {
+
+            console.error(error);
 
             alert("Server error.");
 
@@ -277,128 +389,173 @@ document.addEventListener("click", async (e) => {
 
 });
 
+
 // =======================================
-// SAVE PACKAGE
+// SAVE / UPDATE
 // =======================================
 
 saveBtn.addEventListener("click", async () => {
 
-    const packageData = {
 
-        name: document.getElementById("packageName").value.trim(),
+    const name =
+        document.getElementById("packageName")
+            .value
+            .trim();
 
-        price: Number(
+
+    const price =
+        Number(
             document.getElementById("packagePrice").value
-        ),
+        );
 
-        duration: Number(
+
+    const duration =
+        Number(
             document.getElementById("packageDuration").value
-        ),
+        );
 
-        durationUnit:
-            document.getElementById("durationUnit").value,
 
-        status:
-            document.getElementById("packageStatus").value
+    const durationUnit =
+        document.getElementById("durationUnit").value;
 
-    };
+
+    const status =
+        document.getElementById("packageStatus").value;
+
 
     if (
-        packageData.name === "" ||
-        packageData.price <= 0 ||
-        packageData.duration <= 0
+        !name ||
+        price <= 0 ||
+        duration <= 0
     ) {
 
         alert("Please complete all fields.");
 
         return;
-
     }
+
+
+    const packageData = {
+        name,
+        price,
+        duration,
+        durationUnit,
+        status
+    };
+
+
+    const url = editingId
+        ? `/api/packages/${encodeURIComponent(editingId)}`
+        : "/api/packages";
+
+
+    const method = editingId
+        ? "PUT"
+        : "POST";
+
+
+    saveBtn.disabled = true;
+
+    saveBtn.textContent =
+        editingId
+            ? "Updating..."
+            : "Saving...";
+
 
     try {
 
-        const url = editingId
-            ? `/api/packages/${editingId}`
-            : "/api/packages";
+        const response =
+            await fetch(url, {
 
-        const method = editingId
-            ? "PUT"
-            : "POST";
+                method,
 
-        const response = await fetch(url, {
+                credentials: "include",
 
-            method,
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-            headers: {
+                body: JSON.stringify(packageData)
 
-                "Content-Type": "application/json"
+            });
 
-            },
 
-            body: JSON.stringify(packageData)
+        const result =
+            await response.json();
 
-        });
 
-        const result = await response.json();
+        if (!response.ok || !result.success) {
 
-        if (result.success) {
+            alert(
+                result.message ||
+                "Unable to save package."
+            );
 
-            modal.style.display = "none";
-
-            editingId = null;
-
-            loadPackages();
-
-        } else {
-
-            alert(result.message);
-
+            return;
         }
 
-    } catch (err) {
-
-        console.error(err);
-
-        alert("Unable to save package.");
-
-    }
-
-});
-
-// =======================================
-// HELPERS
-// =======================================
-
-// Refresh package list
-function refreshPackages() {
-
-    loadPackages();
-
-}
-
-// Close modal after pressing ESC
-document.addEventListener("keydown", (e) => {
-
-    if (e.key === "Escape") {
 
         modal.style.display = "none";
 
+        editingId = null;
+
+        await loadPackages();
+
+
+    } catch (error) {
+
+        console.error(
+            "Save package error:",
+            error
+        );
+
+        alert("Unable to contact the server.");
+
+    } finally {
+
+        saveBtn.disabled = false;
+
+        saveBtn.textContent =
+            editingId
+                ? "Update Package"
+                : "Save Package";
+
     }
 
 });
 
-// Prevent empty spaces in package name
-document.getElementById("packageName").addEventListener("input", function () {
-
-    this.value = this.value.replace(/\s+/g, " ");
-
-});
 
 // =======================================
-// INITIALIZE PAGE
+// REFRESH
 // =======================================
 
-window.addEventListener("DOMContentLoaded", () => {
+function refreshPackages() {
+    loadPackages();
+}
+
+
+// =======================================
+// ESCAPE HTML
+// =======================================
+
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+// =======================================
+// INITIAL LOAD
+// =======================================
+
+document.addEventListener("DOMContentLoaded", () => {
 
     loadPackages();
 

@@ -1,293 +1,303 @@
-<meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="en">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>WiTime - Reports</title>
+    <title>WiTime - Reports</title>
 
-<link rel="stylesheet" href="/css/reports.css">
+    <link rel="stylesheet" href="/css/reports.css">
+</head>
 
+<body>
 
-<!-- Sidebar -->
+<div class="layout">
 
-<aside class="sidebar">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-    <div class="logo">
+        <div class="logo">
+            <img src="/images/logo.png" alt="WiTime">
 
-        <img src="/images/logo.png" alt="WiTime">
+            <h2>WiTime</h2>
+            <p>Admin Panel</p>
+        </div>
 
-        <h2>WiTime</h2>
+        <nav class="menu">
 
-        <p>Fast • Affordable • Reliable</p>
+            <a href="/admin/dashboard.html">
+                🏠 Dashboard
+            </a>
 
-    </div>
+            <a href="/admin/packages.html">
+                📦 Packages
+            </a>
 
-    <ul>
+            <a href="/admin/users.html">
+                👥 Users
+            </a>
 
-        <li onclick="location.href='dashboard.html'">
-            🏠 Dashboard
-        </li>
+            <a href="/admin/payments.html">
+                💳 Payments
+            </a>
 
-        <li onclick="location.href='packages.html'">
-            📦 Packages
-        </li>
+            <a href="/admin/reports.html" class="active">
+                📈 Reports
+            </a>
 
-        <li onclick="location.href='users.html'">
-            👥 Users
-        </li>
+            <a href="/admin/settings.html">
+                ⚙ Settings
+            </a>
 
-        <li onclick="location.href='payments.html'">
-            💳 Payments
-        </li>
+        </nav>
 
-        <li class="active">
-            📈 Reports
-        </li>
-
-        <li onclick="location.href='settings.html'">
-            ⚙ Settings
-        </li>
-
-        <li id="logoutBtn">
-            🚪 Logout
-        </li>
-
-    </ul>
-
-</aside>
+    </aside>
 
 
-<!-- Main -->
+    <!-- MAIN -->
+    <main class="main">
 
-<main class="main">
+        <div class="header">
 
+            <div>
+                <h1>Reports</h1>
 
-    <!-- Header -->
+                <p>
+                    WiTime payment and revenue reports.
+                </p>
+            </div>
 
-    <div class="header">
-
-        <h1>Reports</h1>
-
-        <div>
-
-            <button
-                id="refreshReports"
-                class="primary-btn">
-
-                Refresh
-
-            </button>
-
-            <button
-                id="exportCSV"
-                class="primary-btn">
-
-                Export CSV
-
-            </button>
-
-            <button
-                id="printReport"
-                class="primary-btn">
-
-                Print
-
+            <button id="refreshReports" class="refresh-btn">
+                ↻ Refresh
             </button>
 
         </div>
 
-    </div>
 
+        <!-- ============================== -->
+        <!-- SUMMARY CARDS -->
+        <!-- ============================== -->
 
-    <!-- Filters -->
+        <section class="report-cards">
 
-    <div class="toolbar">
+            <div class="report-card revenue-card">
 
-        <input
-            type="date"
-            id="startDate">
+                <span class="card-icon">💰</span>
 
-        <input
-            type="date"
-            id="endDate">
-
-        <button
-            id="filterBtn"
-            class="primary-btn">
-
-            Filter
-
-        </button>
-
-    </div>
-
-
-    <!-- Payment Status -->
-
-    <div class="status-section">
-
-        <h2>Payment Status</h2>
-
-        <div class="status-grid">
-
-
-            <div class="status-card">
-
-                <span>Successful</span>
-
-                <strong id="successPayments">
-                    0
-                </strong>
+                <div>
+                    <h3>Total Revenue</h3>
+                    <strong id="totalRevenue">
+                        KES 0
+                    </strong>
+                </div>
 
             </div>
 
 
-            <div class="status-card">
+            <div class="report-card">
 
-                <span>Pending</span>
+                <span class="card-icon">💳</span>
 
-                <strong id="pendingPayments">
-                    0
-                </strong>
-
-            </div>
-
-
-            <div class="status-card">
-
-                <span>Failed</span>
-
-                <strong id="failedPayments">
-                    0
-                </strong>
+                <div>
+                    <h3>Total Payments</h3>
+                    <strong id="totalPayments">
+                        0
+                    </strong>
+                </div>
 
             </div>
 
 
-            <div class="status-card">
+            <div class="report-card">
 
-                <span>Total Payments</span>
+                <span class="card-icon">✅</span>
 
-                <strong id="totalPayments">
-                    0
-                </strong>
+                <div>
+                    <h3>Successful</h3>
+                    <strong id="successfulPayments">
+                        0
+                    </strong>
+                </div>
 
             </div>
 
 
-        </div>
+            <div class="report-card">
 
-    </div>
+                <span class="card-icon">⏳</span>
+
+                <div>
+                    <h3>Pending</h3>
+                    <strong id="pendingPayments">
+                        0
+                    </strong>
+                </div>
+
+            </div>
 
 
-    <!-- Charts -->
+            <div class="report-card">
 
-    <div class="chart-grid">
+                <span class="card-icon">❌</span>
+
+                <div>
+                    <h3>Failed</h3>
+                    <strong id="failedPayments">
+                        0
+                    </strong>
+                </div>
+
+            </div>
+
+        </section>
 
 
-        <div class="chart-card">
+        <!-- ============================== -->
+        <!-- CHARTS -->
+        <!-- ============================== -->
 
-            <h3>Revenue Trend</h3>
+        <section class="charts-grid">
 
-            <div class="chart-wrapper">
+            <!-- Revenue Chart -->
+
+            <div class="chart-card">
+
+                <div class="chart-header">
+
+                    <div>
+                        <h2>Revenue Overview</h2>
+
+                        <p>
+                            Revenue generated from payments.
+                        </p>
+                    </div>
+
+                </div>
 
                 <canvas id="revenueChart"></canvas>
 
             </div>
 
-        </div>
 
+            <!-- Payment Status Chart -->
 
-        <div class="chart-card">
+            <div class="chart-card">
 
-            <h3>Payment Status</h3>
+                <div class="chart-header">
 
-            <div class="chart-wrapper">
+                    <div>
+                        <h2>Payment Status</h2>
+
+                        <p>
+                            Payment success, pending and failed.
+                        </p>
+                    </div>
+
+                </div>
 
                 <canvas id="statusChart"></canvas>
 
             </div>
 
-        </div>
+        </section>
 
 
-    </div>
+        <!-- ============================== -->
+        <!-- PACKAGE REVENUE -->
+        <!-- ============================== -->
+
+        <section class="chart-card package-chart-card">
+
+            <div class="chart-header">
+
+                <div>
+                    <h2>Revenue by Package</h2>
+
+                    <p>
+                        Amount generated by each WiTime package.
+                    </p>
+                </div>
+
+            </div>
+
+            <canvas id="packageChart"></canvas>
+
+        </section>
 
 
-    <!-- Recent Payments -->
+        <!-- ============================== -->
+        <!-- REPORT TABLE -->
+        <!-- ============================== -->
 
-    <div class="table-card">
+        <section class="table-card">
 
+            <div class="table-header">
 
-        <div class="table-header">
+                <div>
+                    <h2>Payment Report</h2>
 
-            <h2>
-                Recent Payments
-            </h2>
+                    <p>
+                        Recent payment transactions.
+                    </p>
+                </div>
 
-        </div>
+                <button id="exportReport">
+                    Export CSV
+                </button>
 
-
-        <div class="table-wrapper">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>Phone</th>
-
-                        <th>Package</th>
-
-                        <th>Amount</th>
-
-                        <th>Status</th>
-
-                        <th>Receipt</th>
-
-                        <th>Date</th>
-
-                    </tr>
-
-                </thead>
+            </div>
 
 
-                <tbody id="reportsTable">
+            <div class="table-wrapper">
 
-                    <tr>
+                <table>
 
-                        <td colspan="6">
+                    <thead>
 
-                            Loading reports...
+                        <tr>
 
-                        </td>
+                            <th>Phone</th>
+                            <th>Package</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Transaction ID</th>
+                            <th>Date</th>
 
-                    </tr>
+                        </tr>
 
-                </tbody>
-
-            </table>
-
-        </div>
-
-
-        <!-- Full Report -->
-
-        <div class="full-report-button">
-
-            <button
-                id="viewFullReport"
-                class="primary-btn">
-
-                View Full Report
-
-            </button>
-
-        </div>
+                    </thead>
 
 
-    </div>
+                    <tbody id="reportsTable">
+
+                        <tr>
+
+                            <td colspan="6" class="empty">
+                                Loading reports...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
 
 
-</main>
+<!-- Chart.js -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="/js/reports.js"></script>
+
+</body>
+
+</html>
