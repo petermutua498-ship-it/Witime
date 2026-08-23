@@ -5,9 +5,14 @@ const Payment = require("../models/Payment");
 const Package = require("../models/Package");
 const User = require("../models/Users");
 
+const {
+    createHotspotProfile,
+    createHotspotUser
+} = require("../services/mikrotikService");
+
 
 // ======================================
-// M-PESA STK CALLBACK
+// M-PESA CALLBACK
 // POST /callback
 // ======================================
 
@@ -15,9 +20,10 @@ router.post("/callback", async (req, res) => {
 
     try {
 
-        console.log(
-            "========== CALLBACK RECEIVED =========="
-        );
+        console.log("");
+        console.log("======================================");
+        console.log("📲 M-PESA CALLBACK RECEIVED");
+        console.log("======================================");
 
         console.log(
             JSON.stringify(req.body, null, 2)
@@ -25,22 +31,27 @@ router.post("/callback", async (req, res) => {
 
 
         // ======================================
-        // VALIDATE CALLBACK
+        // GET CALLBACK DATA
         // ======================================
 
         const callback =
             req.body?.Body?.stkCallback;
 
 
+        // If Safaricom sends an unexpected request
         if (!callback) {
 
-            console.error(
-                "❌ Invalid M-Pesa callback structure"
+            console.log(
+                "⚠️ No stkCallback found."
             );
 
             return res.json({
+
                 ResultCode: 0,
-                ResultDesc: "Accepted"
+
+                ResultDesc:
+                    "Accepted"
+
             });
 
         }
@@ -50,13 +61,21 @@ router.post("/callback", async (req, res) => {
             callback.CheckoutRequestID;
 
 
+        console.log(
+            "CheckoutRequestID:",
+            checkoutRequestID
+        );
+
+
         // ======================================
         // FIND PAYMENT
         // ======================================
 
         const payment =
             await Payment.findOne({
+
                 checkoutRequestID
+
             });
 
 
@@ -68,113 +87,262 @@ router.post("/callback", async (req, res) => {
             );
 
             return res.json({
+
                 ResultCode: 0,
-                ResultDesc: "Accepted"
+
+                ResultDesc:
+                    "Accepted"
+
             });
 
         }
 
 
         // ======================================
-        // PREVENT DUPLICATE CALLBACK
+        // PREVENT DUPLICATE PROCESSING
         // ======================================
 
-        if (payment.status === "success") {
+        if (
+            payment.status ===
+            "success"
+        ) {
 
             console.log(
-                "⚠️ Payment already processed:",
+                "ℹ️ Payment already processed:",
                 checkoutRequestID
             );
 
             return res.json({
+
                 ResultCode: 0,
-                ResultDesc: "Accepted"
+
+                ResultDesc:
+                    "Accepted"
+
             });
 
         }
 
 
         // ======================================
-        // SUCCESSFUL PAYMENT
+        // PAYMENT FAILED
         // ======================================
 
-        if (callback.ResultCode === 0) {
+        if (
+            Number(callback.ResultCode) !== 0
+        ) {
 
-            console.log(
-                "✅ M-Pesa payment successful"
-            );
-
-
-            // ======================================
-            // UPDATE PAYMENT
-            // ======================================
-
-            payment.status = "success";
-
-
-            const items =
-                callback.CallbackMetadata?.Item || [];
-
-
-            for (const item of items) {
-
-                // M-Pesa receipt
-
-                if (
-                    item.Name ===
-                    "MpesaReceiptNumber"
-                ) {
-
-                    payment.transactionId =
-                        item.Value;
-
-                }
-
-
-                // Phone number
-
-                if (
-                    item.Name ===
-                    "PhoneNumber"
-                ) {
-
-                    payment.phone =
-                        String(item.Value);
-
-                }
-
-            }
-
+            payment.status =
+                "failed";
 
             await payment.save();
 
 
             console.log(
-                "✅ Payment Updated Successfully"
+                "❌ Payment failed:",
+                callback.ResultDesc
             );
 
 
-            // ======================================
-            // FIND PACKAGE
-            // ======================================
+            return res.json({
 
-            const packageData =
-                await Package.findOne({
+                ResultCode: 0,
 
-                    name:
-                        payment.packageName,
+                ResultDesc:
+                    "Accepted"
 
-                    active:
-                        true
+            });
 
-                });
+        }
 
 
-            if (!packageData) {
+        // ======================================
+        // PAYMENT SUCCESS
+        // ======================================
+
+        console.log(
+            "✅ M-PESA PAYMENT SUCCESSFUL"
+        );
+
+
+        payment.status =
+            "success";
+
+
+        // ======================================
+        // READ CALLBACK METADATA
+        // ======================================
+
+        const items =
+            callback.CallbackMetadata?.Item ||
+            [];
+
+
+        for (
+            const item of items
+        ) {
+
+            if (
+                item.Name ===
+                "MpesaReceiptNumber"
+            ) {
+
+                payment.transactionId =
+                    String(item.Value);
+
+            }
+
+
+            if (
+                item.Name ===
+                "PhoneNumber"
+            ) {
+
+                payment.phone =
+                    String(item.Value);
+
+            }
+
+        }
+
+
+        await payment.save();
+
+
+        console.log(
+            "📱 Customer phone:",
+            payment.phone
+        );
+
+        console.log(
+            "📦 Package:",
+            payment.packageName
+        );
+
+        console.log(
+            "💰 Amount:",
+            payment.amount
+        );
+
+
+        // ======================================
+        // FIND PACKAGE
+        // ======================================
+
+        const packageData =
+            await Package.findOne({
+
+                name:
+                    payment.packageName,
+
+                active:
+                    true
+
+            });
+
+
+        if (!packageData) {
+
+            console.error(
+                "❌ Package not found:",
+                payment.packageName
+            );
+
+            return res.json({
+
+                ResultCode: 0,
+
+                ResultDesc:
+                    "Accepted"
+
+            });
+
+        }
+
+
+        console.log(
+            "✅ Package found:",
+            packageData.name
+        );
+
+
+        // ======================================
+        // CALCULATE LOGIN / EXPIRY TIME
+        // ======================================
+
+        const loginTime =
+            new Date();
+
+
+        const expiryTime =
+            new Date(loginTime);
+
+
+        const duration =
+            Number(
+                packageData.duration
+            );
+
+
+        switch (
+            packageData.durationUnit
+        ) {
+
+            case "Minutes":
+
+                expiryTime.setMinutes(
+                    expiryTime.getMinutes() +
+                    duration
+                );
+
+                break;
+
+
+            case "Hours":
+
+                expiryTime.setHours(
+                    expiryTime.getHours() +
+                    duration
+                );
+
+                break;
+
+
+            case "Days":
+
+                expiryTime.setDate(
+                    expiryTime.getDate() +
+                    duration
+                );
+
+                break;
+
+
+            case "Weeks":
+
+                expiryTime.setDate(
+                    expiryTime.getDate() +
+                    duration * 7
+                );
+
+                break;
+
+
+            case "Months":
+
+                expiryTime.setMonth(
+                    expiryTime.getMonth() +
+                    duration
+                );
+
+                break;
+
+
+            default:
 
                 console.error(
-                    "❌ Package not found:",
-                    payment.packageName
+                    "❌ Unknown package duration unit:",
+                    packageData.durationUnit
                 );
 
                 return res.json({
@@ -186,289 +354,393 @@ router.post("/callback", async (req, res) => {
 
                 });
 
-            }
-
-
-            // ======================================
-            // CALCULATE PACKAGE EXPIRY
-            // ======================================
-
-            const loginTime =
-                new Date();
-
-
-            const expiryTime =
-                new Date(loginTime);
-
-
-            const duration =
-                Number(
-                    packageData.duration
-                );
-
-
-            switch (
-                packageData.durationUnit
-            ) {
-
-                case "Minutes":
-
-                    expiryTime.setMinutes(
-                        expiryTime.getMinutes() +
-                        duration
-                    );
-
-                    break;
-
-
-                case "Hours":
-
-                    expiryTime.setHours(
-                        expiryTime.getHours() +
-                        duration
-                    );
-
-                    break;
-
-
-                case "Days":
-
-                    expiryTime.setDate(
-                        expiryTime.getDate() +
-                        duration
-                    );
-
-                    break;
-
-
-                case "Weeks":
-
-                    expiryTime.setDate(
-                        expiryTime.getDate() +
-                        (duration * 7)
-                    );
-
-                    break;
-
-
-                case "Months":
-
-                    expiryTime.setMonth(
-                        expiryTime.getMonth() +
-                        duration
-                    );
-
-                    break;
-
-
-                default:
-
-                    console.error(
-                        "❌ Unknown package duration unit:",
-                        packageData.durationUnit
-                    );
-
-                    return res.json({
-
-                        ResultCode: 0,
-
-                        ResultDesc:
-                            "Accepted"
-
-                    });
-
-            }
-
-
-            // ======================================
-            // REMAINING TIME
-            // ======================================
-
-            let remainingTime;
-
-
-            if (
-                packageData.durationUnit ===
-                "Minutes"
-            ) {
-
-                remainingTime =
-                    `${duration} Minutes`;
-
-            } else {
-
-                remainingTime =
-                    `${duration} ${packageData.durationUnit}`;
-
-            }
-
-
-            // ======================================
-            // FIND EXISTING WITIME USER
-            // ======================================
-
-            let existingUser =
-                await User.findOne({
-
-                    phone:
-                        payment.phone
-
-                }).sort({
-
-                    updatedAt: -1
-
-                });
-
-
-            // ======================================
-            // UPDATE EXISTING USER
-            // ======================================
-
-            if (existingUser) {
-
-                console.log(
-                    "👤 Existing WiTime user found:",
-                    existingUser._id,
-                    payment.phone
-                );
-
-
-                existingUser.packageName =
-                    payment.packageName;
-
-
-                existingUser.remainingTime =
-                    remainingTime;
-
-
-                existingUser.loginTime =
-                    loginTime;
-
-
-                existingUser.expiryTime =
-                    expiryTime;
-
-
-                // ======================================
-                // PRESERVE ACTIVE CONNECTION
-                // ======================================
-
-                if (
-                    existingUser.status !==
-                    "Online"
-                ) {
-
-                    existingUser.status =
-                        "Offline";
-
-
-                    existingUser.ipAddress =
-                        "";
-
-
-                    existingUser.macAddress =
-                        "";
-
-
-                    existingUser.mikrotikSessionId =
-                        "";
-
-
-                    existingUser.lastSeen =
-                        null;
-
-                }
-
-
-                await existingUser.save();
-
-
-                console.log(
-                    "✅ Existing WiTime user updated:",
-                    existingUser._id,
-                    payment.phone
-                );
-
-            }
-
-
-            // ======================================
-            // CREATE NEW USER
-            // ======================================
-
-            else {
-
-                const user =
-                    await User.create({
-
-                        phone:
-                            payment.phone,
-
-                        packageName:
-                            payment.packageName,
-
-                        remainingTime:
-                            remainingTime,
-
-                        status:
-                            "Offline",
-
-                        loginTime:
-                            loginTime,
-
-                        expiryTime:
-                            expiryTime,
-
-                        ipAddress:
-                            "",
-
-                        macAddress:
-                            "",
-
-                        mikrotikSessionId:
-                            "",
-
-                        lastSeen:
-                            null
-
-                    });
-
-
-                console.log(
-                    "✅ New WiTime user created:",
-                    user._id,
-                    payment.phone
-                );
-
-            }
-
-
         }
 
 
+        const remainingTime =
+            `${duration} ${packageData.durationUnit}`;
+
+
         // ======================================
-        // FAILED / CANCELLED PAYMENT
+        // MIKROTIK SETTINGS
         // ======================================
 
-        else {
-
-            payment.status =
-                "failed";
+        const mikrotikHost =
+            process.env.MIKROTIK_HOST;
 
 
-            await payment.save();
+        const mikrotikUsername =
+            process.env.MIKROTIK_USERNAME;
 
+
+        const mikrotikPassword =
+            process.env.MIKROTIK_PASSWORD;
+
+
+        const mikrotikPort =
+            process.env.MIKROTIK_PORT ||
+            8728;
+
+
+        if (
+            !mikrotikHost ||
+            !mikrotikUsername ||
+            !mikrotikPassword
+        ) {
+
+            console.error(
+                "❌ MikroTik configuration missing from .env"
+            );
+
+        } else {
 
             console.log(
-                "❌ Payment failed:",
-                callback.ResultDesc
+                "🔵 MikroTik configuration found"
             );
 
         }
 
 
         // ======================================
-        // ACKNOWLEDGE SAFARICOM
+        // CREATE / UPDATE WITIME USER
+        // ======================================
+
+        let user =
+            await User.findOne({
+
+                phone:
+                    payment.phone
+
+            });
+
+
+        if (user) {
+
+            console.log(
+                "♻️ Existing WiTime user found:",
+                payment.phone
+            );
+
+
+            user.packageName =
+                payment.packageName;
+
+
+            user.remainingTime =
+                remainingTime;
+
+
+            user.loginTime =
+                loginTime;
+
+
+            user.expiryTime =
+                expiryTime;
+
+
+        } else {
+
+            console.log(
+                "🆕 Creating new WiTime user:",
+                payment.phone
+            );
+
+
+            user =
+                new User({
+
+                    phone:
+                        payment.phone,
+
+                    packageName:
+                        payment.packageName,
+
+                    remainingTime:
+                        remainingTime,
+
+                    status:
+                        "Offline",
+
+                    loginTime:
+                        loginTime,
+
+                    expiryTime:
+                        expiryTime,
+
+                    ipAddress:
+                        "",
+
+                    macAddress:
+                        "",
+
+                    mikrotikSessionId:
+                        "",
+
+                    lastSeen:
+                        null
+
+                });
+
+        }
+
+
+        // ======================================
+        // CREATE / UPDATE MIKROTIK PROFILE
+        // ======================================
+
+        if (
+            mikrotikHost &&
+            mikrotikUsername &&
+            mikrotikPassword
+        ) {
+
+            try {
+
+                // Clean package name for RouterOS
+                const profileName =
+                    String(
+                        packageData.name
+                    )
+                    .replace(
+                        /[^a-zA-Z0-9_-]/g,
+                        "_"
+                    )
+                    .substring(
+                        0,
+                        50
+                    );
+
+
+                // Convert package duration
+                let limitUptime;
+
+
+                switch (
+                    packageData.durationUnit
+                ) {
+
+                    case "Minutes":
+
+                        limitUptime =
+                            `${duration}m`;
+
+                        break;
+
+
+                    case "Hours":
+
+                        limitUptime =
+                            `${duration}h`;
+
+                        break;
+
+
+                    case "Days":
+
+                        limitUptime =
+                            `${duration}d`;
+
+                        break;
+
+
+                    case "Weeks":
+
+                        limitUptime =
+                            `${duration * 7}d`;
+
+                        break;
+
+
+                    case "Months":
+
+                        limitUptime =
+                            `${duration * 30}d`;
+
+                        break;
+
+
+                    default:
+
+                        throw new Error(
+                            `Unsupported duration unit: ${packageData.durationUnit}`
+                        );
+
+                }
+
+
+                console.log(
+                    "🔵 Creating MikroTik profile:",
+                    profileName
+                );
+
+
+                const profileResult =
+                    await createHotspotProfile({
+
+                        host:
+                            mikrotikHost,
+
+                        username:
+                            mikrotikUsername,
+
+                        password:
+                            mikrotikPassword,
+
+                        port:
+                            mikrotikPort,
+
+                        profileName,
+
+                        duration,
+
+                        durationUnit
+
+                    });
+
+
+                if (
+                    !profileResult.success
+                ) {
+
+                    console.error(
+                        "❌ MikroTik profile creation failed:",
+                        profileResult.message
+                    );
+
+                } else {
+
+                    console.log(
+                        "✅ MikroTik profile ready:",
+                        profileName
+                    );
+
+                }
+
+
+                // ======================================
+                // CREATE / UPDATE CUSTOMER HOTSPOT USER
+                // ======================================
+
+                console.log(
+                    "🔵 Creating MikroTik hotspot user:",
+                    payment.phone
+                );
+
+
+                const mikrotikResult =
+                    await createHotspotUser({
+
+                        host:
+                            mikrotikHost,
+
+                        username:
+                            mikrotikUsername,
+
+                        password:
+                            mikrotikPassword,
+
+                        port:
+                            mikrotikPort,
+
+                        phone:
+                            payment.phone,
+
+                        userPassword:
+                            payment.phone,
+
+                        profileName,
+
+                        limitUptime
+
+                    });
+
+
+                if (
+                    mikrotikResult.success
+                ) {
+
+                    console.log(
+                        "✅ MikroTik hotspot user ready:",
+                        payment.phone
+                    );
+
+                } else {
+
+                    console.error(
+                        "❌ MikroTik hotspot user failed:",
+                        mikrotikResult.message
+                    );
+
+                }
+
+            } catch (mikrotikError) {
+
+                console.error(
+                    "❌ MikroTik callback error:",
+                    mikrotikError
+                );
+
+            }
+
+        }
+
+
+        // ======================================
+        // RESET CONNECTION INFORMATION
+        // ======================================
+
+        user.status =
+            "Offline";
+
+
+        user.ipAddress =
+            "";
+
+
+        user.macAddress =
+            "";
+
+
+        user.mikrotikSessionId =
+            "";
+
+
+        user.lastSeen =
+            null;
+
+
+        // ======================================
+        // SAVE WITIME USER
+        // ======================================
+
+        await user.save();
+
+
+        console.log(
+            "✅ WiTime user ready:",
+            payment.phone
+        );
+
+
+        console.log(
+            "⏰ Login time:",
+            loginTime
+        );
+
+
+        console.log(
+            "⏰ Expiry time:",
+            expiryTime
+        );
+
+
+        console.log(
+            "======================================"
+        );
+
+
+        // ======================================
+        // ACKNOWLEDGE M-PESA
         // ======================================
 
         return res.json({
@@ -489,9 +761,8 @@ router.post("/callback", async (req, res) => {
         );
 
 
-        // ======================================
-        // ALWAYS ACKNOWLEDGE SAFARICOM
-        // ======================================
+        // Always acknowledge callback
+        // so Safaricom does not keep retrying
 
         return res.json({
 

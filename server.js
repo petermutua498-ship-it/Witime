@@ -428,6 +428,117 @@ setInterval(async () => {
 
 
 // ======================================
+// AUTOMATIC PACKAGE EXPIRY
+// ======================================
+
+const {
+    disconnectUserByPhone
+} = require("./services/mikrotikService");
+
+setInterval(async () => {
+
+    try {
+
+        const now = new Date();
+
+        const expiredUsers = await User.find({
+
+            expiryTime: {
+                $lte: now
+            },
+
+            // Don't process the same expired package again
+            remainingTime: {
+                $ne: "Expired"
+            },
+
+            status: {
+                $in: [
+                    "Online",
+                    "Offline"
+                ]
+            }
+
+        });
+
+        if (!expiredUsers.length) {
+            return;
+        }
+
+        for (const user of expiredUsers) {
+
+            console.log(
+                "⏰ Package expired:",
+                user.phone,
+                user.packageName
+            );
+
+            // Disconnect from MikroTik
+            const result =
+                await disconnectUserByPhone({
+
+                    host:
+                        process.env.MIKROTIK_HOST,
+
+                    username:
+                        process.env.MIKROTIK_USERNAME,
+
+                    password:
+                        process.env.MIKROTIK_PASSWORD,
+
+                    port:
+                        process.env.MIKROTIK_PORT ||
+                        8728,
+
+                    phone:
+                        user.phone
+
+                });
+
+            if (!result.success) {
+
+                console.error(
+                    "❌ Could not disconnect expired user:",
+                    user.phone,
+                    result.message
+                );
+
+            }
+
+            // Update WiTime
+            user.status = "Offline";
+
+            user.remainingTime = "Expired";
+
+            user.ipAddress = "";
+
+            user.macAddress = "";
+
+            user.mikrotikSessionId = "";
+
+            user.lastSeen = null;
+
+            await user.save();
+
+            console.log(
+                "✅ Expired user processed:",
+                user.phone
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ Package expiry checker error:",
+            error
+        );
+
+    }
+
+}, 30 * 1000);
+
+// ======================================
 // KEEP ALIVE
 // ======================================
 
