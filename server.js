@@ -1,5 +1,12 @@
 require("dotenv").config();
 
+console.log("MikroTik config:", {
+    host: process.env.MIKROTIK_HOST,
+    username: process.env.MIKROTIK_USERNAME,
+    passwordConfigured: !!process.env.MIKROTIK_PASSWORD,
+    port: process.env.MIKROTIK_PORT
+});
+
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
