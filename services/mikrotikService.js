@@ -777,6 +777,13 @@ async function connectWiTimeUserToMikroTik({
 
         }
 
+        console.log("MikroTik ENV:", {
+    host,
+    username,
+    port,
+    passwordConfigured: !!password
+});
+
 
         console.log(
             "✅ WiTime user connected to MikroTik:",
@@ -817,7 +824,10 @@ async function connectWiTimeUserToMikroTik({
 
         };
 
+        
+
     }
+    
 
 }
 
