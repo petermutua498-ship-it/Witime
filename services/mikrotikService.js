@@ -10,19 +10,45 @@ function createMikroTikAPI({
     password,
     port = 8728
 }) {
-
     return new RouterOSClient({
-
         host,
-
         user: username,
-
         password,
-
         port: Number(port)
-
     });
+}
 
+
+// ======================================
+// GET MIKROTIK CONFIG FROM .ENV
+// ======================================
+
+function getMikroTikConfig() {
+
+    const host = process.env.MIKROTIK_HOST;
+    const username = process.env.MIKROTIK_USERNAME;
+    const password = process.env.MIKROTIK_PASSWORD;
+    const port = Number(
+        process.env.MIKROTIK_PORT || 8728
+    );
+
+    if (!host || !username || !password) {
+
+        return {
+            success: false,
+            message:
+                "MikroTik configuration is missing from .env."
+        };
+
+    }
+
+    return {
+        success: true,
+        host,
+        username,
+        password,
+        port
+    };
 }
 
 
@@ -77,7 +103,7 @@ async function testMikroTikConnection({
 
         console.error(
             "❌ MikroTik connection error:",
-            error
+            error.message
         );
 
         return {
@@ -114,8 +140,7 @@ function convertDurationToRouterOS(
     unit
 ) {
 
-    const value =
-        Number(duration);
+    const value = Number(duration);
 
     if (
         !Number.isFinite(value) ||
@@ -131,27 +156,21 @@ function convertDurationToRouterOS(
     switch (unit) {
 
         case "Minutes":
-
             return `${value}m`;
 
         case "Hours":
-
             return `${value}h`;
 
         case "Days":
-
             return `${value}d`;
 
         case "Weeks":
-
             return `${value * 7}d`;
 
         case "Months":
-
             return `${value * 30}d`;
 
         default:
-
             throw new Error(
                 `Unsupported duration unit: ${unit}`
             );
@@ -166,13 +185,18 @@ function convertDurationToRouterOS(
 // ======================================
 
 async function createHotspotProfile({
+
     host,
     username,
     password,
     port = 8728,
+
     profileName,
+
     duration,
+
     durationUnit
+
 }) {
 
     let api;
@@ -212,36 +236,44 @@ async function createHotspotProfile({
 
         console.log(
             "🔵 Creating MikroTik profile:",
-            profileName,
+            profileName
+        );
+
+        console.log(
+            "⏰ Session timeout:",
             sessionTimeout
         );
 
 
         // ======================================
-        // FIND EXISTING PROFILE
+        // CHECK EXISTING PROFILE
         // ======================================
 
-        const existing =
+        const profiles =
             await api.write(
-                "/ip/hotspot/user/profile/print",
-                [
-                    `?name=${profileName}`
-                ]
+                "/ip/hotspot/user/profile/print"
             );
+
+
+        const existingProfile =
+            Array.isArray(profiles)
+                ? profiles.find(
+                    profile =>
+                        String(profile.name) ===
+                        String(profileName)
+                )
+                : null;
 
 
         // ======================================
         // UPDATE EXISTING PROFILE
         // ======================================
 
-        if (
-            Array.isArray(existing) &&
-            existing.length > 0
-        ) {
+        if (existingProfile) {
 
             const profileId =
-                existing[0][".id"] ||
-                existing[0].id;
+                existingProfile[".id"] ||
+                existingProfile.id;
 
             console.log(
                 "🟡 Updating existing MikroTik profile:",
@@ -252,9 +284,17 @@ async function createHotspotProfile({
             await api.write(
                 "/ip/hotspot/user/profile/set",
                 [
+
                     `=.id=${profileId}`,
+
                     `=session-timeout=${sessionTimeout}`
+
                 ]
+            );
+
+            console.log(
+                "✅ MikroTik profile updated:",
+                profileName
             );
 
         }
@@ -298,7 +338,7 @@ async function createHotspotProfile({
 
         console.error(
             "❌ MikroTik profile error:",
-            error
+            error.message
         );
 
         return {
@@ -331,6 +371,7 @@ async function createHotspotProfile({
 // ======================================
 
 async function createHotspotUser({
+
     host,
     username,
     password,
@@ -343,6 +384,7 @@ async function createHotspotUser({
     profileName,
 
     limitUptime
+
 }) {
 
     let api;
@@ -380,31 +422,41 @@ async function createHotspotUser({
         );
 
 
+        const finalPassword =
+            String(
+                userPassword || phone
+            );
+
+
         // ======================================
-        // FIND EXISTING HOTSPOT USER
+        // GET ALL HOTSPOT USERS
         // ======================================
 
-        const existingUsers =
+        const users =
             await api.write(
-                "/ip/hotspot/user/print",
-                [
-                    `?name=${phone}`
-                ]
+                "/ip/hotspot/user/print"
             );
+
+
+        const existingUser =
+            Array.isArray(users)
+                ? users.find(
+                    user =>
+                        String(user.name) ===
+                        String(phone)
+                )
+                : null;
 
 
         // ======================================
         // UPDATE EXISTING USER
         // ======================================
 
-        if (
-            Array.isArray(existingUsers) &&
-            existingUsers.length > 0
-        ) {
+        if (existingUser) {
 
             const userId =
-                existingUsers[0][".id"] ||
-                existingUsers[0].id;
+                existingUser[".id"] ||
+                existingUser.id;
 
             console.log(
                 "🟡 Updating MikroTik user:",
@@ -417,9 +469,9 @@ async function createHotspotUser({
 
                 `=.id=${userId}`,
 
-                `=password=${userPassword || phone}`,
+                `=password=${finalPassword}`,
 
-                `=disabled=no`
+                "=disabled=no"
 
             ];
 
@@ -465,9 +517,9 @@ async function createHotspotUser({
 
                 `=name=${phone}`,
 
-                `=password=${userPassword || phone}`,
+                `=password=${finalPassword}`,
 
-                `=disabled=no`
+                "=disabled=no"
 
             ];
 
@@ -511,14 +563,14 @@ async function createHotspotUser({
             phone,
 
             password:
-                userPassword || phone,
+                finalPassword,
 
             profileName,
 
             limitUptime,
 
             message:
-                "MikroTik Hotspot user created successfully."
+                "MikroTik Hotspot user ready."
 
         };
 
@@ -526,7 +578,7 @@ async function createHotspotUser({
 
         console.error(
             "❌ MikroTik hotspot user error:",
-            error
+            error.message
         );
 
         return {
@@ -572,38 +624,18 @@ async function connectWiTimeUserToMikroTik({
 
     try {
 
-        const host =
-            process.env.MIKROTIK_HOST;
-
-        const username =
-            process.env.MIKROTIK_USERNAME;
-
-        const password =
-            process.env.MIKROTIK_PASSWORD;
-
-        const port =
-            process.env.MIKROTIK_PORT ||
-            8728;
+        const config =
+            getMikroTikConfig();
 
 
-        // ======================================
-        // CHECK CONFIGURATION
-        // ======================================
+        if (!config.success) {
 
-        if (
-            !host ||
-            !username ||
-            !password
-        ) {
+            console.error(
+                "❌",
+                config.message
+            );
 
-            return {
-
-                success: false,
-
-                message:
-                    "MikroTik configuration is missing from .env."
-
-            };
+            return config;
 
         }
 
@@ -615,7 +647,7 @@ async function connectWiTimeUserToMikroTik({
                 success: false,
 
                 message:
-                    "Customer phone number is required."
+                    "Phone number is required."
 
             };
 
@@ -642,15 +674,22 @@ async function connectWiTimeUserToMikroTik({
 
         const profileName =
             String(packageName)
+
+                .trim()
+
                 .replace(
                     /[^a-zA-Z0-9_-]/g,
                     "_"
                 )
-                .substring(0, 50);
+
+                .substring(
+                    0,
+                    50
+                );
 
 
         console.log(
-            "🔵 Connecting WiTime customer to MikroTik:",
+            "🔵 Connecting WiTime user to MikroTik:",
             phone
         );
 
@@ -672,13 +711,17 @@ async function connectWiTimeUserToMikroTik({
         const profile =
             await createHotspotProfile({
 
-                host,
+                host:
+                    config.host,
 
-                username,
+                username:
+                    config.username,
 
-                password,
+                password:
+                    config.password,
 
-                port,
+                port:
+                    config.port,
 
                 profileName,
 
@@ -691,38 +734,34 @@ async function connectWiTimeUserToMikroTik({
 
         if (!profile.success) {
 
-            return {
-
-                success: false,
-
-                message:
-                    profile.message ||
-                    "MikroTik profile creation failed."
-
-            };
+            return profile;
 
         }
 
 
         // ======================================
-        // CREATE / UPDATE CUSTOMER
+        // CREATE / UPDATE USER
         // ======================================
 
         const user =
             await createHotspotUser({
 
-                host,
+                host:
+                    config.host,
 
-                username,
+                username:
+                    config.username,
 
-                password,
+                password:
+                    config.password,
 
-                port,
+                port:
+                    config.port,
 
                 phone,
 
                 userPassword:
-                    phone,
+                    String(phone),
 
                 profileName,
 
@@ -734,15 +773,7 @@ async function connectWiTimeUserToMikroTik({
 
         if (!user.success) {
 
-            return {
-
-                success: false,
-
-                message:
-                    user.message ||
-                    "MikroTik user creation failed."
-
-            };
+            return user;
 
         }
 
@@ -764,16 +795,16 @@ async function connectWiTimeUserToMikroTik({
             sessionTimeout:
                 profile.sessionTimeout,
 
-            password:
-                phone
+            message:
+                "WiTime user successfully connected to MikroTik."
 
         };
 
     } catch (error) {
 
         console.error(
-            "❌ WiTime → MikroTik error:",
-            error
+            "❌ WiTime → MikroTik connection error:",
+            error.message
         );
 
         return {
@@ -815,11 +846,8 @@ async function getActiveHotspotUsers({
             createMikroTikAPI({
 
                 host,
-
                 username,
-
                 password,
-
                 port
 
             });
@@ -838,7 +866,9 @@ async function getActiveHotspotUsers({
             success: true,
 
             users:
-                users || [],
+                Array.isArray(users)
+                    ? users
+                    : [],
 
             count:
                 Array.isArray(users)
@@ -851,7 +881,7 @@ async function getActiveHotspotUsers({
 
         console.error(
             "❌ Active MikroTik users error:",
-            error
+            error.message
         );
 
         return {
@@ -923,11 +953,8 @@ async function disconnectHotspotUser({
             createMikroTikAPI({
 
                 host,
-
                 username,
-
                 password,
-
                 port
 
             });
@@ -969,7 +996,7 @@ async function disconnectHotspotUser({
 
         console.error(
             "❌ MikroTik disconnect error:",
-            error
+            error.message
         );
 
         return {
@@ -1019,15 +1046,26 @@ async function disconnectUserByPhone({
 
     try {
 
+        if (!phone) {
+
+            return {
+
+                success: false,
+
+                message:
+                    "Phone number is required."
+
+            };
+
+        }
+
+
         api =
             createMikroTikAPI({
 
                 host,
-
                 username,
-
                 password,
-
                 port
 
             });
@@ -1133,7 +1171,7 @@ async function disconnectUserByPhone({
 
 
         // ======================================
-        // DISABLE HOTSPOT USER
+        // DISABLE USER
         // ======================================
 
         if (hotspotUser) {
@@ -1196,7 +1234,7 @@ async function disconnectUserByPhone({
 
         console.error(
             "❌ MikroTik expiry error:",
-            error
+            error.message
         );
 
         return {

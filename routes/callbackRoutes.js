@@ -6,8 +6,7 @@ const Package = require("../models/Package");
 const User = require("../models/Users");
 
 const {
-    createHotspotProfile,
-    createHotspotUser
+    connectWiTimeUserToMikroTik
 } = require("../services/mikrotikService");
 
 
@@ -20,10 +19,9 @@ router.post("/callback", async (req, res) => {
 
     try {
 
-        console.log("");
-        console.log("======================================");
-        console.log("📲 M-PESA CALLBACK RECEIVED");
-        console.log("======================================");
+        console.log(
+            "========== M-PESA CALLBACK =========="
+        );
 
         console.log(
             JSON.stringify(req.body, null, 2)
@@ -38,20 +36,15 @@ router.post("/callback", async (req, res) => {
             req.body?.Body?.stkCallback;
 
 
-        // If Safaricom sends an unexpected request
         if (!callback) {
 
             console.log(
-                "⚠️ No stkCallback found."
+                "⚠️ Invalid M-Pesa callback received."
             );
 
             return res.json({
-
                 ResultCode: 0,
-
-                ResultDesc:
-                    "Accepted"
-
+                ResultDesc: "Accepted"
             });
 
         }
@@ -61,21 +54,13 @@ router.post("/callback", async (req, res) => {
             callback.CheckoutRequestID;
 
 
-        console.log(
-            "CheckoutRequestID:",
-            checkoutRequestID
-        );
-
-
         // ======================================
         // FIND PAYMENT
         // ======================================
 
         const payment =
             await Payment.findOne({
-
                 checkoutRequestID
-
             });
 
 
@@ -87,12 +72,8 @@ router.post("/callback", async (req, res) => {
             );
 
             return res.json({
-
                 ResultCode: 0,
-
-                ResultDesc:
-                    "Accepted"
-
+                ResultDesc: "Accepted"
             });
 
         }
@@ -102,10 +83,7 @@ router.post("/callback", async (req, res) => {
         // PREVENT DUPLICATE PROCESSING
         // ======================================
 
-        if (
-            payment.status ===
-            "success"
-        ) {
+        if (payment.status === "success") {
 
             console.log(
                 "ℹ️ Payment already processed:",
@@ -113,12 +91,8 @@ router.post("/callback", async (req, res) => {
             );
 
             return res.json({
-
                 ResultCode: 0,
-
-                ResultDesc:
-                    "Accepted"
-
+                ResultDesc: "Accepted"
             });
 
         }
@@ -128,29 +102,20 @@ router.post("/callback", async (req, res) => {
         // PAYMENT FAILED
         // ======================================
 
-        if (
-            Number(callback.ResultCode) !== 0
-        ) {
+        if (callback.ResultCode !== 0) {
 
-            payment.status =
-                "failed";
+            payment.status = "failed";
 
             await payment.save();
-
 
             console.log(
                 "❌ Payment failed:",
                 callback.ResultDesc
             );
 
-
             return res.json({
-
                 ResultCode: 0,
-
-                ResultDesc:
-                    "Accepted"
-
+                ResultDesc: "Accepted"
             });
 
         }
@@ -160,13 +125,7 @@ router.post("/callback", async (req, res) => {
         // PAYMENT SUCCESS
         // ======================================
 
-        console.log(
-            "✅ M-PESA PAYMENT SUCCESSFUL"
-        );
-
-
-        payment.status =
-            "success";
+        payment.status = "success";
 
 
         // ======================================
@@ -174,13 +133,10 @@ router.post("/callback", async (req, res) => {
         // ======================================
 
         const items =
-            callback.CallbackMetadata?.Item ||
-            [];
+            callback.CallbackMetadata?.Item || [];
 
 
-        for (
-            const item of items
-        ) {
+        for (const item of items) {
 
             if (
                 item.Name ===
@@ -188,7 +144,7 @@ router.post("/callback", async (req, res) => {
             ) {
 
                 payment.transactionId =
-                    String(item.Value);
+                    item.Value;
 
             }
 
@@ -210,18 +166,8 @@ router.post("/callback", async (req, res) => {
 
 
         console.log(
-            "📱 Customer phone:",
+            "✅ Payment successful:",
             payment.phone
-        );
-
-        console.log(
-            "📦 Package:",
-            payment.packageName
-        );
-
-        console.log(
-            "💰 Amount:",
-            payment.amount
         );
 
 
@@ -249,19 +195,15 @@ router.post("/callback", async (req, res) => {
             );
 
             return res.json({
-
                 ResultCode: 0,
-
-                ResultDesc:
-                    "Accepted"
-
+                ResultDesc: "Accepted"
             });
 
         }
 
 
         console.log(
-            "✅ Package found:",
+            "📦 Package found:",
             packageData.name
         );
 
@@ -341,17 +283,13 @@ router.post("/callback", async (req, res) => {
             default:
 
                 console.error(
-                    "❌ Unknown package duration unit:",
+                    "❌ Unknown duration unit:",
                     packageData.durationUnit
                 );
 
                 return res.json({
-
                     ResultCode: 0,
-
-                    ResultDesc:
-                        "Accepted"
-
+                    ResultDesc: "Accepted"
                 });
 
         }
@@ -361,63 +299,31 @@ router.post("/callback", async (req, res) => {
             `${duration} ${packageData.durationUnit}`;
 
 
-        // ======================================
-        // MIKROTIK SETTINGS
-        // ======================================
+        console.log(
+            "⏱️ Package duration:",
+            remainingTime
+        );
 
-        const mikrotikHost =
-            process.env.MIKROTIK_HOST;
-
-
-        const mikrotikUsername =
-            process.env.MIKROTIK_USERNAME;
-
-
-        const mikrotikPassword =
-            process.env.MIKROTIK_PASSWORD;
-
-
-        const mikrotikPort =
-            process.env.MIKROTIK_PORT ||
-            8728;
-
-
-        if (
-            !mikrotikHost ||
-            !mikrotikUsername ||
-            !mikrotikPassword
-        ) {
-
-            console.error(
-                "❌ MikroTik configuration missing from .env"
-            );
-
-        } else {
-
-            console.log(
-                "🔵 MikroTik configuration found"
-            );
-
-        }
+        console.log(
+            "⏰ Package expiry:",
+            expiryTime
+        );
 
 
         // ======================================
-        // CREATE / UPDATE WITIME USER
+        // FIND / CREATE WITIME USER
         // ======================================
 
         let user =
             await User.findOne({
-
-                phone:
-                    payment.phone
-
+                phone: payment.phone
             });
 
 
         if (user) {
 
             console.log(
-                "♻️ Existing WiTime user found:",
+                "🔄 Updating existing WiTime user:",
                 payment.phone
             );
 
@@ -436,7 +342,6 @@ router.post("/callback", async (req, res) => {
 
             user.expiryTime =
                 expiryTime;
-
 
         } else {
 
@@ -485,208 +390,88 @@ router.post("/callback", async (req, res) => {
 
 
         // ======================================
-        // CREATE / UPDATE MIKROTIK PROFILE
+        // CONNECT USER TO MIKROTIK
         // ======================================
 
-        if (
-            mikrotikHost &&
-            mikrotikUsername &&
-            mikrotikPassword
-        ) {
+        try {
 
-            try {
-
-                // Clean package name for RouterOS
-                const profileName =
-                    String(
-                        packageData.name
-                    )
-                    .replace(
-                        /[^a-zA-Z0-9_-]/g,
-                        "_"
-                    )
-                    .substring(
-                        0,
-                        50
-                    );
+            console.log(
+                "🔵 Connecting WiTime user to MikroTik:",
+                payment.phone
+            );
 
 
-                // Convert package duration
-                let limitUptime;
+           const mikrotikResult =
+        await connectWiTimeUserToMikroTik({
+
+            phone: payment.phone,
+
+            packageName:
+                packageData.name,
+
+            duration:
+                packageData.duration,
+
+            durationUnit:
+                packageData.durationUnit
+
+                });
 
 
-                switch (
-                    packageData.durationUnit
-                ) {
+            // ==================================
+            // MIKROTIK SUCCESS
+            // ==================================
 
-                    case "Minutes":
-
-                        limitUptime =
-                            `${duration}m`;
-
-                        break;
-
-
-                    case "Hours":
-
-                        limitUptime =
-                            `${duration}h`;
-
-                        break;
-
-
-                    case "Days":
-
-                        limitUptime =
-                            `${duration}d`;
-
-                        break;
-
-
-                    case "Weeks":
-
-                        limitUptime =
-                            `${duration * 7}d`;
-
-                        break;
-
-
-                    case "Months":
-
-                        limitUptime =
-                            `${duration * 30}d`;
-
-                        break;
-
-
-                    default:
-
-                        throw new Error(
-                            `Unsupported duration unit: ${packageData.durationUnit}`
-                        );
-
-                }
-
+            if (
+                mikrotikResult &&
+                mikrotikResult.success
+            ) {
 
                 console.log(
-                    "🔵 Creating MikroTik profile:",
-                    profileName
-                );
-
-
-                const profileResult =
-                    await createHotspotProfile({
-
-                        host:
-                            mikrotikHost,
-
-                        username:
-                            mikrotikUsername,
-
-                        password:
-                            mikrotikPassword,
-
-                        port:
-                            mikrotikPort,
-
-                        profileName,
-
-                        duration,
-
-                        durationUnit
-
-                    });
-
-
-                if (
-                    !profileResult.success
-                ) {
-
-                    console.error(
-                        "❌ MikroTik profile creation failed:",
-                        profileResult.message
-                    );
-
-                } else {
-
-                    console.log(
-                        "✅ MikroTik profile ready:",
-                        profileName
-                    );
-
-                }
-
-
-                // ======================================
-                // CREATE / UPDATE CUSTOMER HOTSPOT USER
-                // ======================================
-
-                console.log(
-                    "🔵 Creating MikroTik hotspot user:",
+                    "✅ MikroTik user created/updated:",
                     payment.phone
                 );
 
 
-                const mikrotikResult =
-                    await createHotspotUser({
-
-                        host:
-                            mikrotikHost,
-
-                        username:
-                            mikrotikUsername,
-
-                        password:
-                            mikrotikPassword,
-
-                        port:
-                            mikrotikPort,
-
-                        phone:
-                            payment.phone,
-
-                        userPassword:
-                            payment.phone,
-
-                        profileName,
-
-                        limitUptime
-
-                    });
+                console.log(
+                    "📡 MikroTik profile:",
+                    mikrotikResult.profileName
+                );
 
 
-                if (
-                    mikrotikResult.success
-                ) {
-
-                    console.log(
-                        "✅ MikroTik hotspot user ready:",
-                        payment.phone
-                    );
-
-                } else {
-
-                    console.error(
-                        "❌ MikroTik hotspot user failed:",
-                        mikrotikResult.message
-                    );
-
-                }
-
-            } catch (mikrotikError) {
-
-                console.error(
-                    "❌ MikroTik callback error:",
-                    mikrotikError
+                console.log(
+                    "⏱️ MikroTik session timeout:",
+                    mikrotikResult.sessionTimeout
                 );
 
             }
+
+
+            // ==================================
+            // MIKROTIK FAILURE
+            // ==================================
+
+            else {
+
+                console.error(
+                    "❌ MikroTik user creation failed:",
+                    mikrotikResult?.message
+                );
+
+            }
+
+        } catch (mikrotikError) {
+
+            console.error(
+                "❌ MikroTik callback error:",
+                mikrotikError
+            );
 
         }
 
 
         // ======================================
-        // RESET CONNECTION INFORMATION
+        // SAVE WITIME USER
         // ======================================
 
         user.status =
@@ -709,10 +494,6 @@ router.post("/callback", async (req, res) => {
             null;
 
 
-        // ======================================
-        // SAVE WITIME USER
-        // ======================================
-
         await user.save();
 
 
@@ -722,30 +503,14 @@ router.post("/callback", async (req, res) => {
         );
 
 
-        console.log(
-            "⏰ Login time:",
-            loginTime
-        );
-
-
-        console.log(
-            "⏰ Expiry time:",
-            expiryTime
-        );
-
-
-        console.log(
-            "======================================"
-        );
-
-
         // ======================================
         // ACKNOWLEDGE M-PESA
         // ======================================
 
         return res.json({
 
-            ResultCode: 0,
+            ResultCode:
+                0,
 
             ResultDesc:
                 "Accepted"
@@ -762,11 +527,12 @@ router.post("/callback", async (req, res) => {
 
 
         // Always acknowledge callback
-        // so Safaricom does not keep retrying
+        // so M-Pesa does not keep retrying.
 
         return res.json({
 
-            ResultCode: 0,
+            ResultCode:
+                0,
 
             ResultDesc:
                 "Accepted"
