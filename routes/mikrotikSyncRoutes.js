@@ -20,82 +20,161 @@ router.post("/sync", async (req, res) => {
             status
         } = req.body;
 
-        console.log("MikroTik sync received:", {
-            user,
-            address,
-            macAddress,
-            sessionId,
-            status
-        });
+
+        console.log(
+            "📡 MikroTik sync received:",
+            {
+                user,
+                address,
+                macAddress,
+                sessionId,
+                status
+            }
+        );
+
+
+        // ======================================
+        // VALIDATE USER
+        // ======================================
 
         if (!user) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "MikroTik username is required."
+
+                message:
+                    "MikroTik username is required."
+
             });
 
         }
 
+
         // ======================================
-        // FIND USER
+        // NORMALIZE PHONE
         // ======================================
 
-        const witimeUser = await User.findOne({
-            phone: String(user)
-        });
+        const phone =
+            String(user).trim();
+
+
+        // ======================================
+        // FIND WITIME USER
+        // ======================================
+
+        const witimeUser =
+            await User.findOne({
+                phone
+            });
+
 
         if (!witimeUser) {
 
             console.log(
-                "❌ WiTime user not found:",
-                user
+                "⚠️ WiTime user not found:",
+                phone
             );
 
             return res.status(404).json({
+
                 success: false,
-                message: "WiTime user not found."
+
+                message:
+                    "WiTime user not found."
+
             });
 
         }
 
-        // ======================================
-        // UPDATE CONNECTION INFORMATION
-        // ======================================
 
-        witimeUser.status =
-            status === "Online"
-                ? "Online"
-                : "Offline";
+        // ======================================
+        // ONLINE
+        // ======================================
 
         if (status === "Online") {
+
+            witimeUser.status =
+                "Online";
+
 
             witimeUser.ipAddress =
                 address || "";
 
+
             witimeUser.macAddress =
                 macAddress || "";
+
 
             witimeUser.mikrotikSessionId =
                 sessionId || "";
 
-            witimeUser.lastSeen = new Date();
 
-        } else {
-
-            witimeUser.ipAddress = "";
-            witimeUser.macAddress = "";
-            witimeUser.mikrotikSessionId = "";
+            witimeUser.lastSeen =
+                new Date();
 
         }
 
+
+        // ======================================
+        // OFFLINE
+        // ======================================
+
+        else {
+
+            witimeUser.status =
+                "Offline";
+
+
+            witimeUser.ipAddress =
+                "";
+
+
+            witimeUser.macAddress =
+                "";
+
+
+            witimeUser.mikrotikSessionId =
+                "";
+
+
+            witimeUser.lastSeen =
+                null;
+
+        }
+
+
+        // ======================================
+        // SAVE
+        // ======================================
+
         await witimeUser.save();
+
 
         console.log(
             "✅ WiTime user updated:",
-            witimeUser.phone,
-            witimeUser.status
+            {
+                phone:
+                    witimeUser.phone,
+
+                status:
+                    witimeUser.status,
+
+                ip:
+                    witimeUser.ipAddress,
+
+                mac:
+                    witimeUser.macAddress,
+
+                session:
+                    witimeUser.mikrotikSessionId
+            }
         );
+
+
+        // ======================================
+        // RESPONSE
+        // ======================================
 
         return res.json({
 
@@ -132,6 +211,7 @@ router.post("/sync", async (req, res) => {
             error
         );
 
+
         return res.status(500).json({
 
             success: false,
@@ -144,5 +224,6 @@ router.post("/sync", async (req, res) => {
     }
 
 });
+
 
 module.exports = router;
