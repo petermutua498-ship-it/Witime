@@ -21,6 +21,13 @@ if (!phone) {
 
 
 // ======================================
+// COUNTDOWN TIMER
+// ======================================
+
+let countdownTimer = null;
+
+
+// ======================================
 // LOAD CONNECTION
 // ======================================
 
@@ -30,7 +37,10 @@ async function loadConnection() {
 
         const response =
             await fetch(
-                `/api/connected/${encodeURIComponent(phone)}`
+                `/api/connected/${encodeURIComponent(phone)}`,
+                {
+                    cache: "no-store"
+                }
             );
 
 
@@ -40,12 +50,10 @@ async function loadConnection() {
 
         if (!response.ok) {
 
-            alert(
-                data.message ||
-                "Unable to load connection."
+            console.error(
+                "Connection error:",
+                data
             );
-
-            window.location.href = "/";
 
             return;
 
@@ -56,27 +64,47 @@ async function loadConnection() {
         // BASIC INFORMATION
         // ==================================
 
-        document.getElementById("phone").innerText =
-            data.phone || phone;
+        const phoneElement =
+            document.getElementById("phone");
+
+        if (phoneElement) {
+
+            phoneElement.innerText =
+                data.phone || phone;
+
+        }
 
 
-        document.getElementById("package").innerText =
-            data.packageName || "Unknown";
+        const packageElement =
+            document.getElementById("package");
+
+        if (packageElement) {
+
+            packageElement.innerText =
+                data.packageName || "Unknown";
+
+        }
 
 
         // ==================================
         // LOGIN TIME
         // ==================================
 
-        if (data.loginTime) {
-
-            const loginTime =
-                new Date(data.loginTime);
-
+        const connectedAt =
             document.getElementById(
                 "connectedAt"
-            ).innerText =
-                loginTime.toLocaleString();
+            );
+
+
+        if (
+            connectedAt &&
+            data.loginTime
+        ) {
+
+            connectedAt.innerText =
+                new Date(
+                    data.loginTime
+                ).toLocaleString();
 
         }
 
@@ -85,26 +113,21 @@ async function loadConnection() {
         // EXPIRY TIME
         // ==================================
 
-        if (data.expiryTime) {
-
-            const expiry =
-                new Date(data.expiryTime);
-
-
+        const expiresAt =
             document.getElementById(
                 "expiresAt"
-            ).innerText =
-                expiry.toLocaleString();
+            );
 
 
-            startCountdown(expiry);
+        if (
+            expiresAt &&
+            data.expiryTime
+        ) {
 
-        } else {
-
-            document.getElementById(
-                "remainingTime"
-            ).innerText =
-                "No expiry time";
+            expiresAt.innerText =
+                new Date(
+                    data.expiryTime
+                ).toLocaleString();
 
         }
 
@@ -113,7 +136,18 @@ async function loadConnection() {
         // STATUS
         // ==================================
 
-        updateStatus(data.status);
+        updateStatus(
+            data.status
+        );
+
+
+        // ==================================
+        // REMAINING TIME
+        // ==================================
+
+        updateRemainingTime(
+            data
+        );
 
 
     } catch (error) {
@@ -121,10 +155,6 @@ async function loadConnection() {
         console.error(
             "Connection loading error:",
             error
-        );
-
-        alert(
-            "Unable to load connection."
         );
 
     }
@@ -139,11 +169,15 @@ async function loadConnection() {
 function updateStatus(status) {
 
     const statusElement =
-        document.getElementById("status");
+        document.getElementById(
+            "status"
+        );
 
 
     if (!statusElement) {
+
         return;
+
     }
 
 
@@ -154,80 +188,175 @@ function updateStatus(status) {
 
 
 // ======================================
-// COUNTDOWN
+// REMAINING TIME
+// ======================================
+
+function updateRemainingTime(data) {
+
+    const remainingElement =
+        document.getElementById(
+            "remainingTime"
+        );
+
+
+    if (!remainingElement) {
+
+        return;
+
+    }
+
+
+    // ----------------------------------
+    // EXPIRED
+    // ----------------------------------
+
+    if (
+        data.status === "Expired" ||
+        data.remainingTime === "Expired"
+    ) {
+
+        remainingElement.innerText =
+            "Expired";
+
+        stopCountdown();
+
+        return;
+
+    }
+
+
+    // ----------------------------------
+    // USE EXPIRY TIME
+    // ----------------------------------
+
+    if (!data.expiryTime) {
+
+        remainingElement.innerText =
+            data.remainingTime ||
+            "No expiry time";
+
+        return;
+
+    }
+
+
+    const expiry =
+        new Date(
+            data.expiryTime
+        );
+
+
+    if (
+        Number.isNaN(
+            expiry.getTime()
+        )
+    ) {
+
+        remainingElement.innerText =
+            data.remainingTime ||
+            "Unknown";
+
+        return;
+
+    }
+
+
+    startCountdown(
+        expiry
+    );
+
+}
+
+
+// ======================================
+// START COUNTDOWN
 // ======================================
 
 function startCountdown(expiry) {
 
-    const timer =
-        setInterval(() => {
-
-            const now =
-                new Date();
-
-            const diff =
-                expiry.getTime() -
-                now.getTime();
+    stopCountdown();
 
 
-            // ==============================
-            // EXPIRED
-            // ==============================
+    function update() {
 
-            if (diff <= 0) {
-
-                clearInterval(timer);
+        const now =
+            Date.now();
 
 
-                document.getElementById(
-                    "remainingTime"
-                ).innerText =
-                    "Expired";
+        const diff =
+            expiry.getTime() -
+            now;
 
 
-                updateStatus(
-                    "Expired"
-                );
+        // ----------------------------------
+        // EXPIRED
+        // ----------------------------------
 
-
-                return;
-
-            }
-
-
-            // ==============================
-            // CALCULATE TIME
-            // ==============================
-
-            const totalSeconds =
-                Math.floor(
-                    diff / 1000
-                );
-
-
-            const hrs =
-                Math.floor(
-                    totalSeconds / 3600
-                );
-
-
-            const mins =
-                Math.floor(
-                    (totalSeconds % 3600) / 60
-                );
-
-
-            const secs =
-                totalSeconds % 60;
-
-
-            // ==============================
-            // DISPLAY
-            // ==============================
+        if (diff <= 0) {
 
             document.getElementById(
                 "remainingTime"
             ).innerText =
+                "Expired";
+
+
+            updateStatus(
+                "Expired"
+            );
+
+
+            stopCountdown();
+
+            // Ask server for the latest state
+            setTimeout(
+                loadConnection,
+                1000
+            );
+
+            return;
+
+        }
+
+
+        // ----------------------------------
+        // CALCULATE
+        // ----------------------------------
+
+        const totalSeconds =
+            Math.floor(
+                diff / 1000
+            );
+
+
+        const hrs =
+            Math.floor(
+                totalSeconds / 3600
+            );
+
+
+        const mins =
+            Math.floor(
+                (totalSeconds % 3600) / 60
+            );
+
+
+        const secs =
+            totalSeconds % 60;
+
+
+        // ----------------------------------
+        // DISPLAY
+        // ----------------------------------
+
+        const remainingElement =
+            document.getElementById(
+                "remainingTime"
+            );
+
+
+        if (remainingElement) {
+
+            remainingElement.innerText =
 
                 `${String(hrs).padStart(2, "0")}:` +
 
@@ -235,10 +364,54 @@ function startCountdown(expiry) {
 
                 `${String(secs).padStart(2, "0")}`;
 
+        }
 
-        }, 1000);
+    }
+
+
+    update();
+
+
+    countdownTimer =
+        setInterval(
+            update,
+            1000
+        );
 
 }
+
+
+// ======================================
+// STOP COUNTDOWN
+// ======================================
+
+function stopCountdown() {
+
+    if (countdownTimer) {
+
+        clearInterval(
+            countdownTimer
+        );
+
+        countdownTimer = null;
+
+    }
+
+}
+
+
+// ======================================
+// REFRESH SERVER DATA
+// ======================================
+//
+// Every 30 seconds we get the latest
+// WiTime/MikroTik state.
+//
+
+setInterval(
+    loadConnection,
+    30 * 1000
+);
 
 
 // ======================================
@@ -257,7 +430,8 @@ if (buyAgain) {
         "click",
         () => {
 
-            window.location.href = "/";
+            window.location.href =
+                "/";
 
         }
     );

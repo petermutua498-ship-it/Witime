@@ -391,33 +391,28 @@ app.listen(
     }
 );
 
-
 // ======================================
-// MIKROTIK → WITIME USER SYNC
+// MIKROTIK → WITIME ACTIVE USER SYNC
 // ======================================
 
 setInterval(async () => {
 
     try {
 
-        const result =
-            await getActiveHotspotUsers({
+        const result = await getActiveHotspotUsers({
 
-                host:
-                    process.env.MIKROTIK_HOST,
+            host: process.env.MIKROTIK_HOST,
 
-                username:
-                    process.env.MIKROTIK_USERNAME,
+            username: process.env.MIKROTIK_USERNAME,
 
-                password:
-                    process.env.MIKROTIK_PASSWORD,
+            password: process.env.MIKROTIK_PASSWORD,
 
-                port:
-                    Number(
-                        process.env.MIKROTIK_PORT || 8728
-                    )
+            port:
+                Number(
+                    process.env.MIKROTIK_PORT || 8728
+                )
 
-            });
+        });
 
         if (!result.success) {
 
@@ -427,7 +422,6 @@ setInterval(async () => {
             );
 
             return;
-
         }
 
         const activeUsers =
@@ -437,24 +431,26 @@ setInterval(async () => {
             `🔵 MikroTik active users: ${activeUsers.length}`
         );
 
-        // ----------------------------------
-        // UPDATE EACH ACTIVE USER
-        // ----------------------------------
+
+        // ======================================
+        // PROCESS ACTIVE USERS
+        // ======================================
 
         for (const activeUser of activeUsers) {
 
             const phone =
-                String(activeUser.user || "").trim();
+                String(
+                    activeUser.user || ""
+                ).trim();
 
             if (!phone) {
-
-                console.log(
-                    "⚠️ Active MikroTik user has no username"
-                );
-
                 continue;
-
             }
+
+
+            // ----------------------------------
+            // GET MIKROTIK INFORMATION
+            // ----------------------------------
 
             const ipAddress =
                 activeUser.address || "";
@@ -464,6 +460,10 @@ setInterval(async () => {
 
             const sessionId =
                 activeUser.id || "";
+
+            const uptime =
+                activeUser.uptime || "";
+
 
             // ----------------------------------
             // FIND WITIME USER
@@ -482,12 +482,12 @@ setInterval(async () => {
                 );
 
                 continue;
-
             }
 
-            // ----------------------------------
-            // UPDATE WITIME USER
-            // ----------------------------------
+
+            // ==================================
+            // UPDATE USER
+            // ==================================
 
             user.status = "Online";
 
@@ -499,18 +499,44 @@ setInterval(async () => {
 
             user.mikrotikSessionId =
                 sessionId;
+            
+            user.mikrotikTimeLeft =
+            activeUser.sessionTimeLeft || "";
 
             user.lastSeen =
                 new Date();
 
+
+            // ----------------------------------
+            // SAVE
+            // ----------------------------------
+
             await user.save();
+
 
             console.log(
                 "✅ WiTime user synced:",
-                phone,
-                ipAddress,
-                macAddress,
+                phone
+            );
+
+            console.log(
+                "   IP:",
+                ipAddress
+            );
+
+            console.log(
+                "   MAC:",
+                macAddress
+            );
+
+            console.log(
+                "   Session:",
                 sessionId
+            );
+
+            console.log(
+                "   Uptime:",
+                uptime
             );
 
         }

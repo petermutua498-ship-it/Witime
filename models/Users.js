@@ -52,6 +52,11 @@ const userSchema = new mongoose.Schema({
     default: null
     },
 
+    mikrotikTimeLeft: {
+    type: String,
+    default: ""
+    }
+
 }, {
     timestamps: true
 });

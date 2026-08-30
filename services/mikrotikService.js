@@ -423,69 +423,128 @@ async function getActiveUserSession(phone) {
             process.env.MIKROTIK_PORT || 8728
         );
 
-    let api;
+    if (!host || !username || !password) {
+
+        return {
+            success: false,
+            active: false,
+            message:
+                "MikroTik configuration is missing."
+        };
+
+    }
+
+    if (!phone) {
+
+        return {
+            success: false,
+            active: false,
+            message:
+                "Phone number is required."
+        };
+
+    }
 
     try {
 
-        api = createMikroTikAPI({
-            host,
-            username,
-            password,
-            port
-        });
+        return await runMikroTikCommand(
 
-        await api.connect();
+            {
+                host,
+                username,
+                password,
+                port
+            },
 
-        const activeUsers =
-            await api.write(
-                "/ip/hotspot/active/print"
-            );
+            async (execute) => {
 
-        const activeUser =
-            (activeUsers || []).find(
-                user =>
-                    String(user.user) ===
-                    String(phone)
-            );
+                console.log(
+                    "🔵 Reading MikroTik session:",
+                    phone
+                );
 
-        if (!activeUser) {
+                const activeUsers =
+                    await execute(
+                        "/ip/hotspot/active/print"
+                    );
 
-            return {
-                success: false,
-                active: false,
-                message:
-                    "User is not currently active on MikroTik."
-            };
+                const activeUser =
+                    (Array.isArray(activeUsers)
+                        ? activeUsers
+                        : []
+                    ).find(
 
-        }
+                        user =>
+                            String(user.user) ===
+                            String(phone)
 
-        return {
+                    );
 
-            success: true,
+                if (!activeUser) {
 
-            active: true,
+                    console.log(
+                        "⚠️ User not active on MikroTik:",
+                        phone
+                    );
 
-            phone,
+                    return {
 
-            sessionId:
-                activeUser.id || "",
+                        success: false,
 
-            ipAddress:
-                activeUser.address || "",
+                        active: false,
 
-            macAddress:
-                activeUser.macAddress || "",
+                        phone,
 
-            uptime:
-                activeUser.uptime || "0s",
+                        message:
+                            "User is not currently active on MikroTik."
 
-            idleTime:
-                activeUser.idleTime || "0s",
+                    };
 
-            keepaliveTimeout:
-                activeUser.keepaliveTimeout || ""
+                }
 
-        };
+                console.log(
+                    "✅ MikroTik session found:",
+                    phone
+                );
+
+                return {
+
+                    success: true,
+
+                    active: true,
+
+                    phone,
+
+                    sessionId:
+                        activeUser.id ||
+                        activeUser[".id"] ||
+                        "",
+
+                    ipAddress:
+                        activeUser.address ||
+                        "",
+
+                    macAddress:
+                        activeUser.macAddress ||
+                        "",
+
+                    uptime:
+                        activeUser.uptime ||
+                        "0s",
+
+                    idleTime:
+                        activeUser.idleTime ||
+                        "0s",
+
+                    keepaliveTimeout:
+                        activeUser.keepaliveTimeout ||
+                        ""
+
+                };
+
+            }
+
+        );
 
     } catch (error) {
 
@@ -500,21 +559,13 @@ async function getActiveUserSession(phone) {
 
             active: false,
 
+            phone,
+
             message:
                 error.message ||
                 "Unable to read MikroTik session."
 
         };
-
-    } finally {
-
-        if (api) {
-
-            try {
-                await api.close();
-            } catch (_) {}
-
-        }
 
     }
 
