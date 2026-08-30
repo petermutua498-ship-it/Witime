@@ -3,6 +3,7 @@ const router = express.Router();
 
 const User = require("../models/Users");
 
+
 // ======================================
 // MIKROTIK → WITIME USER SYNC
 // POST /api/mikrotik/sync
@@ -16,7 +17,7 @@ router.post("/sync", async (req, res) => {
             user,
             address,
             macAddress,
-            sessionId,
+            id,
             status
         } = req.body;
 
@@ -27,7 +28,7 @@ router.post("/sync", async (req, res) => {
                 user,
                 address,
                 macAddress,
-                sessionId,
+                id,
                 status
             }
         );
@@ -71,21 +72,22 @@ router.post("/sync", async (req, res) => {
 
         if (!witimeUser) {
 
-            console.log(
-                "⚠️ WiTime user not found:",
-                phone
-            );
+    console.log(
+        `ℹ️ Ignoring MikroTik user not registered in WiTime: ${phone}`
+    );
 
-            return res.status(404).json({
+    return res.json({
 
-                success: false,
+        success: true,
 
-                message:
-                    "WiTime user not found."
+        ignored: true,
 
-            });
+        message:
+            "MikroTik user is not registered in WiTime."
 
-        }
+    });
+
+}
 
 
         // ======================================
@@ -107,7 +109,7 @@ router.post("/sync", async (req, res) => {
 
 
             witimeUser.mikrotikSessionId =
-                sessionId || "";
+                id || "";
 
 
             witimeUser.lastSeen =

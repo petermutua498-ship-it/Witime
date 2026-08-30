@@ -404,6 +404,123 @@ async function getActiveHotspotUsers({
 }
 
 // ======================================
+// GET ACTIVE USER REMAINING TIME
+// ======================================
+
+async function getActiveUserSession(phone) {
+
+    const host =
+        process.env.MIKROTIK_HOST;
+
+    const username =
+        process.env.MIKROTIK_USERNAME;
+
+    const password =
+        process.env.MIKROTIK_PASSWORD;
+
+    const port =
+        Number(
+            process.env.MIKROTIK_PORT || 8728
+        );
+
+    let api;
+
+    try {
+
+        api = createMikroTikAPI({
+            host,
+            username,
+            password,
+            port
+        });
+
+        await api.connect();
+
+        const activeUsers =
+            await api.write(
+                "/ip/hotspot/active/print"
+            );
+
+        const activeUser =
+            (activeUsers || []).find(
+                user =>
+                    String(user.user) ===
+                    String(phone)
+            );
+
+        if (!activeUser) {
+
+            return {
+                success: false,
+                active: false,
+                message:
+                    "User is not currently active on MikroTik."
+            };
+
+        }
+
+        return {
+
+            success: true,
+
+            active: true,
+
+            phone,
+
+            sessionId:
+                activeUser.id || "",
+
+            ipAddress:
+                activeUser.address || "",
+
+            macAddress:
+                activeUser.macAddress || "",
+
+            uptime:
+                activeUser.uptime || "0s",
+
+            idleTime:
+                activeUser.idleTime || "0s",
+
+            keepaliveTimeout:
+                activeUser.keepaliveTimeout || ""
+
+        };
+
+    } catch (error) {
+
+        console.error(
+            "❌ MikroTik session read error:",
+            error
+        );
+
+        return {
+
+            success: false,
+
+            active: false,
+
+            message:
+                error.message ||
+                "Unable to read MikroTik session."
+
+        };
+
+    } finally {
+
+        if (api) {
+
+            try {
+                await api.close();
+            } catch (_) {}
+
+        }
+
+    }
+
+}
+
+// ======================================
 // DISCONNECT HOTSPOT SESSION
 // ======================================
 
@@ -518,15 +635,68 @@ async function disconnectUserByPhone({
 }
 
 // ======================================
+// CONVERT ROUTEROS TIME TO SECONDS
+// ======================================
+
+function routerOSTimeToSeconds(time) {
+
+    if (!time) return 0;
+
+    const value = String(time).trim();
+
+    let total = 0;
+
+    const days =
+        value.match(/(\d+)d/);
+
+    const hours =
+        value.match(/(\d+)h/);
+
+    const minutes =
+        value.match(/(\d+)m/);
+
+    const seconds =
+        value.match(/(\d+)s/);
+
+    if (days) {
+        total += Number(days[1]) * 86400;
+    }
+
+    if (hours) {
+        total += Number(hours[1]) * 3600;
+    }
+
+    if (minutes) {
+        total += Number(minutes[1]) * 60;
+    }
+
+    if (seconds) {
+        total += Number(seconds[1]);
+    }
+
+    return total;
+}
+
+// ======================================
 // EXPORT
 // ======================================
 
 module.exports = {
-  testMikroTikConnection,
-  createHotspotProfile,
-  createHotspotUser,
-  connectWiTimeUserToMikroTik,
-  getActiveHotspotUsers,
-  disconnectHotspotUser,
-  disconnectUserByPhone
+
+    testMikroTikConnection,
+
+    createHotspotProfile,
+
+    createHotspotUser,
+
+    connectWiTimeUserToMikroTik,
+
+    getActiveHotspotUsers,
+
+    getActiveUserSession,
+
+    disconnectHotspotUser,
+
+    disconnectUserByPhone
+
 };

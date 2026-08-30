@@ -2,9 +2,14 @@
 // WiTime Connected
 // ======================================
 
-const params = new URLSearchParams(window.location.search);
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
 
-const phone = params.get("phone");
+const phone =
+    params.get("phone");
+
 
 if (!phone) {
 
@@ -14,17 +19,31 @@ if (!phone) {
 
 }
 
+
+// ======================================
+// LOAD CONNECTION
+// ======================================
+
 async function loadConnection() {
 
     try {
 
-        const response = await fetch(`/api/connected/${phone}`);
+        const response =
+            await fetch(
+                `/api/connected/${encodeURIComponent(phone)}`
+            );
 
-        const data = await response.json();
+
+        const data =
+            await response.json();
+
 
         if (!response.ok) {
 
-            alert(data.message);
+            alert(
+                data.message ||
+                "Unable to load connection."
+            );
 
             window.location.href = "/";
 
@@ -32,95 +51,222 @@ async function loadConnection() {
 
         }
 
+
+        // ==================================
+        // BASIC INFORMATION
+        // ==================================
+
         document.getElementById("phone").innerText =
-            data.phone;
+            data.phone || phone;
+
 
         document.getElementById("package").innerText =
-            data.packageName;
+            data.packageName || "Unknown";
 
-        const connectedTime =
-            new Date(data.createdAt);
 
-        document.getElementById("connectedAt").innerText =
-            connectedTime.toLocaleString();
+        // ==================================
+        // LOGIN TIME
+        // ==================================
 
-        // Calculate expiry
+        if (data.loginTime) {
 
-        let hours = 1;
+            const loginTime =
+                new Date(data.loginTime);
 
-        const duration =
-            data.packageDuration.toLowerCase();
+            document.getElementById(
+                "connectedAt"
+            ).innerText =
+                loginTime.toLocaleString();
 
-        if (duration.includes("2")) hours = 2;
-        else if (duration.includes("3")) hours = 3;
-        else if (duration.includes("5")) hours = 5;
-        else if (duration.includes("12")) hours = 12;
+        }
 
-        const expiry =
-            new Date(connectedTime.getTime() + hours * 60 * 60 * 1000);
 
-        document.getElementById("expiresAt").innerText =
-            expiry.toLocaleString();
+        // ==================================
+        // EXPIRY TIME
+        // ==================================
 
-        startCountdown(expiry);
+        if (data.expiryTime) {
 
-    } catch (err) {
+            const expiry =
+                new Date(data.expiryTime);
 
-        console.error(err);
 
-        alert("Unable to load connection.");
+            document.getElementById(
+                "expiresAt"
+            ).innerText =
+                expiry.toLocaleString();
+
+
+            startCountdown(expiry);
+
+        } else {
+
+            document.getElementById(
+                "remainingTime"
+            ).innerText =
+                "No expiry time";
+
+        }
+
+
+        // ==================================
+        // STATUS
+        // ==================================
+
+        updateStatus(data.status);
+
+
+    } catch (error) {
+
+        console.error(
+            "Connection loading error:",
+            error
+        );
+
+        alert(
+            "Unable to load connection."
+        );
 
     }
 
 }
 
-function startCountdown(expiry) {
 
-    const timer = setInterval(() => {
+// ======================================
+// STATUS
+// ======================================
 
-        const now = new Date();
+function updateStatus(status) {
 
-        const diff = expiry - now;
+    const statusElement =
+        document.getElementById("status");
 
-        if (diff <= 0) {
 
-            clearInterval(timer);
+    if (!statusElement) {
+        return;
+    }
 
-            document.getElementById("remainingTime").innerText =
-                "Expired";
 
-            alert("Your internet package has expired.");
-
-            window.location.href = "/";
-
-            return;
-
-        }
-
-        const hrs =
-            Math.floor(diff / 3600000);
-
-        const mins =
-            Math.floor((diff % 3600000) / 60000);
-
-        const secs =
-            Math.floor((diff % 60000) / 1000);
-
-        document.getElementById("remainingTime").innerText =
-
-            `${String(hrs).padStart(2,"0")}:` +
-            `${String(mins).padStart(2,"0")}:` +
-            `${String(secs).padStart(2,"0")}`;
-
-    }, 1000);
+    statusElement.innerText =
+        status || "Offline";
 
 }
 
-document.getElementById("buyAgain")
-.addEventListener("click", () => {
 
-    window.location.href = "/";
+// ======================================
+// COUNTDOWN
+// ======================================
 
-});
+function startCountdown(expiry) {
+
+    const timer =
+        setInterval(() => {
+
+            const now =
+                new Date();
+
+            const diff =
+                expiry.getTime() -
+                now.getTime();
+
+
+            // ==============================
+            // EXPIRED
+            // ==============================
+
+            if (diff <= 0) {
+
+                clearInterval(timer);
+
+
+                document.getElementById(
+                    "remainingTime"
+                ).innerText =
+                    "Expired";
+
+
+                updateStatus(
+                    "Expired"
+                );
+
+
+                return;
+
+            }
+
+
+            // ==============================
+            // CALCULATE TIME
+            // ==============================
+
+            const totalSeconds =
+                Math.floor(
+                    diff / 1000
+                );
+
+
+            const hrs =
+                Math.floor(
+                    totalSeconds / 3600
+                );
+
+
+            const mins =
+                Math.floor(
+                    (totalSeconds % 3600) / 60
+                );
+
+
+            const secs =
+                totalSeconds % 60;
+
+
+            // ==============================
+            // DISPLAY
+            // ==============================
+
+            document.getElementById(
+                "remainingTime"
+            ).innerText =
+
+                `${String(hrs).padStart(2, "0")}:` +
+
+                `${String(mins).padStart(2, "0")}:` +
+
+                `${String(secs).padStart(2, "0")}`;
+
+
+        }, 1000);
+
+}
+
+
+// ======================================
+// BUY AGAIN
+// ======================================
+
+const buyAgain =
+    document.getElementById(
+        "buyAgain"
+    );
+
+
+if (buyAgain) {
+
+    buyAgain.addEventListener(
+        "click",
+        () => {
+
+            window.location.href = "/";
+
+        }
+    );
+
+}
+
+
+// ======================================
+// START
+// ======================================
 
 loadConnection();

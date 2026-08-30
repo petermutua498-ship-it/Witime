@@ -1,47 +1,138 @@
 const express = require("express");
 const router = express.Router();
 
-const Payment = require("../models/Payment");
+const User = require("../models/Users");
+
+
+// ======================================
+// GET CONNECTED USER
+// GET /api/connected/:phone
+// ======================================
 
 router.get("/:phone", async (req, res) => {
 
     try {
 
-        const payment = await Payment.findOne({
+        const phone =
+            String(req.params.phone).trim();
 
-            phone: req.params.phone,
-            status: "success"
+        if (!phone) {
 
-        }).sort({
-
-            createdAt: -1
-
-        });
-
-        if (!payment) {
-
-            return res.status(404).json({
+            return res.status(400).json({
 
                 success: false,
-                message: "No active package found."
+
+                message:
+                    "Phone number is required."
 
             });
 
         }
 
-        res.json(payment);
 
-    } catch (err) {
+        // ==================================
+        // FIND WITIME USER
+        // ==================================
 
-        res.status(500).json({
+        const user =
+            await User.findOne({
+                phone
+            });
+
+
+        if (!user) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "WiTime user not found."
+
+            });
+
+        }
+
+
+        // ==================================
+        // CHECK EXPIRY
+        // ==================================
+
+        const now =
+            new Date();
+
+        let status =
+            user.status || "Offline";
+
+
+        if (
+            user.expiryTime &&
+            new Date(user.expiryTime) <= now
+        ) {
+
+            status = "Expired";
+
+        }
+
+
+        // ==================================
+        // RESPONSE
+        // ==================================
+
+        return res.json({
+
+            success: true,
+
+            phone:
+                user.phone,
+
+            packageName:
+                user.packageName,
+
+            status,
+
+            ipAddress:
+                user.ipAddress || "",
+
+            macAddress:
+                user.macAddress || "",
+
+            mikrotikSessionId:
+                user.mikrotikSessionId || "",
+
+            loginTime:
+                user.loginTime,
+
+            expiryTime:
+                user.expiryTime,
+
+            remainingTime:
+                user.remainingTime,
+
+            lastSeen:
+                user.lastSeen
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Connected user error:",
+            error
+        );
+
+        return res.status(500).json({
 
             success: false,
-            message: err.message
+
+            message:
+                "Unable to load connection information."
 
         });
 
     }
 
 });
+
 
 module.exports = router;

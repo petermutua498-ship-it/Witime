@@ -393,7 +393,7 @@ app.listen(
 
 
 // ======================================
-// MIKROTIK → WITIME ACTIVE USER SYNC
+// MIKROTIK → WITIME USER SYNC
 // ======================================
 
 setInterval(async () => {
@@ -419,7 +419,6 @@ setInterval(async () => {
 
             });
 
-
         if (!result.success) {
 
             console.error(
@@ -431,95 +430,90 @@ setInterval(async () => {
 
         }
 
-
         const activeUsers =
-            Array.isArray(result.users)
-                ? result.users
-                : [];
-
+            result.users || [];
 
         console.log(
             `🔵 MikroTik active users: ${activeUsers.length}`
         );
 
-
-        // ======================================
-        // PROCESS ACTIVE MIKROTIK USERS
-        // ======================================
+        // ----------------------------------
+        // UPDATE EACH ACTIVE USER
+        // ----------------------------------
 
         for (const activeUser of activeUsers) {
 
-    const mikrotikUsername =
-        activeUser.user ||
-        activeUser.name;
+            const phone =
+                String(activeUser.user || "").trim();
 
-    if (!mikrotikUsername) {
-        continue;
-    }
+            if (!phone) {
 
-    // Ignore MikroTik admin/test accounts
-    // Only WiTime phone-number users should sync
-    const phone =
-        String(mikrotikUsername).trim();
+                console.log(
+                    "⚠️ Active MikroTik user has no username"
+                );
 
-    if (!/^254\d{9}$/.test(phone)) {
+                continue;
 
-        console.log(
-            "ℹ️ Ignoring non-WiTime MikroTik user:",
-            phone
-        );
+            }
 
-        continue;
-    }
+            const ipAddress =
+                activeUser.address || "";
 
-    // Find the corresponding WiTime customer
-    const user =
-        await User.findOne({
-            phone: phone
-        });
+            const macAddress =
+                activeUser.macAddress || "";
 
-    if (!user) {
+            const sessionId =
+                activeUser.id || "";
 
-        console.log(
-            "⚠️ MikroTik customer not found in WiTime:",
-            phone
-        );
+            // ----------------------------------
+            // FIND WITIME USER
+            // ----------------------------------
 
-        continue;
-    }
+            const user =
+                await User.findOne({
+                    phone
+                });
 
-    const ipAddress =
-        activeUser.address || "";
+            if (!user) {
 
-    const macAddress =
-        activeUser.macAddress || "";
+                console.log(
+                    "⚠️ MikroTik user not found in WiTime:",
+                    phone
+                );
 
-    const sessionId =
-        activeUser.id || "";
+                continue;
 
-    user.status = "Online";
+            }
 
-    user.ipAddress = ipAddress;
+            // ----------------------------------
+            // UPDATE WITIME USER
+            // ----------------------------------
 
-    user.macAddress = macAddress;
+            user.status = "Online";
 
-    user.mikrotikSessionId = sessionId;
+            user.ipAddress =
+                ipAddress;
 
-    user.lastSeen = new Date();
+            user.macAddress =
+                macAddress;
 
-    await user.save();
+            user.mikrotikSessionId =
+                sessionId;
 
-    console.log(
-        "✅ WiTime user synchronized:",
-        {
-            phone,
-            ipAddress,
-            macAddress,
-            sessionId
+            user.lastSeen =
+                new Date();
+
+            await user.save();
+
+            console.log(
+                "✅ WiTime user synced:",
+                phone,
+                ipAddress,
+                macAddress,
+                sessionId
+            );
+
         }
-    );
-}
-
 
     } catch (error) {
 
@@ -530,7 +524,7 @@ setInterval(async () => {
 
     }
 
-}, 10 * 1000);
+}, 30 * 1000);
 
 // ======================================================
 // AUTOMATIC OFFLINE CLEANUP
