@@ -372,6 +372,40 @@ app.get(
     }
 );
 
+// ======================================
+// WIREGUARD TUNNEL INITIALIZATION
+// ======================================
+const { WireGuard } = require("wireguard-wrapper");
+
+async function initWireGuard() {
+  if (!process.env.WG_PRIVATE_KEY || !process.env.WG_ENDPOINT) {
+    console.log("⚠️ WireGuard env variables missing, skipping tunnel startup.");
+    return;
+  }
+
+  try {
+    const wg = new WireGuard({
+      privateKey: process.env.WG_PRIVATE_KEY,
+      address: "10.0.0.2/24",
+      peers: [
+        {
+          publicKey: process.env.WG_PUBLIC_KEY,
+          endpoint: process.env.WG_ENDPOINT, // hjq0agg42aj.sn.mynetname.net:13231
+          allowedIps: ["10.0.0.0/24"],
+          persistentKeepalive: 25,
+        },
+      ],
+    });
+
+    await wg.up();
+    console.log("✅ WireGuard tunnel connected to MikroTik (10.0.0.1)");
+  } catch (err) {
+    console.error("❌ WireGuard startup error:", err.message);
+  }
+}
+
+// Call before server starts
+initWireGuard();
 
 // ======================================
 // SERVER
