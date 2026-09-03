@@ -6,7 +6,6 @@ const session = require("express-session");
 const cors = require("cors");
 
 const requireAdmin = require("./middleware/adminAuth");
-
 const User = require("./models/Users");
 
 const packageRoutes = require("./routes/packageRoutes");
@@ -21,8 +20,7 @@ const reportsRoutes = require("./routes/reportsRoutes");
 const connectedRoutes = require("./routes/connectedRoutes");
 const mikrotikRoutes = require("./routes/mikrotikRoutes");
 const mikrotikSyncRoutes = require("./routes/mikrotikSyncRoutes");
-const mikrotikCloudRoutes =
-    require("./routes/mikrotikCloudRoutes");
+const mikrotikCloudRoutes = require("./routes/mikrotikCloudRoutes");
 
 const {
     getActiveHotspotUsers,
@@ -32,261 +30,85 @@ const {
 
 const app = express();
 
-
 // ======================================
 // BASIC CONFIGURATION
 // ======================================
-
 app.set("trust proxy", 1);
-
 app.use(cors());
-
 app.use(express.json());
-
-app.use(
-    express.urlencoded({
-        extended: true
-    })
-);
-
+app.use(express.urlencoded({ extended: true }));
 
 // ======================================
 // REQUEST LOGGER
 // ======================================
-
 app.use((req, res, next) => {
-
     console.log(req.method, req.url);
-
     next();
-
 });
-
 
 // ======================================
 // SESSION
 // ======================================
-
 app.use(
     session({
-
-        secret:
-            process.env.SESSION_SECRET ||
-            "witime-local-secret",
-
+        secret: process.env.SESSION_SECRET || "witime-local-secret",
         resave: false,
-
         saveUninitialized: false,
-
         rolling: true,
-
         cookie: {
-
             httpOnly: true,
-
-            secure:
-                process.env.NODE_ENV === "production",
-
+            secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-
-            maxAge:
-                24 * 60 * 60 * 1000
-
+            maxAge: 24 * 60 * 60 * 1000
         }
-
     })
 );
-
 
 // ======================================
 // MONGODB
 // ======================================
-
 mongoose
     .connect(process.env.MONGO_URI)
-
-    .then(() => {
-
-        console.log("✅ MongoDB Connected");
-
-    })
-
+    .then(() => console.log("✅ MongoDB Connected"))
     .catch((error) => {
-
-        console.error(
-            "❌ MongoDB connection error:"
-        );
-
+        console.error("❌ MongoDB connection error:");
         console.error(error);
-
     });
 
+// ======================================
+// ROUTES
+// ======================================
+app.use("/api/admin", adminRoutes);
+app.use("/api/packages", packageRoutes);
+app.use("/", paymentRoutes);
+app.use("/", verifyRoutes);
+app.use("/", callbackRoutes);
+
+app.use("/api/dashboard", requireAdmin, dashboardRoutes);
+app.use("/api/payments", requireAdmin, paymentAdminRoutes);
+app.use("/api/users", requireAdmin, usersRoutes);
+app.use("/api/reports", requireAdmin, reportsRoutes);
+
+app.use("/api/connected", connectedRoutes);
+app.use("/api/admin/mikrotik", mikrotikRoutes);
+app.use("/api/mikrotik", mikrotikSyncRoutes);
+app.use("/api/mikrotik/cloud", mikrotikCloudRoutes);
 
 // ======================================
-// ADMIN API
+// ADMIN PAGE PROTECTION & ROUTING
 // ======================================
-
-app.use(
-    "/api/admin",
-    adminRoutes
-);
-
-
-// ======================================
-// PUBLIC ROUTES
-// ======================================
-
-app.use(
-    "/api/packages",
-    packageRoutes
-);
-
-app.use(
-    "/",
-    paymentRoutes
-);
-
-app.use(
-    "/",
-    verifyRoutes
-);
-
-
-// ======================================
-// M-PESA CALLBACK
-// POST /callback
-// ======================================
-
-app.use(
-    "/",
-    callbackRoutes
-);
-
-
-// ======================================
-// DASHBOARD
-// ======================================
-
-app.use(
-    "/api/dashboard",
-    requireAdmin,
-    dashboardRoutes
-);
-
-
-// ======================================
-// ADMIN APIs
-// ======================================
-
-app.use(
-    "/api/payments",
-    requireAdmin,
-    paymentAdminRoutes
-);
-
-app.use(
-    "/api/users",
-    requireAdmin,
-    usersRoutes
-);
-
-app.use(
-    "/api/reports",
-    requireAdmin,
-    reportsRoutes
-);
-
-
-// ======================================
-// CONNECTED USERS
-// ======================================
-
-app.use(
-    "/api/connected",
-    connectedRoutes
-);
-
-
-// ======================================
-// MIKROTIK ADMIN API
-// ======================================
-
-app.use(
-    "/api/admin/mikrotik",
-    mikrotikRoutes
-);
-
-
-// ======================================
-// MIKROTIK SYNC API
-// ======================================
-
-app.use(
-    "/api/mikrotik",
-    mikrotikSyncRoutes
-);
-
-app.use(
-    "/api/mikrotik/cloud",
-    mikrotikCloudRoutes
-);
-
-
-// ======================================
-// ADMIN PAGE PROTECTION
-// ======================================
-
 function requireAdminPage(req, res, next) {
-
-    if (
-        req.session &&
-        req.session.admin
-    ) {
-
-        console.log(
-            "✅ Admin page authorized:",
-            req.session.admin.username
-        );
-
+    if (req.session && req.session.admin) {
         return next();
-
     }
-
-    console.log(
-        "❌ Admin page unauthorized:",
-        req.path
-    );
-
-    return res.redirect(
-        "/admin/login.html"
-    );
-
+    return res.redirect("/admin/login.html");
 }
 
-
-// ======================================
-// ADMIN LOGIN PAGE
-// ======================================
-
-app.get(
-    "/admin/login.html",
-    (req, res) => {
-
-        res.sendFile(
-            __dirname +
-            "/public/admin/login.html"
-        );
-
-    }
-);
-
-
-// ======================================
-// PROTECTED ADMIN PAGES
-// ======================================
+app.get("/admin/login.html", (req, res) => {
+    res.sendFile(__dirname + "/public/admin/login.html");
+});
 
 const adminPages = [
-
     "dashboard.html",
     "packages.html",
     "users.html",
@@ -294,640 +116,221 @@ const adminPages = [
     "payments.html",
     "reports.html",
     "settings.html"
-
 ];
 
 adminPages.forEach((page) => {
-
-    app.get(
-        `/admin/${page}`,
-
-        requireAdminPage,
-
-        (req, res) => {
-
-            res.sendFile(
-                __dirname +
-                `/public/admin/${page}`
-            );
-
-        }
-
-    );
-
+    app.get(`/admin/${page}`, requireAdminPage, (req, res) => {
+        res.sendFile(__dirname + `/public/admin/${page}`);
+    });
 });
 
+app.use(express.static(__dirname + "/public", { index: false }));
+
+app.get("/", (req, res) => {
+    res.sendFile(__dirname + "/public/index.html");
+});
+
+app.get("/api/health", (req, res) => {
+    res.json({
+        success: true,
+        status: "online",
+        service: "WiTime",
+        time: new Date().toISOString()
+    });
+});
 
 // ======================================
-// STATIC FILES
+// MIKROTIK JOB QUEUE ENDPOINT (POLLING)
 // ======================================
+app.get('/api/router/jobs', (req, res) => {
+    const token = req.headers['x-router-token'];
+    const expectedToken = process.env.ROUTER_SECRET_TOKEN || "witime123@pinchez123";
 
-app.use(
-    express.static(
-        __dirname + "/public",
-        {
-            index: false
-        }
-    )
-);
-
-
-// ======================================
-// HOME
-// ======================================
-
-app.get(
-    "/",
-    (req, res) => {
-
-        res.sendFile(
-            __dirname +
-            "/public/index.html"
-        );
-
+    if (!token || token !== expectedToken) {
+        res.setHeader('Content-Type', 'text/plain');
+        return res.status(403).send('Unauthorized');
     }
-);
 
+    res.setHeader('Content-Type', 'text/plain');
 
-// ======================================
-// HEALTH CHECK
-// ======================================
-
-app.get(
-    "/api/health",
-    (req, res) => {
-
-        res.json({
-
-            success: true,
-
-            status: "online",
-
-            service: "WiTime",
-
-            time:
-                new Date().toISOString()
-
-        });
-
+    if (global.pendingJobs && global.pendingJobs.length > 0) {
+        const commands = global.pendingJobs.join('\n');
+        global.pendingJobs = []; // Clear queue after retrieval
+        return res.send(commands);
     }
-);
 
-
-
-// ======================================
-// SERVER
-// ======================================
-
-const PORT =
-    process.env.PORT || 3000;
-
-app.listen(
-    PORT,
-    () => {
-
-        console.log(
-            `WiTime running on port ${PORT}`
-        );
-
-    }
-);
+    return res.send('');
+});
 
 // ======================================
 // MIKROTIK → WITIME ACTIVE USER SYNC
 // ======================================
-
 setInterval(async () => {
+    if (mongoose.connection.readyState !== 1) {
+        return;
+    }
 
     try {
-
         const result = await getActiveHotspotUsers({
-
             host: process.env.MIKROTIK_HOST,
-
             username: process.env.MIKROTIK_USERNAME,
-
             password: process.env.MIKROTIK_PASSWORD,
-
-            port:
-                Number(
-                    process.env.MIKROTIK_PORT || 8728
-                )
-
+            port: Number(process.env.MIKROTIK_PORT || 8728)
         });
 
         if (!result.success) {
-
-            console.error(
-                "❌ MikroTik sync failed:",
-                result.message
-            );
-
+            console.error("❌ MikroTik sync failed:", result.message);
             return;
         }
 
-        const activeUsers =
-            result.users || [];
+        const activeUsers = result.users || [];
+        const bulkOps = activeUsers.map((activeUser) => {
+            const phone = String(activeUser.user || "").trim();
+            if (!phone) return null;
 
-        console.log(
-            `🔵 MikroTik active users: ${activeUsers.length}`
-        );
+            const remainingSeconds = routerOsTimeToSeconds(activeUser.sessionTimeLeft);
 
+            return {
+                updateOne: {
+                    filter: { phone },
+                    update: {
+                        $set: {
+                            status: "Online",
+                            ipAddress: activeUser.address || "",
+                            macAddress: activeUser.macAddress || "",
+                            mikrotikSessionId: activeUser.id || "",
+                            mikrotikTimeLeft: activeUser.sessionTimeLeft || "",
+                            remainingSeconds: remainingSeconds,
+                            remainingTime: activeUser.sessionTimeLeft || "0s",
+                            lastSeen: new Date()
+                        }
+                    }
+                }
+            };
+        }).filter(Boolean);
 
-        // ======================================
-        // PROCESS ACTIVE USERS
-        // ======================================
-
-        for (const activeUser of activeUsers) {
-
-            const phone =
-                String(
-                    activeUser.user || ""
-                ).trim();
-
-            if (!phone) {
-                continue;
-            }
-
-
-            // ----------------------------------
-            // GET MIKROTIK INFORMATION
-            // ----------------------------------
-
-            const ipAddress =
-                activeUser.address || "";
-
-            const macAddress =
-                activeUser.macAddress || "";
-
-            const sessionId =
-                activeUser.id || "";
-
-            const uptime =
-                activeUser.uptime || "";
-
-
-            // ----------------------------------
-            // FIND WITIME USER
-            // ----------------------------------
-
-            const user =
-                await User.findOne({
-                    phone
-                });
-
-            if (!user) {
-
-                console.log(
-                    "⚠️ MikroTik user not found in WiTime:",
-                    phone
-                );
-
-                continue;
-            }
-
-
-            // ==================================
-            // UPDATE USER
-            // ==================================
-
-            user.status = "Online";
-
-            user.ipAddress =
-                ipAddress;
-
-            user.macAddress =
-                macAddress;
-
-            user.mikrotikSessionId =
-                sessionId;
-            
-            user.mikrotikTimeLeft =
-            activeUser.sessionTimeLeft || "";
-
-            const remainingSeconds =
-                routerOsTimeToSeconds(
-                    activeUser.sessionTimeLeft
-                );
-
-                user.remainingSeconds = remainingSeconds;
-
-                user.remainingTime =
-                    activeUser.sessionTimeLeft || "0s";
-
-                user.lastSeen =
-                    new Date();
-
-
-            // ----------------------------------
-            // SAVE
-            // ----------------------------------
-
-            await user.save();
-
-
-            console.log(
-                "✅ WiTime user synced:",
-                phone
-            );
-
-            console.log(
-                "   IP:",
-                ipAddress
-            );
-
-            console.log(
-                "   MAC:",
-                macAddress
-            );
-
-            console.log(
-                "   Session:",
-                sessionId
-            );
-
-            console.log(
-                "   Uptime:",
-                uptime
-            );
-
+        if (bulkOps.length > 0) {
+            await User.bulkWrite(bulkOps);
+            console.log(`✅ Synced ${bulkOps.length} active MikroTik user(s)`);
         }
-
     } catch (error) {
-
-        console.error(
-            "❌ MikroTik → WiTime sync error:",
-            error
-        );
-
+        console.error("❌ MikroTik → WiTime sync error:", error);
     }
-
 }, 30 * 1000);
 
-// ======================================================
+// ======================================
 // AUTOMATIC OFFLINE CLEANUP
-// ======================================================
-
+// ======================================
 let offlineCleanupRunning = false;
 
 setInterval(async () => {
-
-    if (offlineCleanupRunning) {
+    if (offlineCleanupRunning || mongoose.connection.readyState !== 1) {
         return;
     }
 
     offlineCleanupRunning = true;
 
     try {
-
-        // Only run if MongoDB is connected
-        if (
-            mongoose.connection.readyState !== 1
-        ) {
-
-            console.log(
-                "⚠️ Offline cleanup skipped: MongoDB not connected."
-            );
-
-            return;
-
-        }
-
-
-        const timeout =
-            new Date(
-                Date.now() -
-                90 * 1000
-            );
-
-
-        const result =
-            await User.updateMany(
-
-                {
-
-                    status: "Online",
-
-                    lastSeen: {
-                        $lt: timeout
-                    }
-
-                },
-
-                {
-
-                    $set: {
-
-                        status: "Offline",
-
-                        ipAddress: "",
-
-                        macAddress: "",
-
-                        mikrotikSessionId: ""
-
-                    }
-
+        const timeout = new Date(Date.now() - 90 * 1000);
+        const result = await User.updateMany(
+            {
+                status: "Online",
+                lastSeen: { $lt: timeout }
+            },
+            {
+                $set: {
+                    status: "Offline",
+                    ipAddress: "",
+                    macAddress: "",
+                    mikrotikSessionId: ""
                 }
-
-            );
-
-
-        if (
-            result.modifiedCount > 0
-        ) {
-
-            console.log(
-                `🔴 ${result.modifiedCount} user(s) automatically marked Offline`
-            );
-
-        }
-
-    } catch (error) {
-
-        console.error(
-            "❌ Offline cleanup error:",
-            error
+            }
         );
 
+        if (result.modifiedCount > 0) {
+            console.log(`🔴 ${result.modifiedCount} user(s) automatically marked Offline`);
+        }
+    } catch (error) {
+        console.error("❌ Offline cleanup error:", error);
     } finally {
-
         offlineCleanupRunning = false;
-
     }
-
 }, 30 * 1000);
 
-
-// ======================================================
+// ======================================
 // AUTOMATIC PACKAGE EXPIRY
-// ======================================================
-
+// ======================================
 let expiryCheckRunning = false;
 
 setInterval(async () => {
-
-    if (expiryCheckRunning) {
+    if (expiryCheckRunning || mongoose.connection.readyState !== 1) {
         return;
     }
 
     expiryCheckRunning = true;
 
     try {
+        const now = new Date();
+        const expiredUsers = await User.find({
+            expiryTime: { $lte: now },
+            remainingTime: { $ne: "Expired" },
+            status: { $in: ["Online", "Offline"] }
+        });
 
-        // ------------------------------------------
-        // Make sure MongoDB is connected
-        // ------------------------------------------
-
-        if (
-            mongoose.connection.readyState !== 1
-        ) {
-
-            console.log(
-                "⚠️ Package expiry skipped: MongoDB not connected."
-            );
-
+        if (expiredUsers.length === 0) {
             return;
-
         }
 
-
-        const now =
-            new Date();
-
-
-        // ------------------------------------------
-        // FIND EXPIRED USERS
-        // ------------------------------------------
-
-        const expiredUsers =
-            await User.find({
-
-                expiryTime: {
-                    $lte: now
-                },
-
-                remainingTime: {
-                    $ne: "Expired"
-                },
-
-                status: {
-                    $in: [
-                        "Online",
-                        "Offline"
-                    ]
-                }
-
-            });
-
-
-        if (
-            expiredUsers.length === 0
-        ) {
-
-            return;
-
-        }
-
-
-        // ------------------------------------------
-        // PROCESS EACH EXPIRED USER
-        // ------------------------------------------
-
-        for (
-            const user
-            of expiredUsers
-        ) {
-
-            console.log(
-                "⏰ Package expired:",
-                user.phone,
-                user.packageName
-            );
-
-
-            // --------------------------------------
-            // DISCONNECT MIKROTIK USER
-            // --------------------------------------
-
+        for (const user of expiredUsers) {
             try {
-
-                if (
-                    process.env.MIKROTIK_HOST &&
-                    process.env.MIKROTIK_USERNAME &&
-                    process.env.MIKROTIK_PASSWORD
-                ) {
-
-                    const result =
-                        await disconnectUserByPhone({
-
-                            host:
-                                process.env.MIKROTIK_HOST,
-
-                            username:
-                                process.env.MIKROTIK_USERNAME,
-
-                            password:
-                                process.env.MIKROTIK_PASSWORD,
-
-                            port:
-                                Number(
-                                    process.env.MIKROTIK_PORT ||
-                                    8728
-                                ),
-
-                            phone:
-                                user.phone
-
-                        });
-
-
-                    if (
-                        result &&
-                        result.success
-                    ) {
-
-                        console.log(
-                            "✅ MikroTik user disconnected:",
-                            user.phone
-                        );
-
-                    } else {
-
-                        console.error(
-                            "❌ Could not disconnect expired user:",
-                            user.phone,
-
-                            result?.message ||
-                            "Unknown MikroTik error"
-                        );
-
-                    }
-
-                } else {
-
-                    console.log(
-                        "⚠️ MikroTik configuration missing during expiry."
-                    );
-
+                if (process.env.MIKROTIK_HOST && process.env.MIKROTIK_USERNAME && process.env.MIKROTIK_PASSWORD) {
+                    await disconnectUserByPhone({
+                        host: process.env.MIKROTIK_HOST,
+                        username: process.env.MIKROTIK_USERNAME,
+                        password: process.env.MIKROTIK_PASSWORD,
+                        port: Number(process.env.MIKROTIK_PORT || 8728),
+                        phone: user.phone
+                    });
                 }
-
             } catch (mikrotikError) {
-
-                console.error(
-                    "❌ MikroTik expiry error:",
-                    mikrotikError
-                );
-
+                console.error("❌ MikroTik expiry disconnect error:", mikrotikError);
             }
 
-
-            // --------------------------------------
-            // UPDATE WITIME
-            // --------------------------------------
-
-            user.status =
-                "Offline";
-
-            user.remainingTime =
-                "Expired";
-
-            user.ipAddress =
-                "";
-
-            user.macAddress =
-                "";
-
-            user.mikrotikSessionId =
-                "";
-
-            user.lastSeen =
-                null;
-
+            user.status = "Offline";
+            user.remainingTime = "Expired";
+            user.ipAddress = "";
+            user.macAddress = "";
+            user.mikrotikSessionId = "";
+            user.lastSeen = null;
 
             await user.save();
-
-
-            console.log(
-                "✅ Expired user processed:",
-                user.phone
-            );
-
+            console.log(`⏰ Expired user processed & disconnected: ${user.phone}`);
         }
-
-
     } catch (error) {
-
-        console.error(
-            "❌ Package expiry checker error:",
-            error
-        );
-
+        console.error("❌ Package expiry checker error:", error);
     } finally {
-
         expiryCheckRunning = false;
-
     }
-
 }, 30 * 1000);
 
-// Express Route matching the MikroTik fetch URL
-app.get('/api/router/jobs', (req, res) => {
-    const token = req.headers['x-router-token'];
-    
-    // Validate secret token
-    if (token !== process.env.ROUTER_SECRET_TOKEN && token !== "super_secret_witime_key_123") {
-        return res.status(401).send('');
-    }
-
-    // Ensure response is plain text, not JSON or HTML
-    res.setHeader('Content-Type', 'text/plain');
-
-    // Send queued RouterOS commands or empty string
-    if (global.pendingJobs && global.pendingJobs.length > 0) {
-        const commands = global.pendingJobs.join('\n');
-        global.pendingJobs = []; // Clear queue after fetching
-        return res.send(commands);
-    }
-
-    res.send(''); // Return empty response if no pending commands
-});
-
-
-// ======================================================
+// ======================================
 // KEEP ALIVE
-// ======================================================
+// ======================================
+const SERVER_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT || 3000}`;
 
-const SERVER_URL =
-    process.env.RENDER_EXTERNAL_URL ||
-    `http://localhost:${PORT}`;
+setInterval(async () => {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/health`);
+        console.log(`🏓 Keep-alive ping: ${response.status}`);
+    } catch (error) {
+        console.log("⚠️ Keep-alive ping failed:", error.message);
+    }
+}, 10 * 60 * 1000);
 
-
-setInterval(
-    async () => {
-
-        try {
-
-            const response =
-                await fetch(
-                    `${SERVER_URL}/api/health`
-                );
-
-
-            console.log(
-                `🏓 Keep-alive ping: ${response.status}`
-            );
-
-        } catch (error) {
-
-            console.log(
-                "⚠️ Keep-alive ping failed:",
-                error.message
-            );
-
-        }
-
-    },
-
-    10 * 60 * 1000
-);
+// ======================================
+// SERVER START
+// ======================================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 WiTime running on port ${PORT}`);
+});
