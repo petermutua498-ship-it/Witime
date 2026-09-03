@@ -142,24 +142,43 @@ app.get("/api/health", (req, res) => {
 // ======================================
 // MIKROTIK JOB QUEUE ENDPOINT (POLLING)
 // ======================================
-app.get('/api/router/jobs', (req, res) => {
+app.get('/api/router/jobs', async (req, res) => {
     const token = req.headers['x-router-token'];
     const expectedToken = process.env.ROUTER_SECRET_TOKEN || "witime123@pinchez123";
 
+    res.setHeader('Content-Type', 'text/plain');
+
+    // 1. Strict Token Check
     if (!token || token !== expectedToken) {
-        res.setHeader('Content-Type', 'text/plain');
+        console.warn(`[WiTime Router] Unauthorized polling attempt with token: ${token}`);
         return res.status(403).send('Unauthorized');
     }
 
-    res.setHeader('Content-Type', 'text/plain');
+    try {
+        // 2. Safe Array Initialization Check
+        if (!global.pendingJobs) {
+            global.pendingJobs = [];
+        }
 
-    if (global.pendingJobs && global.pendingJobs.length > 0) {
-        const commands = global.pendingJobs.join('\n');
-        global.pendingJobs = []; // Clear queue after retrieval
-        return res.send(commands);
+        // 3. Process Queued RouterOS Commands
+        if (global.pendingJobs.length > 0) {
+            const commands = global.pendingJobs.join('\n');
+            
+            console.log(`[WiTime Router] Sending ${global.pendingJobs.length} command(s) to MikroTik.`);
+            
+            // Clear queue only after building payload
+            global.pendingJobs = []; 
+            
+            return res.status(200).send(commands);
+        }
+
+        // Return 200 OK with empty string if no commands pending
+        return res.status(200).send('');
+
+    } catch (error) {
+        console.error('[WiTime Router] Error serving router jobs:', error);
+        return res.status(500).send('');
     }
-
-    return res.send('');
 });
 
 // ======================================
