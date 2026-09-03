@@ -382,3 +382,42 @@ tbody tr:last-child td {
     }
 
 }
+
+.actions {
+    display: flex;
+    gap: 6px;
+    min-width: 250px;
+}
+
+.action-btn {
+    border: none;
+    padding: 7px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.viewBtn {
+    background: #e8f0ff;
+    color: #2563eb;
+}
+
+.disconnectBtn {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.extendBtn {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.action-btn:hover {
+    opacity: 0.85;
+}
+
+.action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

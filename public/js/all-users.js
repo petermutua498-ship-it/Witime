@@ -15,6 +15,131 @@ let users = [];
 
 
 // ======================================
+// LIVE COUNTDOWN
+// ======================================
+
+setInterval(() => {
+
+    let changed = false;
+
+    users.forEach(user => {
+
+        if (
+            user.status === "Online" &&
+            Number.isFinite(Number(user.remainingSeconds))
+        ) {
+
+            if (user.remainingSeconds > 0) {
+
+                user.remainingSeconds--;
+
+                changed = true;
+
+            }
+
+        }
+
+    });
+
+    if (changed) {
+        updateCountdownDisplays();
+    }
+
+}, 1000);
+
+
+// ======================================
+// UPDATE COUNTDOWN
+// ======================================
+
+function updateCountdownDisplays() {
+
+    document
+        .querySelectorAll("[data-user-countdown]")
+        .forEach(element => {
+
+            const phone =
+                element.dataset.userCountdown;
+
+            const user =
+                users.find(
+                    item =>
+                        String(item.phone) ===
+                        String(phone)
+                );
+
+            if (!user) return;
+
+            if (
+                user.status !== "Online" ||
+                Number(user.remainingSeconds) <= 0
+            ) {
+
+                element.textContent =
+                    "Expired";
+
+                return;
+            }
+
+            element.textContent =
+                formatRemainingSeconds(
+                    user.remainingSeconds
+                );
+
+        });
+
+}
+
+
+// ======================================
+// FORMAT COUNTDOWN
+// ======================================
+
+function formatRemainingSeconds(seconds) {
+
+    seconds =
+        Math.max(
+            0,
+            Number(seconds) || 0
+        );
+
+    const days =
+        Math.floor(seconds / 86400);
+
+    seconds %= 86400;
+
+    const hours =
+        Math.floor(seconds / 3600);
+
+    seconds %= 3600;
+
+    const minutes =
+        Math.floor(seconds / 60);
+
+    const secs =
+        seconds % 60;
+
+    const parts = [];
+
+    if (days > 0) {
+        parts.push(`${days}d`);
+    }
+
+    if (hours > 0 || days > 0) {
+        parts.push(`${hours}h`);
+    }
+
+    if (minutes > 0 || hours > 0 || days > 0) {
+        parts.push(`${minutes}m`);
+    }
+
+    parts.push(`${secs}s`);
+
+    return parts.join(" ");
+}
+
+
+// ======================================
 // LOAD USERS
 // ======================================
 
@@ -30,11 +155,15 @@ async function loadUsers() {
             </tr>
         `;
 
-        const response = await fetch("/api/users", {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store"
-        });
+        const response =
+            await fetch(
+                "/api/users",
+                {
+                    method: "GET",
+                    credentials: "include",
+                    cache: "no-store"
+                }
+            );
 
         if (!response.ok) {
 
@@ -44,31 +173,25 @@ async function loadUsers() {
 
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
         console.log(
             "WiTime All Users response:",
             data
         );
 
-
-        // ======================================
-        // ACCEPT ARRAY RESPONSE
-        // ======================================
-
         if (Array.isArray(data)) {
 
             users = data;
 
-        }
-
-        else if (Array.isArray(data.users)) {
+        } else if (
+            Array.isArray(data.users)
+        ) {
 
             users = data.users;
 
-        }
-
-        else {
+        } else {
 
             throw new Error(
                 "Invalid users response from server"
@@ -76,6 +199,14 @@ async function loadUsers() {
 
         }
 
+        users.forEach(user => {
+
+            user.remainingSeconds =
+                Number(
+                    user.remainingSeconds || 0
+                );
+
+        });
 
         displayUsers(users);
 
@@ -111,47 +242,41 @@ async function loadUsers() {
 
 function sortUsers(data) {
 
-    return [...data].sort((a, b) => {
+    return [...data].sort(
+        (a, b) => {
 
-        // Online users first
-        if (
-            a.status === "Online" &&
-            b.status !== "Online"
-        ) {
+            if (
+                a.status === "Online" &&
+                b.status !== "Online"
+            ) {
+                return -1;
+            }
 
-            return -1;
+            if (
+                a.status !== "Online" &&
+                b.status === "Online"
+            ) {
+                return 1;
+            }
+
+            const dateA =
+                new Date(
+                    a.updatedAt ||
+                    a.createdAt ||
+                    0
+                );
+
+            const dateB =
+                new Date(
+                    b.updatedAt ||
+                    b.createdAt ||
+                    0
+                );
+
+            return dateB - dateA;
 
         }
-
-        if (
-            a.status !== "Online" &&
-            b.status === "Online"
-        ) {
-
-            return 1;
-
-        }
-
-
-        // Newest updated records first
-        const dateA =
-            new Date(
-                a.updatedAt ||
-                a.createdAt ||
-                0
-            );
-
-        const dateB =
-            new Date(
-                b.updatedAt ||
-                b.createdAt ||
-                0
-            );
-
-
-        return dateB - dateA;
-
-    });
+    );
 
 }
 
@@ -164,7 +289,6 @@ function displayUsers(data) {
 
     table.innerHTML = "";
 
-
     // ======================================
     // SUMMARY
     // ======================================
@@ -172,24 +296,20 @@ function displayUsers(data) {
     const total =
         data.length;
 
-
     const online =
         data.filter(
-            user => user.status === "Online"
+            user =>
+                user.status === "Online"
         ).length;
-
 
     const offline =
         total - online;
 
-
     totalUsersEl.textContent =
         total;
 
-
     onlineUsersEl.textContent =
         online;
-
 
     offlineUsersEl.textContent =
         offline;
@@ -232,18 +352,15 @@ function displayUsers(data) {
             const isOnline =
                 user.status === "Online";
 
-
             const statusClass =
                 isOnline
                     ? "online"
                     : "offline";
 
-
             const statusText =
                 isOnline
                     ? "Online"
                     : "Offline";
-
 
             const ip =
                 isOnline
@@ -253,7 +370,6 @@ function displayUsers(data) {
                     )
                     : "-";
 
-
             const mac =
                 isOnline
                     ? (
@@ -262,11 +378,20 @@ function displayUsers(data) {
                     )
                     : "-";
 
-
             const created =
                 formatDate(
                     user.createdAt
                 );
+
+            const remaining =
+                isOnline
+                    ? formatRemainingSeconds(
+                        user.remainingSeconds
+                    )
+                    : (
+                        user.remainingTime ||
+                        "-"
+                    );
 
 
             table.innerHTML += `
@@ -277,7 +402,6 @@ function displayUsers(data) {
                         ${index + 1}
                     </td>
 
-
                     <td>
                         <strong>
                             ${escapeHtml(
@@ -286,58 +410,70 @@ function displayUsers(data) {
                         </strong>
                     </td>
 
-
                     <td>
                         ${escapeHtml(
                             user.packageName || "-"
                         )}
                     </td>
 
-
-                    <td>
+                    <td
+                        data-user-countdown="${escapeHtml(
+                            user.phone || ""
+                        )}">
                         ${escapeHtml(
-                            user.remainingTime || "-"
+                            remaining
                         )}
                     </td>
 
-
                     <td>
-
                         <span
                             class="status ${statusClass}">
-
                             ${statusText}
-
                         </span>
-
                     </td>
-
 
                     <td>
                         ${escapeHtml(ip)}
                     </td>
 
-
                     <td>
                         ${escapeHtml(mac)}
                     </td>
-
 
                     <td>
                         ${escapeHtml(created)}
                     </td>
 
-
-                    <td>
+                    <td class="actions">
 
                         <button
-                            class="viewBtn"
+                            class="viewBtn action-btn"
                             data-id="${escapeHtml(
                                 user._id
                             )}">
-
                             👁 View
+                        </button>
 
+                        <button
+                            class="disconnectBtn action-btn"
+                            data-id="${escapeHtml(
+                                user._id
+                            )}"
+                            data-phone="${escapeHtml(
+                                user.phone || ""
+                            )}">
+                            🔴 Disconnect
+                        </button>
+
+                        <button
+                            class="extendBtn action-btn"
+                            data-id="${escapeHtml(
+                                user._id
+                            )}"
+                            data-phone="${escapeHtml(
+                                user.phone || ""
+                            )}">
+                            ⏱ Extend
                         </button>
 
                     </td>
@@ -348,6 +484,9 @@ function displayUsers(data) {
 
         }
     );
+
+
+    updateCountdownDisplays();
 
 }
 
@@ -365,7 +504,6 @@ searchBox.addEventListener(
                 .trim()
                 .toLowerCase();
 
-
         if (!keyword) {
 
             displayUsers(users);
@@ -374,56 +512,51 @@ searchBox.addEventListener(
 
         }
 
-
         const filtered =
-            users.filter(user => {
+            users.filter(
+                user => {
 
-                const phone =
-                    String(
-                        user.phone || ""
-                    ).toLowerCase();
+                    const phone =
+                        String(
+                            user.phone || ""
+                        ).toLowerCase();
 
+                    const packageName =
+                        String(
+                            user.packageName || ""
+                        ).toLowerCase();
 
-                const packageName =
-                    String(
-                        user.packageName || ""
-                    ).toLowerCase();
+                    const status =
+                        String(
+                            user.status || ""
+                        ).toLowerCase();
 
+                    const ip =
+                        String(
+                            user.ipAddress || ""
+                        ).toLowerCase();
 
-                const status =
-                    String(
-                        user.status || ""
-                    ).toLowerCase();
+                    const mac =
+                        String(
+                            user.macAddress || ""
+                        ).toLowerCase();
 
+                    return (
 
-                const ip =
-                    String(
-                        user.ipAddress || ""
-                    ).toLowerCase();
+                        phone.includes(keyword) ||
 
+                        packageName.includes(keyword) ||
 
-                const mac =
-                    String(
-                        user.macAddress || ""
-                    ).toLowerCase();
+                        status.includes(keyword) ||
 
+                        ip.includes(keyword) ||
 
-                return (
+                        mac.includes(keyword)
 
-                    phone.includes(keyword) ||
+                    );
 
-                    packageName.includes(keyword) ||
-
-                    status.includes(keyword) ||
-
-                    ip.includes(keyword) ||
-
-                    mac.includes(keyword)
-
-                );
-
-            });
-
+                }
+            );
 
         displayUsers(filtered);
 
@@ -444,9 +577,7 @@ refreshBtn.addEventListener(
         refreshBtn.textContent =
             "Refreshing...";
 
-
         await loadUsers();
-
 
         refreshBtn.disabled = false;
 
@@ -458,7 +589,7 @@ refreshBtn.addEventListener(
 
 
 // ======================================
-// BACK TO USERS
+// BACK
 // ======================================
 
 backBtn.addEventListener(
@@ -473,43 +604,313 @@ backBtn.addEventListener(
 
 
 // ======================================
-// VIEW USER
+// ACTION BUTTONS
 // ======================================
 
 document.addEventListener(
     "click",
-    event => {
+    async event => {
 
-        const button =
+        const viewButton =
             event.target.closest(
                 ".viewBtn"
             );
 
-
-        if (!button) {
-
-            return;
-
-        }
-
-
-        const id =
-            button.dataset.id;
-
-
-        if (!id) {
-
-            alert(
-                "User ID not found."
+        const disconnectButton =
+            event.target.closest(
+                ".disconnectBtn"
             );
 
+        const extendButton =
+            event.target.closest(
+                ".extendBtn"
+            );
+
+
+        // ==================================
+        // VIEW
+        // ==================================
+
+        if (viewButton) {
+
+            const id =
+                viewButton.dataset.id;
+
+            if (!id) {
+
+                alert(
+                    "User ID not found."
+                );
+
+                return;
+
+            }
+
+            window.location.href =
+                `/admin/user-details.html?id=${encodeURIComponent(id)}`;
+
             return;
 
         }
 
 
-        window.location.href =
-            `/admin/user-details.html?id=${encodeURIComponent(id)}`;
+        // ==================================
+        // DISCONNECT
+        // ==================================
+
+        if (disconnectButton) {
+
+            const id =
+                disconnectButton.dataset.id;
+
+            const phone =
+                disconnectButton.dataset.phone;
+
+
+            if (!id) {
+
+                alert(
+                    "User ID not found."
+                );
+
+                return;
+
+            }
+
+
+            const confirmed =
+                confirm(
+                    `Disconnect ${phone || "this user"} from WiFi?`
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            disconnectButton.disabled =
+                true;
+
+            disconnectButton.textContent =
+                "Disconnecting...";
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/users/${encodeURIComponent(id)}/disconnect`,
+                        {
+                            method: "POST",
+                            credentials: "include",
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            }
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Disconnect failed."
+                    );
+
+                }
+
+
+                alert(
+                    result.message ||
+                    "User disconnected successfully."
+                );
+
+
+                await loadUsers();
+
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Disconnect error:",
+                    error
+                );
+
+                alert(
+                    error.message ||
+                    "Unable to disconnect user."
+                );
+
+            }
+
+            finally {
+
+                disconnectButton.disabled =
+                    false;
+
+                disconnectButton.textContent =
+                    "🔴 Disconnect";
+
+            }
+
+            return;
+
+        }
+
+
+        // ==================================
+        // EXTEND
+        // ==================================
+
+        if (extendButton) {
+
+            const id =
+                extendButton.dataset.id;
+
+            const phone =
+                extendButton.dataset.phone;
+
+
+            if (!id) {
+
+                alert(
+                    "User ID not found."
+                );
+
+                return;
+
+            }
+
+
+            // Ask how many minutes to add
+            const minutes =
+                prompt(
+                    `How many minutes should be added to ${phone || "this user"}?`,
+                    "60"
+                );
+
+
+            if (
+                minutes === null ||
+                minutes.trim() === ""
+            ) {
+
+                return;
+
+            }
+
+
+            const duration =
+                Number(minutes);
+
+
+            if (
+                !Number.isFinite(duration) ||
+                duration <= 0
+            ) {
+
+                alert(
+                    "Please enter a valid number of minutes."
+                );
+
+                return;
+
+            }
+
+
+            extendButton.disabled =
+                true;
+
+            extendButton.textContent =
+                "Extending...";
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/users/${encodeURIComponent(id)}/extend`,
+                        {
+                            method: "POST",
+
+                            credentials: "include",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+
+                                duration,
+
+                                durationUnit:
+                                    "minutes"
+
+                            })
+
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Extension failed."
+                    );
+
+                }
+
+
+                alert(
+                    result.message ||
+                    `Added ${duration} minutes successfully.`
+                );
+
+
+                await loadUsers();
+
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Extend error:",
+                    error
+                );
+
+                alert(
+                    error.message ||
+                    "Unable to extend user."
+                );
+
+            }
+
+            finally {
+
+                extendButton.disabled =
+                    false;
+
+                extendButton.textContent =
+                    "⏱ Extend";
+
+            }
+
+        }
 
     }
 );
@@ -521,16 +922,10 @@ document.addEventListener(
 
 function formatDate(value) {
 
-    if (!value) {
-
-        return "-";
-
-    }
-
+    if (!value) return "-";
 
     const date =
         new Date(value);
-
 
     if (
         Number.isNaN(
@@ -541,7 +936,6 @@ function formatDate(value) {
         return "-";
 
     }
-
 
     return date.toLocaleString(
         "en-KE",
@@ -562,30 +956,15 @@ function escapeHtml(value) {
 
     return String(value)
 
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
+        .replaceAll("&", "&amp;")
 
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
+        .replaceAll("<", "&lt;")
 
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
+        .replaceAll(">", "&gt;")
 
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
+        .replaceAll('"', "&quot;")
 
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
+        .replaceAll("'", "&#039;");
 
 }
 

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>WiTime - User Details</title>
+
+    <link rel="stylesheet" href="/css/user-details.css">
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            <img src="/images/logo.png" alt="WiTime">
+            <h2>WiTime</h2>
+            <p>Admin Panel</p>
+        </div>
+
+        <nav class="menu">
+
+            <a href="/admin/dashboard.html">
+                🏠 Dashboard
+            </a>
+
+            <a href="/admin/packages.html">
+                📦 Packages
+            </a>
+
+            <a href="/admin/users.html">
+                👥 Users
+            </a>
+
+            <a href="/admin/all-users.html">
+                👥 All Users
+            </a>
+
+            <a href="/admin/payments.html">
+                💳 Payments
+            </a>
+
+            <a href="/admin/reports.html">
+                📈 Reports
+            </a>
+
+            <a href="/admin/settings.html">
+                ⚙ Settings
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <div class="header">
+
+            <div>
+                <h1>User Details</h1>
+                <p>WiTime customer connection information.</p>
+            </div>
+
+            <button id="backButton" class="back-btn">
+                ← Back
+            </button>
+
+        </div>
+
+
+        <!-- USER CARD -->
+        <div class="user-card">
+
+            <div class="user-header">
+
+                <div class="avatar">
+                    👤
+                </div>
+
+                <div>
+                    <h2 id="userPhone">Loading...</h2>
+                    <span id="userStatus" class="status offline">
+                        Offline
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="actions">
+
+    <button id="disconnectButton" class="disconnect-btn">
+        🔌 Disconnect User
+    </button>
+
+    <button id="extendButton" class="extend-btn">
+    ⏱ Extend User
+</button>
+
+</div>
+
+<div id="extendPanel" class="extend-panel">
+
+    <h3>Extend User</h3>
+
+    <div class="time-controls">
+
+        <input
+            type="number"
+            id="extendAmount"
+            min="1"
+            value="1"
+            placeholder="Amount"
+        >
+
+        <select id="extendUnit">
+            <option value="Minutes">Minutes</option>
+            <option value="Hours">Hours</option>
+            <option value="Days">Days</option>
+        </select>
+
+        <button id="confirmExtend">
+            Extend
+        </button>
+
+    </div>
+
+</div>
+
+
+            <div class="details-grid">
+
+                <div class="detail">
+                    <span>Phone Number</span>
+                    <strong id="phone">-</strong>
+                </div>
+
+                <div class="detail">
+                    <span>Package</span>
+                    <strong id="packageName">-</strong>
+                </div>
+
+                <div class="detail">
+                    <span>Remaining Time</span>
+                    <strong id="remainingTime">-</strong>
+                </div>
+
+                <div class="detail">
+                    <span>IP Address</span>
+                    <strong id="ipAddress">-</strong>
+                </div>
+
+                <div class="detail">
+                    <span>MAC Address</span>
+                    <strong id="macAddress">-</strong>
+                </div>
+
+                <div class="detail">
+                    <span>MikroTik Session</span>
+                    <strong id="sessionId">-</strong>
+                </div>
+
+                <div class="detail">
+                    <span>Login Time</span>
+                    <strong id="loginTime">-</strong>
+                </div>
+
+                <div class="detail">
+                    <span>Expiry Time</span>
+                    <strong id="expiryTime">-</strong>
+                </div>
+
+                <div class="detail">
+                    <span>Created</span>
+                    <strong id="createdAt">-</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CONNECTION -->
+        <div class="section-card">
+
+            <h2>Connection Status</h2>
+
+            <div id="connectionBox" class="connection offline">
+
+                <div class="connection-icon">
+                    ●
+                </div>
+
+                <div>
+                    <strong id="connectionStatus">
+                        Offline
+                    </strong>
+
+                    <p id="connectionMessage">
+                        User is not currently connected.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ERROR -->
+        <div id="errorBox" class="error-box">
+            Unable to load user information.
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="/js/user-details.js"></script>
+
+</body>
+</html>

@@ -1,12 +1,5 @@
 require("dotenv").config();
 
-console.log("MikroTik config:", {
-    host: process.env.MIKROTIK_HOST,
-    username: process.env.MIKROTIK_USERNAME,
-    passwordConfigured: !!process.env.MIKROTIK_PASSWORD,
-    port: process.env.MIKROTIK_PORT
-});
-
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
@@ -28,10 +21,13 @@ const reportsRoutes = require("./routes/reportsRoutes");
 const connectedRoutes = require("./routes/connectedRoutes");
 const mikrotikRoutes = require("./routes/mikrotikRoutes");
 const mikrotikSyncRoutes = require("./routes/mikrotikSyncRoutes");
+const mikrotikCloudRoutes =
+    require("./routes/mikrotikCloudRoutes");
 
 const {
     getActiveHotspotUsers,
-    disconnectUserByPhone
+    disconnectUserByPhone,
+    routerOsTimeToSeconds
 } = require("./services/mikrotikService");
 
 const app = express();
@@ -230,6 +226,11 @@ app.use(
     mikrotikSyncRoutes
 );
 
+app.use(
+    "/api/mikrotik/cloud",
+    mikrotikCloudRoutes
+);
+
 
 // ======================================
 // ADMIN PAGE PROTECTION
@@ -372,40 +373,7 @@ app.get(
     }
 );
 
-// ======================================
-// WIREGUARD TUNNEL INITIALIZATION
-// ======================================
-const { WireGuard } = require("wireguard-wrapper");
 
-async function initWireGuard() {
-  if (!process.env.WG_PRIVATE_KEY || !process.env.WG_ENDPOINT) {
-    console.log("⚠️ WireGuard env variables missing, skipping tunnel startup.");
-    return;
-  }
-
-  try {
-    const wg = new WireGuard({
-      privateKey: process.env.WG_PRIVATE_KEY,
-      address: "10.0.0.2/24",
-      peers: [
-        {
-          publicKey: process.env.WG_PUBLIC_KEY,
-          endpoint: process.env.WG_ENDPOINT, // hjq0agg42aj.sn.mynetname.net:13231
-          allowedIps: ["10.0.0.0/24"],
-          persistentKeepalive: 25,
-        },
-      ],
-    });
-
-    await wg.up();
-    console.log("✅ WireGuard tunnel connected to MikroTik (10.0.0.1)");
-  } catch (err) {
-    console.error("❌ WireGuard startup error:", err.message);
-  }
-}
-
-// Call before server starts
-initWireGuard();
 
 // ======================================
 // SERVER
@@ -537,8 +505,18 @@ setInterval(async () => {
             user.mikrotikTimeLeft =
             activeUser.sessionTimeLeft || "";
 
-            user.lastSeen =
-                new Date();
+            const remainingSeconds =
+                routerOsTimeToSeconds(
+                    activeUser.sessionTimeLeft
+                );
+
+                user.remainingSeconds = remainingSeconds;
+
+                user.remainingTime =
+                    activeUser.sessionTimeLeft || "0s";
+
+                user.lastSeen =
+                    new Date();
 
 
             // ----------------------------------
@@ -892,6 +870,28 @@ setInterval(async () => {
     }
 
 }, 30 * 1000);
+
+// Express Route matching the MikroTik fetch URL
+app.get('/api/router/jobs', (req, res) => {
+    const token = req.headers['x-router-token'];
+    
+    // Validate secret token
+    if (token !== process.env.ROUTER_SECRET_TOKEN && token !== "super_secret_witime_key_123") {
+        return res.status(401).send('');
+    }
+
+    // Ensure response is plain text, not JSON or HTML
+    res.setHeader('Content-Type', 'text/plain');
+
+    // Send queued RouterOS commands or empty string
+    if (global.pendingJobs && global.pendingJobs.length > 0) {
+        const commands = global.pendingJobs.join('\n');
+        global.pendingJobs = []; // Clear queue after fetching
+        return res.send(commands);
+    }
+
+    res.send(''); // Return empty response if no pending commands
+});
 
 
 // ======================================================

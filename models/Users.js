@@ -17,6 +17,11 @@ const userSchema = new mongoose.Schema({
         default: "0 Minutes"
     },
 
+    remainingSeconds: {
+        type: Number,
+        default: 0
+    },
+
     status: {
         type: String,
         enum: ["Online", "Offline"],
