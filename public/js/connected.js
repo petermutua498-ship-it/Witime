@@ -22,13 +22,39 @@ function autoLoginToMikrotik(userPhone, ipAddress = "192.168.88.1") {
     if (hasAttemptedLogin) return;
     hasAttemptedLogin = true;
 
-    console.log(`[WiTime] Redirecting user ${userPhone} to router gateway (${ipAddress})...`);
+    console.log(`[WiTime] Initiating local POST login for ${userPhone}...`);
 
-    // Standard MikroTik HTTP GET login URL with destination target
-    const targetUrl = `http://${ipAddress}/login?username=${encodeURIComponent(userPhone)}&password=${encodeURIComponent(userPhone)}&dst=https://www.google.com`;
+    // Create a hidden form targeting MikroTik's native login processor
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = `http://${ipAddress}/login`;
 
-    // Direct browser redirect bypasses HTTPS mixed-content/CORS blocking
-    window.location.href = targetUrl;
+    // Username input
+    const usernameInput = document.createElement("input");
+    usernameInput.type = "hidden";
+    usernameInput.name = "username";
+    usernameInput.value = userPhone;
+
+    // Password input
+    const passwordInput = document.createElement("input");
+    passwordInput.type = "hidden";
+    passwordInput.name = "password";
+    passwordInput.value = userPhone;
+
+    // Target destination after successful login
+    const dstInput = document.createElement("input");
+    dstInput.type = "hidden";
+    dstInput.name = "dst";
+    dstInput.value = "https://www.google.com";
+
+    // Append fields to form
+    form.appendChild(usernameInput);
+    form.appendChild(passwordInput);
+    form.appendChild(dstInput);
+
+    // Append form to body and submit
+    document.body.appendChild(form);
+    form.submit();
 }
 
 // ======================================
