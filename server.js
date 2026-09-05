@@ -4,6 +4,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const cors = require("cors");
+const path = require("path");
+const fs = require("fs");
 
 const requireAdmin = require("./middleware/adminAuth");
 const User = require("./models/Users");
@@ -105,7 +107,7 @@ function requireAdminPage(req, res, next) {
 }
 
 app.get("/admin/login.html", (req, res) => {
-    res.sendFile(__dirname + "/public/admin/login.html");
+    res.sendFile(path.join(__dirname, "public", "admin", "login.html"));
 });
 
 const adminPages = [
@@ -120,14 +122,65 @@ const adminPages = [
 
 adminPages.forEach((page) => {
     app.get(`/admin/${page}`, requireAdminPage, (req, res) => {
-        res.sendFile(__dirname + `/public/admin/${page}`);
+        res.sendFile(path.join(__dirname, "public", "admin", page));
     });
 });
 
-app.use(express.static(__dirname + "/public", { index: false }));
+// ======================================
+// STATIC FILES & ROOT ROUTE (FIXED)
+// ======================================
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/public/index.html");
+    const indexPath = path.join(__dirname, "public", "index.html");
+
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(200).send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>WiTime Hotspot</title>
+                <style>
+                    body { font-family: sans-serif; text-align: center; padding: 40px; background: #f4f6f9; }
+                    .card { background: white; padding: 30px; border-radius: 8px; max-width: 400px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .btn { display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 15px; border: none; cursor: pointer; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h2>WiTime Hotspot Portal</h2>
+                    <p>Welcome to WiTime Services.</p>
+                    <button class="btn" onclick="autoLogin()">Connect Free Wi-Fi</button>
+                </div>
+                <script>
+                    function autoLogin() {
+                        const params = new URLSearchParams(window.location.search);
+                        const linkLogin = params.get('link-login-only') || 'http://192.168.88.1/login';
+                        
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = linkLogin;
+
+                        const user = document.createElement('input');
+                        user.type = 'hidden'; user.name = 'username'; user.value = 'witime';
+                        form.appendChild(user);
+
+                        const pass = document.createElement('input');
+                        pass.type = 'hidden'; pass.name = 'password'; pass.value = '';
+                        form.appendChild(pass);
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                </script>
+            </body>
+            </html>
+        `);
+    }
 });
 
 app.get("/api/health", (req, res) => {
@@ -148,31 +201,23 @@ app.get('/api/router/jobs', async (req, res) => {
 
     res.setHeader('Content-Type', 'text/plain');
 
-    // 1. Strict Token Check
     if (!token || token !== expectedToken) {
         console.warn(`[WiTime Router] Unauthorized polling attempt with token: ${token}`);
         return res.status(403).send('Unauthorized');
     }
 
     try {
-        // 2. Safe Array Initialization Check
         if (!global.pendingJobs) {
             global.pendingJobs = [];
         }
 
-        // 3. Process Queued RouterOS Commands
         if (global.pendingJobs.length > 0) {
             const commands = global.pendingJobs.join('\n');
-            
             console.log(`[WiTime Router] Sending ${global.pendingJobs.length} command(s) to MikroTik.`);
-            
-            // Clear queue only after building payload
             global.pendingJobs = []; 
-            
             return res.status(200).send(commands);
         }
 
-        // Return 200 OK with empty string if no commands pending
         return res.status(200).send('');
 
     } catch (error) {
@@ -335,7 +380,8 @@ setInterval(async () => {
 // ======================================
 // KEEP ALIVE
 // ======================================
-const SERVER_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT || 3000}`;
+const PORT = process.env.PORT || 3000;
+const SERVER_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
 
 setInterval(async () => {
     try {
@@ -349,7 +395,6 @@ setInterval(async () => {
 // ======================================
 // SERVER START
 // ======================================
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 WiTime running on port ${PORT}`);
 });
