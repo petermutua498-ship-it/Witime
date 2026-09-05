@@ -127,7 +127,7 @@ adminPages.forEach((page) => {
 });
 
 // ======================================
-// STATIC FILES & ROOT ROUTE (FIXED)
+// STATIC FILES & ROOT ROUTE
 // ======================================
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -193,7 +193,7 @@ app.get("/api/health", (req, res) => {
 });
 
 // ======================================
-// MIKROTIK JOB QUEUE ENDPOINT (POLLING)
+// MIKROTIK JOB QUEUE ENDPOINT (HTTP POLLING)
 // ======================================
 app.get('/api/router/jobs', async (req, res) => {
     const token = req.headers['x-router-token'];
@@ -228,9 +228,10 @@ app.get('/api/router/jobs', async (req, res) => {
 
 // ======================================
 // MIKROTIK → WITIME ACTIVE USER SYNC
+// (Safely skips socket call if MIKROTIK_HOST is not set)
 // ======================================
 setInterval(async () => {
-    if (mongoose.connection.readyState !== 1) {
+    if (mongoose.connection.readyState !== 1 || !process.env.MIKROTIK_HOST) {
         return;
     }
 
