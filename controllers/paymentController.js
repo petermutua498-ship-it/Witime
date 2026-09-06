@@ -156,16 +156,20 @@ if (paymentSuccess) {
     await user.save();
 
     // 2. Push MikroTik creation commands to the HTTP polling queue
-    if (!global.pendingJobs) {
-        global.pendingJobs = [];
-    }
+    // NEW / FIXED BLOCK:
+console.log(`🔵 Queuing MikroTik user creation for local router polling: ${phone}`);
 
-    const command = `/ip hotspot user add name="${phone}" password="${phone}" profile="${packageName}" comment="Paid via M-Pesa"`;
-    
-    // Add command string directly as expected by /api/router/jobs
-    global.pendingJobs.push(command);
+if (!global.pendingJobs) {
+    global.pendingJobs = [];
+}
 
-    console.log(`📡 Queued RouterOS command for ${phone}:`, command);
+// Build the raw RouterOS command string
+const routerCommand = `/ip hotspot user add name="${phone}" password="${phone}" profile="${packageName}" comment="Paid via M-Pesa"`;
+
+// Push directly to pending jobs queue
+global.pendingJobs.push(routerCommand);
+
+console.log(`📡 Queued command for MikroTik: ${routerCommand}`);
 }
 
         return res.status(200).json({
