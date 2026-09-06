@@ -146,50 +146,45 @@ exports.callback = async (req, res) => {
         }
 
         // PAYMENT SUCCESS
-        if (ResultCode === 0) {
+        // Inside exports.callback when ResultCode === 0:
+if (ResultCode === 0) {
+    payment.status = "success";
+    await payment.save();
 
-            payment.status = "success";
+    const phone = payment.phone;
+    const profile = payment.packageName;
 
-            await payment.save();
-
-            const phone =
-                payment.phone;
-
-            const profile =
-                payment.packageName;
-
-            const command =
-                `/ip hotspot user add name="${phone}" password="${phone}" profile="${profile}" comment="Paid via M-Pesa"`;
-
-            if (!global.pendingJobs) {
-                global.pendingJobs = [];
-            }
-
-            global.pendingJobs.push({
-                phone,
-                command
-            });
-
-            console.log(
-                "✅ Payment successful"
-            );
-
-            console.log(
-                "📡 MikroTik job queued:",
-                command
-            );
-
+    // 1. Guard against direct API execution when on Render
+    try {
+        const host = process.env.MIKROTIK_HOST;
+        
+        // Only attempt direct socket connection if MIKROTIK_HOST is defined and NOT local IP
+        if (host && host !== "192.168.88.1" && host !== "localhost" && host !== "127.0.0.1") {
+            await createMikrotikUser(phone, phone, profile);
+            console.log("✅ MikroTik user created directly via API");
         } else {
-
-            payment.status = "failed";
-
-            await payment.save();
-
-            console.log(
-                "❌ Payment failed:",
-                ResultDesc
-            );
+            console.log("ℹ️ Server running in cloud mode (Render). Skipping direct API call.");
         }
+    } catch (mikrotikErr) {
+        console.warn("⚠️ MikroTik API unreachable from cloud server:", mikrotikErr.message);
+    }
+
+    // 2. Queue the command for local polling agent / client login
+    const command = `/ip hotspot user add name="${phone}" password="${phone}" profile="${profile}" comment="Paid via M-Pesa"`;
+
+    if (!global.pendingJobs) {
+        global.pendingJobs = [];
+    }
+
+    global.pendingJobs.push({
+        phone,
+        command,
+        createdAt: new Date()
+    });
+
+    console.log("✅ Payment successful for:", phone);
+    console.log("📡 MikroTik job queued:", command);
+}
 
         return res.status(200).json({
 
