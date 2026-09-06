@@ -127,19 +127,19 @@ adminPages.forEach((page) => {
 // ======================================
 // STATIC FILES & ROOT ROUTE
 // ======================================
+// Serve static assets from public
 app.use(express.static(path.join(__dirname, "public")));
 
+// Express Root Route - Explicitly handle both "/" and query parameters
 app.get("/", (req, res) => {
     try {
         const indexPath = path.join(__dirname, "public", "index.html");
-        console.log("🔍 Looking for index.html at:", indexPath);
 
         if (fs.existsSync(indexPath)) {
             return res.sendFile(indexPath);
         }
 
-        console.log("⚠️ public/index.html not found. Serving embedded fallback HTML.");
-        
+        // Inline fallback HTML if public/index.html does not exist in repo
         return res.status(200).send(`
             <!DOCTYPE html>
             <html lang="en">
@@ -184,8 +184,8 @@ app.get("/", (req, res) => {
             </html>
         `);
     } catch (err) {
-        console.error("❌ Root route error:", err);
-        return res.status(500).send("Internal Server Error: " + err.message);
+        console.error("❌ Error in / route:", err);
+        return res.status(500).send("Server Error: " + err.message);
     }
 });
 
