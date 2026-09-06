@@ -364,12 +364,16 @@ setInterval(async () => {
             return;
         }
 
-       if (global.pendingJobs.length > 0) {
-    const commands = global.pendingJobs.join("\n");
-    console.log(`[WiTime Router] Sending ${global.pendingJobs.length} command(s) to MikroTik.`);
+       // Replace direct RouterOS API calls with HTTP job queue pushes
+if (!global.pendingJobs) {
     global.pendingJobs = [];
-    return res.status(200).send(commands);
 }
+
+// Ensure command is a plain string matching what /api/router/jobs expects
+const addCmd = `/ip hotspot user add name="${phone}" password="${phone}" profile="${packageName}" comment="Paid via M-Pesa"`;
+global.pendingJobs.push(addCmd);
+
+console.log(`📡 Queued MikroTik user creation for ${phone}`);
 
         for (const user of expiredUsers) {
             // Push RouterOS disconnect commands to the HTTP polling queue
