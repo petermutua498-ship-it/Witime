@@ -147,43 +147,25 @@ exports.callback = async (req, res) => {
 
         // PAYMENT SUCCESS
         // Inside exports.callback when ResultCode === 0:
-if (ResultCode === 0) {
-    payment.status = "success";
-    await payment.save();
+// Replace direct MikroTik creation in your callback/verify route with queued jobs:
+if (paymentSuccess) {
+    // 1. Update database user status
+    user.status = "Paid";
+    user.loginTime = new Date();
+    user.expiryTime = new Date(Date.now() + durationInMs);
+    await user.save();
 
-    const phone = payment.phone;
-    const profile = payment.packageName;
-
-    // 1. Guard against direct API execution when on Render
-    try {
-        const host = process.env.MIKROTIK_HOST;
-        
-        // Only attempt direct socket connection if MIKROTIK_HOST is defined and NOT local IP
-        if (host && host !== "192.168.88.1" && host !== "localhost" && host !== "127.0.0.1") {
-            await createMikrotikUser(phone, phone, profile);
-            console.log("✅ MikroTik user created directly via API");
-        } else {
-            console.log("ℹ️ Server running in cloud mode (Render). Skipping direct API call.");
-        }
-    } catch (mikrotikErr) {
-        console.warn("⚠️ MikroTik API unreachable from cloud server:", mikrotikErr.message);
-    }
-
-    // 2. Queue the command for local polling agent / client login
-    const command = `/ip hotspot user add name="${phone}" password="${phone}" profile="${profile}" comment="Paid via M-Pesa"`;
-
+    // 2. Push MikroTik creation commands to the HTTP polling queue
     if (!global.pendingJobs) {
         global.pendingJobs = [];
     }
 
-    global.pendingJobs.push({
-        phone,
-        command,
-        createdAt: new Date()
-    });
+    const command = `/ip hotspot user add name="${phone}" password="${phone}" profile="${packageName}" comment="Paid via M-Pesa"`;
+    
+    // Add command string directly as expected by /api/router/jobs
+    global.pendingJobs.push(command);
 
-    console.log("✅ Payment successful for:", phone);
-    console.log("📡 MikroTik job queued:", command);
+    console.log(`📡 Queued RouterOS command for ${phone}:`, command);
 }
 
         return res.status(200).json({

@@ -364,9 +364,12 @@ setInterval(async () => {
             return;
         }
 
-        if (!global.pendingJobs) {
-            global.pendingJobs = [];
-        }
+       if (global.pendingJobs.length > 0) {
+    const commands = global.pendingJobs.join("\n");
+    console.log(`[WiTime Router] Sending ${global.pendingJobs.length} command(s) to MikroTik.`);
+    global.pendingJobs = [];
+    return res.status(200).send(commands);
+}
 
         for (const user of expiredUsers) {
             // Push RouterOS disconnect commands to the HTTP polling queue
