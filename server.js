@@ -130,57 +130,63 @@ adminPages.forEach((page) => {
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-    const indexPath = path.join(__dirname, "public", "index.html");
+    try {
+        const indexPath = path.join(__dirname, "public", "index.html");
+        console.log("🔍 Looking for index.html at:", indexPath);
 
-    if (fs.existsSync(indexPath)) {
-        return res.sendFile(indexPath);
+        if (fs.existsSync(indexPath)) {
+            return res.sendFile(indexPath);
+        }
+
+        console.log("⚠️ public/index.html not found. Serving embedded fallback HTML.");
+        
+        return res.status(200).send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>WiTime Hotspot Portal</title>
+                <style>
+                    body { font-family: system-ui, sans-serif; text-align: center; padding: 40px; background: #f4f6f9; color: #333; }
+                    .card { background: white; padding: 30px; border-radius: 12px; max-width: 400px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+                    .btn { display: inline-block; padding: 14px 28px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; border: none; cursor: pointer; font-size: 16px; width: 100%; box-sizing: border-box; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h2>WiTime Hotspot Portal</h2>
+                    <p>Welcome to WiTime High-Speed Wi-Fi.</p>
+                    <button class="btn" onclick="autoLogin()">Connect Free Wi-Fi</button>
+                </div>
+                <script>
+                    function autoLogin() {
+                        const params = new URLSearchParams(window.location.search);
+                        const linkLogin = params.get('link-login-only') || 'http://192.168.88.1/login';
+                        
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = linkLogin;
+
+                        const user = document.createElement('input');
+                        user.type = 'hidden'; user.name = 'username'; user.value = 'witime';
+                        form.appendChild(user);
+
+                        const pass = document.createElement('input');
+                        pass.type = 'hidden'; pass.name = 'password'; pass.value = '';
+                        form.appendChild(pass);
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                </script>
+            </body>
+            </html>
+        `);
+    } catch (err) {
+        console.error("❌ Root route error:", err);
+        return res.status(500).send("Internal Server Error: " + err.message);
     }
-
-    // Fallback page if public/index.html is missing
-    return res.status(200).send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>WiTime Hotspot Portal</title>
-            <style>
-                body { font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 40px; background: #f4f6f9; color: #333; }
-                .card { background: white; padding: 30px; border-radius: 12px; max-width: 400px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-                .btn { display: inline-block; padding: 14px 28px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; border: none; cursor: pointer; font-size: 16px; width: 100%; box-sizing: border-box; }
-                .btn:hover { background: #218838; }
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <h2>WiTime Hotspot Portal</h2>
-                <p>Welcome to WiTime High-Speed Wi-Fi.</p>
-                <button class="btn" onclick="autoLogin()">Connect Free Wi-Fi</button>
-            </div>
-            <script>
-                function autoLogin() {
-                    const params = new URLSearchParams(window.location.search);
-                    const linkLogin = params.get('link-login-only') || 'http://192.168.88.1/login';
-                    
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = linkLogin;
-
-                    const user = document.createElement('input');
-                    user.type = 'hidden'; user.name = 'username'; user.value = 'witime';
-                    form.appendChild(user);
-
-                    const pass = document.createElement('input');
-                    pass.type = 'hidden'; pass.name = 'password'; pass.value = '';
-                    form.appendChild(pass);
-
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            </script>
-        </body>
-        </html>
-    `);
 });
 
 app.get("/api/health", (req, res) => {
