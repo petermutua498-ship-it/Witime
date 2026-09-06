@@ -1,10 +1,10 @@
 // ======================================
-// WiTime Connected Page Script
+// WiTime Connected Script
 // ======================================
 
 const params = new URLSearchParams(window.location.search);
 const phone = params.get("phone");
-const routerIp = params.get("routerIp") || "192.168.88.1"; // Default MikroTik gateway
+const routerIp = params.get("routerIp") || "192.168.88.1";
 
 if (!phone) {
     alert("Invalid connection.");
@@ -12,37 +12,29 @@ if (!phone) {
 }
 
 let countdownTimer = null;
-let hasAttemptedLogin = false; // Prevents auto-login loop on every refresh
-let pendingExpiryDate = null;  // Holds expiry date until network is verified
+let hasAttemptedLogin = false;
+let verifiedExpiryDate = null;
 
 // ======================================
-// MIKROTIK AUTO-LOGIN & NETWORK VERIFICATION
+// 1. MIKROTIK AUTHENTICATION & VERIFICATION
 // ======================================
 
-function submitMikrotikLogin(expiryDate) {
-    pendingExpiryDate = expiryDate;
+function authenticateAndVerify(expiryDate) {
+    verifiedExpiryDate = expiryDate;
 
+    // Trigger MikroTik Login POST if not done already
     if (!hasAttemptedLogin) {
         hasAttemptedLogin = true;
 
         const statusElement = document.getElementById("status");
         if (statusElement) statusElement.innerText = "Authenticating with Wi-Fi...";
 
-        // Extract link-login-only parameter or construct default local login URL
         const linkLogin = params.get("link-login-only") || `http://${routerIp}/login`;
 
-        // 1. Create a hidden background iframe to post credentials without re-navigating
-        const iframeName = "mikrotik_login_iframe_" + Date.now();
-        let iframe = document.createElement("iframe");
-        iframe.name = iframeName;
-        iframe.style.display = "none";
-        document.body.appendChild(iframe);
-
-        // 2. Build dynamic hidden POST form
+        // Direct form POST to MikroTik local gateway
         const form = document.createElement("form");
         form.method = "POST";
         form.action = linkLogin;
-        form.target = iframeName;
 
         const user = document.createElement("input");
         user.type = "hidden";
@@ -56,32 +48,42 @@ function submitMikrotikLogin(expiryDate) {
         pass.value = phone;
         form.appendChild(pass);
 
+        // Target hidden iframe so page does not navigate away
+        const iframeName = "mikrotik_auth_iframe";
+        let iframe = document.getElementById(iframeName);
+        if (!iframe) {
+            iframe = document.createElement("iframe");
+            iframe.name = iframeName;
+            iframe.id = iframeName;
+            iframe.style.display = "none";
+            document.body.appendChild(iframe);
+        }
+
+        form.target = iframeName;
         document.body.appendChild(form);
         form.submit();
 
-        console.log(`[WiTime] Posted login to MikroTik for user: ${phone}`);
+        console.log(`[WiTime] Posted credentials (${phone}) to ${linkLogin}`);
     }
 
-    // Verify network connectivity before starting countdown
-    verifyNetworkAndStartTimer();
+    // Ping external endpoint to ensure router granted network access
+    verifyInternetAccess();
 }
 
-function verifyNetworkAndStartTimer() {
+function verifyInternetAccess() {
     let attempts = 0;
     const maxAttempts = 15;
     const statusElement = document.getElementById("status");
 
-    // Don't re-run polling if timer is already active
-    if (countdownTimer) return;
+    if (countdownTimer) return; // Stop redundant checks if timer is running
 
     const checkInterval = setInterval(async () => {
         attempts++;
         if (statusElement && !countdownTimer) {
-            statusElement.innerText = `Establishing Internet (${attempts}s)...`;
+            statusElement.innerText = `Establishing network connection (${attempts}s)...`;
         }
 
         try {
-            // Ping external endpoint to verify internet routing through MikroTik
             const response = await fetch("https://witime-o2tz.onrender.com/api/health?cachebust=" + Date.now(), {
                 mode: "cors",
                 cache: "no-store"
@@ -91,27 +93,27 @@ function verifyNetworkAndStartTimer() {
                 clearInterval(checkInterval);
                 updateStatus("Online");
 
-                // 🚀 NETWORK ACCESS CONFIRMED — START COUNTDOWN TIMER NOW
-                if (pendingExpiryDate) {
-                    startCountdown(pendingExpiryDate);
+                // 🚀 INTERNET ACCESS CONFIRMED — NOW START TIMER
+                if (verifiedExpiryDate) {
+                    startCountdown(verifiedExpiryDate);
                 }
             }
         } catch (err) {
-            console.log("Waiting for internet routing...", err);
+            console.log("Waiting for MikroTik routing...", err);
         }
 
         if (attempts >= maxAttempts) {
             clearInterval(checkInterval);
             if (statusElement && !countdownTimer) {
-                statusElement.innerText = "Connecting taking longer than expected. Retrying...";
-                hasAttemptedLogin = false; // Allow retry on next sync
+                statusElement.innerText = "Connection taking longer than expected. Please retry.";
+                hasAttemptedLogin = false;
             }
         }
     }, 1000);
 }
 
 // ======================================
-// LOAD CONNECTION DATA FROM BACKEND
+// 2. FETCH DATA FROM SERVER
 // ======================================
 
 async function loadConnection() {
@@ -128,18 +130,13 @@ async function loadConnection() {
             return;
         }
 
-        // 1. Basic Information
+        // Render standard elements
         const phoneElement = document.getElementById("phone");
-        if (phoneElement) {
-            phoneElement.innerText = data.phone || phone;
-        }
+        if (phoneElement) phoneElement.innerText = data.phone || phone;
 
         const packageElement = document.getElementById("package");
-        if (packageElement) {
-            packageElement.innerText = data.packageName || "Unknown";
-        }
+        if (packageElement) packageElement.innerText = data.packageName || "Unknown";
 
-        // 2. Login & Expiry Times
         const connectedAt = document.getElementById("connectedAt");
         if (connectedAt && data.loginTime) {
             connectedAt.innerText = new Date(data.loginTime).toLocaleString();
@@ -150,7 +147,7 @@ async function loadConnection() {
             expiresAt.innerText = new Date(data.expiryTime).toLocaleString();
         }
 
-        // 3. Status Check
+        // Handle Expired State
         if (data.status === "Expired" || data.remainingTime === "Expired") {
             updateStatus("Expired");
             const remainingElement = document.getElementById("remainingTime");
@@ -159,7 +156,7 @@ async function loadConnection() {
             return;
         }
 
-        // 4. Handle Expiry Date Parsing
+        // Parse expiry date without starting timer yet
         let expiryDate = null;
         if (data.expiryTime) {
             const parsed = new Date(data.expiryTime);
@@ -168,27 +165,25 @@ async function loadConnection() {
             }
         }
 
-        // 5. Trigger Login and Defer Countdown Until Verified
+        // Only authenticate if status is active/paid
         if (["Paid", "Online", "Active"].includes(data.status)) {
-            submitMikrotikLogin(expiryDate);
+            authenticateAndVerify(expiryDate);
         } else {
             updateStatus(data.status || "Pending");
         }
 
     } catch (error) {
-        console.error("Connection loading error:", error);
+        console.error("Connection error:", error);
     }
 }
 
 // ======================================
-// STATUS & TIMER HELPERS
+// 3. UI HELPERS
 // ======================================
 
 function updateStatus(status) {
     const statusElement = document.getElementById("status");
-    if (statusElement) {
-        statusElement.innerText = status;
-    }
+    if (statusElement) statusElement.innerText = status;
 }
 
 function startCountdown(expiry) {
@@ -203,7 +198,6 @@ function startCountdown(expiry) {
             if (remainingElement) remainingElement.innerText = "Expired";
             updateStatus("Expired");
             stopCountdown();
-
             setTimeout(loadConnection, 1000);
             return;
         }
@@ -233,10 +227,8 @@ function stopCountdown() {
     }
 }
 
-// Sync with server every 30 seconds
-setInterval(loadConnection, 30 * 1000);
+setInterval(loadConnection, 30000);
 
-// Buy Again Button
 const buyAgain = document.getElementById("buyAgain");
 if (buyAgain) {
     buyAgain.addEventListener("click", () => {
@@ -244,5 +236,5 @@ if (buyAgain) {
     });
 }
 
-// Initialize sequence
+// Initial Call
 loadConnection();
