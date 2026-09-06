@@ -93,47 +93,128 @@ exports.pay = async (req, res) => {
 };
 
 exports.callback = async (req, res) => {
+
     try {
-        const { Body } = req.body;
 
-        // 1. Check if the payment was successful (ResultCode === 0)
-        if (Body && Body.stkCallback && Body.stkCallback.ResultCode === 0) {
-            const checkoutRequestID = Body.stkCallback.CheckoutRequestID;
+        const callback =
+            req.body?.Body?.stkCallback;
 
-            // 2. Find the pending payment in MongoDB
-            const payment = await Payment.findOne({ checkoutRequestID });
+        if (!callback) {
 
-            if (payment) {
-                // Mark payment as completed
-                payment.status = "completed";
-                await payment.save();
+            console.log(
+                "[M-Pesa] Invalid callback."
+            );
 
-                // Extract details
-                const phone = payment.phone;
-                const profile = payment.packageName || "default";
-
-                // -------------------------------------------------------------
-                // 3. ADD THE COMMAND TO global.pendingJobs HERE
-                // -------------------------------------------------------------
-                const command = `/ip hotspot user add name="${phone}" password="${phone}" profile="${profile}" comment="Paid via M-Pesa"`;
-
-                if (!global.pendingJobs) {
-                    global.pendingJobs = [];
-                }
-
-                global.pendingJobs.push(command);
-                console.log(`[WiTime Router Job Queued] Command: ${command}`);
-            }
-        } else {
-            console.log("[M-Pesa Callback] Payment failed or cancelled by user.");
+            return res.status(200).json({
+                ResultCode: 0,
+                ResultDesc: "Accepted"
+            });
         }
 
-        // Always acknowledge Safaricom callback with 200 OK
-        return res.status(200).json({ ResultCode: 0, ResultDesc: "Accepted" });
+        const {
+            ResultCode,
+            ResultDesc,
+            CheckoutRequestID
+        } = callback;
+
+        console.log(
+            "[M-Pesa Callback]",
+            {
+                ResultCode,
+                ResultDesc,
+                CheckoutRequestID
+            }
+        );
+
+        const payment =
+            await Payment.findOne({
+                checkoutRequestID:
+                    CheckoutRequestID
+            });
+
+        if (!payment) {
+
+            console.log(
+                "[M-Pesa] Payment not found:",
+                CheckoutRequestID
+            );
+
+            return res.status(200).json({
+                ResultCode: 0,
+                ResultDesc: "Accepted"
+            });
+        }
+
+        // PAYMENT SUCCESS
+        if (ResultCode === 0) {
+
+            payment.status = "success";
+
+            await payment.save();
+
+            const phone =
+                payment.phone;
+
+            const profile =
+                payment.packageName;
+
+            const command =
+                `/ip hotspot user add name="${phone}" password="${phone}" profile="${profile}" comment="Paid via M-Pesa"`;
+
+            if (!global.pendingJobs) {
+                global.pendingJobs = [];
+            }
+
+            global.pendingJobs.push({
+                phone,
+                command
+            });
+
+            console.log(
+                "✅ Payment successful"
+            );
+
+            console.log(
+                "📡 MikroTik job queued:",
+                command
+            );
+
+        } else {
+
+            payment.status = "failed";
+
+            await payment.save();
+
+            console.log(
+                "❌ Payment failed:",
+                ResultDesc
+            );
+        }
+
+        return res.status(200).json({
+
+            ResultCode: 0,
+
+            ResultDesc: "Accepted"
+
+        });
 
     } catch (error) {
-        console.error("[M-Pesa Callback Error]:", error);
-        return res.status(200).json({ ResultCode: 0, ResultDesc: "Accepted" });
+
+        console.error(
+            "[M-Pesa Callback Error]:",
+            error
+        );
+
+        return res.status(200).json({
+
+            ResultCode: 0,
+
+            ResultDesc: "Accepted"
+
+        });
+
     }
+
 };
 
