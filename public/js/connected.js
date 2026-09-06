@@ -18,43 +18,77 @@ let hasAttemptedLogin = false; // Prevents auto-login loop on every refresh
 // MIKROTIK AUTO-LOGIN FUNCTION
 // ======================================
 
-function autoLoginToMikrotik(userPhone, ipAddress = "192.168.88.1") {
-    if (hasAttemptedLogin) return;
-    hasAttemptedLogin = true;
+async function autoLogin() {
+    const statusText = document.getElementById('status-message');
+    if (statusText) statusText.innerText = "Connecting to network...";
 
-    console.log(`[WiTime] Initiating local POST login for ${userPhone}...`);
+    const params = new URLSearchParams(window.location.search);
+    const linkLogin = params.get('link-login-only') || 'http://192.168.88.1/login';
+    
+    // 1. Create and submit dynamic login form to MikroTik
+    const iframeName = 'login-iframe-' + Date.now();
+    let iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
 
-    // Create a hidden form targeting MikroTik's native login processor
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = `http://${ipAddress}/login`;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = linkLogin;
+    form.target = iframeName; // Submit in background iframe so page doesn't reload instantly
 
-    // Username input
-    const usernameInput = document.createElement("input");
-    usernameInput.type = "hidden";
-    usernameInput.name = "username";
-    usernameInput.value = userPhone;
+    const user = document.createElement('input');
+    user.type = 'hidden'; user.name = 'username'; user.value = 'witime';
+    form.appendChild(user);
 
-    // Password input
-    const passwordInput = document.createElement("input");
-    passwordInput.type = "hidden";
-    passwordInput.name = "password";
-    passwordInput.value = userPhone;
+    const pass = document.createElement('input');
+    pass.type = 'hidden'; pass.name = 'password'; pass.value = '';
+    form.appendChild(pass);
 
-    // Target destination after successful login
-    const dstInput = document.createElement("input");
-    dstInput.type = "hidden";
-    dstInput.name = "dst";
-    dstInput.value = "https://www.google.com";
-
-    // Append fields to form
-    form.appendChild(usernameInput);
-    form.appendChild(passwordInput);
-    form.appendChild(dstInput);
-
-    // Append form to body and submit
     document.body.appendChild(form);
     form.submit();
+
+    // 2. Poll for network connectivity BEFORE starting countdown
+    verifyNetworkAndStartTimer();
+}
+
+function verifyNetworkAndStartTimer() {
+    let attempts = 0;
+    const maxAttempts = 10;
+    const statusText = document.getElementById('status-message');
+
+    const checkInterval = setInterval(async () => {
+        attempts++;
+        if (statusText) statusText.innerText = `Authenticating session (${attempts}s)...`;
+
+        try {
+            // Ping external health endpoint to verify active WAN access
+            const response = await fetch('https://witime-o2tz.onrender.com/api/health?cachebust=' + Date.now(), {
+                mode: 'cors',
+                cache: 'no-store'
+            });
+
+            if (response.ok) {
+                clearInterval(checkInterval);
+                if (statusText) statusText.innerText = "Connected! Starting your session...";
+                
+                // 🚀 NETWORK CONNECTED — START COUNTDOWN TIMER NOW
+                startCountdownTimer();
+            }
+        } catch (err) {
+            console.log("Waiting for MikroTik network access...", err);
+        }
+
+        if (attempts >= maxAttempts) {
+            clearInterval(checkInterval);
+            if (statusText) statusText.innerText = "Connection taking longer than expected. Please retry.";
+        }
+    }, 1000);
+}
+
+function startCountdownTimer() {
+    // Your actual countdown timer logic goes here
+    console.log("Internet confirmed active! Timer running...");
 }
 
 // ======================================
