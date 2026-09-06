@@ -235,14 +235,25 @@ app.get("/api/router/jobs", async (req, res) => {
 // MIKROTIK → WITIME ACTIVE USER SYNC
 // (Only triggers direct socket if MIKROTIK_HOST is explicitly set)
 // ======================================
+// AFTER (Updated Sync Block with Host Guard)
 setInterval(async () => {
-    if (mongoose.connection.readyState !== 1 || !process.env.MIKROTIK_HOST) {
+    const host = process.env.MIKROTIK_HOST;
+
+    // 🛑 GUARD: Block direct TCP connection if database is disconnected
+    // or if the server is running in the cloud with a local/unreachable IP.
+    if (
+        mongoose.connection.readyState !== 1 ||
+        !host ||
+        host === "192.168.88.1" ||
+        host === "localhost" ||
+        host === "127.0.0.1"
+    ) {
         return;
     }
 
     try {
         const result = await getActiveHotspotUsers({
-            host: process.env.MIKROTIK_HOST,
+            host: host,
             username: process.env.MIKROTIK_USERNAME,
             password: process.env.MIKROTIK_PASSWORD,
             port: Number(process.env.MIKROTIK_PORT || 8728)
