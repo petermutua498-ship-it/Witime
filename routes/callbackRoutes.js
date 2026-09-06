@@ -449,27 +449,23 @@ router.post("/callback", async (req, res) => {
         // CONNECT CUSTOMER TO MIKROTIK
         // ==================================================
 
-        try {// ✅ FIXED CODE
-// Extract phone from your callback request body/metadata:
-const customerPhone = phoneNumber || userPhone || phone || req.body?.Body?.stkCallback?.CallbackMetadata?.Item?.find(i => i.Name === 'PhoneNumber')?.Value;
+        try {// Safe phone number resolution
+const activePhone = typeof phone !== "undefined" ? phone : 
+                    typeof phoneNumber !== "undefined" ? phoneNumber : 
+                    typeof userPhone !== "undefined" ? userPhone : 
+                    user?.phone;
 
-if (!customerPhone) {
-    console.error("❌ Unable to extract phone number for MikroTik queueing.");
-    return;
+if (!activePhone) {
+    console.error("❌ MikroTik queue error: No valid phone variable found in scope.");
+} else {
+    if (!global.pendingJobs) global.pendingJobs = [];
+
+    const formattedPhone = String(activePhone).trim();
+    const addCmd = `/ip hotspot user add name="${formattedPhone}" password="${formattedPhone}" profile="${packageName}" comment="Paid M-Pesa"`;
+    
+    global.pendingJobs.push(addCmd);
+    console.log(`📡 Successfully queued MikroTik creation for ${formattedPhone}`);
 }
-
-if (!global.pendingJobs) global.pendingJobs = [];
-
-// Format phone string consistently
-const formattedPhone = String(customerPhone).trim();
-
-const addCmd = `/ip hotspot user add name="${formattedPhone}" password="${formattedPhone}" profile="${packageName}" comment="Paid M-Pesa"`;
-const activeCmd = `/ip hotspot active login user="${formattedPhone}" password="${formattedPhone}"`;
-
-global.pendingJobs.push(addCmd);
-global.pendingJobs.push(activeCmd);
-
-console.log(`📡 Successfully queued MikroTik creation & activation for ${formattedPhone}`);
             // ==================================================
             // MIKROTIK SUCCESS
             // ==================================================
