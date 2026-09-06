@@ -18,39 +18,7 @@ let hasAttemptedLogin = false; // Prevents auto-login loop on every refresh
 // MIKROTIK AUTO-LOGIN FUNCTION
 // ======================================
 
-async function autoLogin() {
-    const statusText = document.getElementById('status-message');
-    if (statusText) statusText.innerText = "Connecting to network...";
 
-    const params = new URLSearchParams(window.location.search);
-    const linkLogin = params.get('link-login-only') || 'http://192.168.88.1/login';
-    
-    // 1. Create and submit dynamic login form to MikroTik
-    const iframeName = 'login-iframe-' + Date.now();
-    let iframe = document.createElement('iframe');
-    iframe.name = iframeName;
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = linkLogin;
-    form.target = iframeName; // Submit in background iframe so page doesn't reload instantly
-
-    const user = document.createElement('input');
-    user.type = 'hidden'; user.name = 'username'; user.value = 'witime';
-    form.appendChild(user);
-
-    const pass = document.createElement('input');
-    pass.type = 'hidden'; pass.name = 'password'; pass.value = '';
-    form.appendChild(pass);
-
-    document.body.appendChild(form);
-    form.submit();
-
-    // 2. Poll for network connectivity BEFORE starting countdown
-    verifyNetworkAndStartTimer();
-}
 
 function verifyNetworkAndStartTimer() {
     let attempts = 0;
@@ -156,13 +124,6 @@ async function loadConnection() {
         // ==================================
         // TRIGGER AUTO-LOGIN TO MIKROTIK
         // ==================================
-
-        if (data.status === "Active" || data.status === "Connected" || data.status === "completed") {
-            // Short delay ensures MikroTik scheduler finished creating user account
-            setTimeout(() => {
-                autoLoginToMikrotik(data.phone || phone, routerIp);
-            }, 2000);
-        }
 
     } catch (error) {
         console.error("Connection loading error:", error);
