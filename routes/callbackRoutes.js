@@ -449,31 +449,21 @@ router.post("/callback", async (req, res) => {
         // CONNECT CUSTOMER TO MIKROTIK
         // ==================================================
 
-        try {
+        try {console.log(`🔵 Queuing MikroTik user creation: ${phone}`);
 
-            console.log(
-                "🔵 Connecting customer to MikroTik:",
-                payment.phone
-            );
+if (!global.pendingJobs) {
+    global.pendingJobs = [];
+}
 
+// 1. Queue command to add Hotspot user
+const addCmd = `/ip hotspot user add name="${phone}" password="${phone}" profile="${packageName}" comment="Paid M-Pesa"`;
+global.pendingJobs.push(addCmd);
 
-            const mikrotikResult =
-                await connectWiTimeUserToMikroTik({
+// 2. Queue command to actively log them in (bypasses captive portal splash screen)
+const activeCmd = `/ip hotspot active login user="${phone}" password="${phone}"`;
+global.pendingJobs.push(activeCmd);
 
-                    phone:
-                        payment.phone,
-
-                    packageName:
-                        packageData.name,
-
-                    duration:
-                        duration,
-
-                    durationUnit:
-                        durationUnit
-
-                });
-
+console.log(`📡 Successfully queued MikroTik creation & activation for ${phone}`);
 
             // ==================================================
             // MIKROTIK SUCCESS
