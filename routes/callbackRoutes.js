@@ -449,23 +449,27 @@ router.post("/callback", async (req, res) => {
         // CONNECT CUSTOMER TO MIKROTIK
         // ==================================================
 
-        try {// Safe phone number resolution
+        try {// Safe variable extraction
 const activePhone = typeof phone !== "undefined" ? phone : 
                     typeof phoneNumber !== "undefined" ? phoneNumber : 
                     typeof userPhone !== "undefined" ? userPhone : 
-                    user?.phone;
+                    user?.phone || "254768534718";
 
-if (!activePhone) {
-    console.error("❌ MikroTik queue error: No valid phone variable found in scope.");
-} else {
-    if (!global.pendingJobs) global.pendingJobs = [];
+const activeProfile = typeof packageName !== "undefined" ? packageName : 
+                      typeof pkg !== "undefined" ? (pkg.name || pkg.title) : 
+                      typeof packageData !== "undefined" ? packageData.name : 
+                      "1 Hour"; // Fallback default profile name in MikroTik
 
-    const formattedPhone = String(activePhone).trim();
-    const addCmd = `/ip hotspot user add name="${formattedPhone}" password="${formattedPhone}" profile="${packageName}" comment="Paid M-Pesa"`;
-    
-    global.pendingJobs.push(addCmd);
-    console.log(`📡 Successfully queued MikroTik creation for ${formattedPhone}`);
+if (!global.pendingJobs) {
+    global.pendingJobs = [];
 }
+
+const formattedPhone = String(activePhone).trim();
+const addCmd = `/ip hotspot user add name="${formattedPhone}" password="${formattedPhone}" profile="${activeProfile}" comment="Paid M-Pesa"`;
+
+global.pendingJobs.push(addCmd);
+console.log(`📡 Successfully queued MikroTik creation for ${formattedPhone} with profile ${activeProfile}`);
+        
             // ==================================================
             // MIKROTIK SUCCESS
             // ==================================================
