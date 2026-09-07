@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
+    // Update basic UI labels
     const phoneElement = document.getElementById("phone");
     if (phoneElement) phoneElement.innerText = phone;
 
@@ -18,22 +19,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let countdownInterval = null;
+    let statusPollInterval = null;
     let hasLoggedIntoMikrotik = false;
 
-    // 1. Fetch connection status from Express backend
+    // 1. Polling loop to check payment & status until active
+    function startStatusPolling() {
+        fetchConnectionStatus(); // Run immediately
+        statusPollInterval = setInterval(fetchConnectionStatus, 2000); // Poll every 2 seconds
+    }
+
     async function fetchConnectionStatus() {
         try {
             const response = await fetch(`/api/connected/${encodeURIComponent(phone)}`, {
                 cache: "no-store"
             });
 
-            if (!response.ok) {
-                console.error("Failed to fetch connection status");
-                return;
-            }
+            if (!response.ok) return;
 
             const data = await response.json();
 
+            // Set timestamps on UI
             const connectedAt = document.getElementById("connectedAt");
             if (connectedAt && data.loginTime) {
                 connectedAt.innerText = new Date(data.loginTime).toLocaleString();
@@ -44,26 +49,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 expiresAt.innerText = new Date(data.expiryTime).toLocaleString();
             }
 
-            // If active/offline user, trigger MikroTik login and pass expiryTime along
-            if (["Paid", "Online", "Active", "Offline"].includes(data.status)) {
+            // Check if backend confirmed payment / user creation
+            if (["Paid", "Online", "Active", "Offline", "success"].includes(data.status)) {
+                // Stop polling once active payment is confirmed
+                if (statusPollInterval) clearInterval(statusPollInterval);
+
+                const statusElement = document.getElementById("status");
+                if (statusElement) statusElement.innerText = "Connected";
+
+                // Start timer immediately using DB expiry date
+                if (data.expiryTime && !countdownInterval) {
+                    startTimerFromExpiry(new Date(data.expiryTime));
+                }
+
+                // Authenticate with MikroTik once
                 if (!hasLoggedIntoMikrotik) {
                     hasLoggedIntoMikrotik = true;
-                    submitMikrotikCredentials(data.expiryTime);
+                    submitMikrotikCredentials();
                 }
+
             } else if (data.status === "Expired") {
+                if (statusPollInterval) clearInterval(statusPollInterval);
                 renderExpiredState();
             }
 
         } catch (error) {
-            console.error("Error loading connection data:", error);
+            console.error("Status check error:", error);
         }
     }
 
-    // 2. Submit credentials to local MikroTik Hotspot via iframe
-    function submitMikrotikCredentials(expiryTime) {
-        const statusElement = document.getElementById("status");
-        if (statusElement) statusElement.innerText = "Authenticating with Wi-Fi...";
-
+    // 2. Submit credentials to local MikroTik Hotspot via hidden iframe
+    function submitMikrotikCredentials() {
         const linkLogin = params.get("link-login-only") || `http://${routerIp}/login`;
 
         let iframe = document.getElementById("mikrotik_iframe");
@@ -94,59 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.body.appendChild(form);
         form.submit();
-
-        // 3. Verify internet access FIRST, then launch the timer
-        verifyNetworkAccess(expiryTime);
     }
 
-    // 3. Ping health route to confirm internet pass-through before starting timer
-    function verifyNetworkAccess(expiryTime) {
-        let attempts = 0;
-        const maxAttempts = 15;
-        const statusElement = document.getElementById("status");
-
-        const checkInterval = setInterval(async () => {
-            attempts++;
-            if (statusElement && !countdownInterval) {
-                statusElement.innerText = `Connecting (${attempts}s)...`;
-            }
-
-            try {
-                const res = await fetch("https://witime-o2tz.onrender.com/api/health?cachebust=" + Date.now(), {
-                    mode: "cors",
-                    cache: "no-store"
-                });
-
-                if (res.ok) {
-                    clearInterval(checkInterval);
-                    if (statusElement) statusElement.innerText = "Connected & Online";
-
-                    // START COUNTDOWN NOW THAT NETWORK IS CONFIRMED
-                    if (expiryTime) {
-                        startTimerFromExpiry(new Date(expiryTime));
-                    } else {
-                        startTimerFromSeconds(3600);
-                    }
-                }
-            } catch (err) {
-                console.log("Waiting for network gateway bypass...", err);
-            }
-
-            if (attempts >= maxAttempts) {
-                clearInterval(checkInterval);
-                if (statusElement && !countdownInterval) {
-                    statusElement.innerText = "Connected";
-                    if (expiryTime) {
-                        startTimerFromExpiry(new Date(expiryTime));
-                    } else {
-                        startTimerFromSeconds(3600);
-                    }
-                }
-            }
-        }, 1000);
-    }
-
-    // 4. Timer Logic
+    // 3. Robust Countdown Engine
     function startTimerFromExpiry(expiryDate) {
         if (countdownInterval) clearInterval(countdownInterval);
 
@@ -163,24 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
             displayTime(totalSeconds);
         }
 
-        tick();
-        countdownInterval = setInterval(tick, 1000);
-    }
-
-    function startTimerFromSeconds(initialSeconds) {
-        if (countdownInterval) clearInterval(countdownInterval);
-        let secondsLeft = initialSeconds;
-
-        function tick() {
-            if (secondsLeft <= 0) {
-                renderExpiredState();
-                return;
-            }
-            displayTime(secondsLeft);
-            secondsLeft--;
-        }
-
-        tick();
+        tick(); // Run first tick immediately
         countdownInterval = setInterval(tick, 1000);
     }
 
@@ -199,6 +148,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderExpiredState() {
         if (countdownInterval) clearInterval(countdownInterval);
+        if (statusPollInterval) clearInterval(statusPollInterval);
+
         const timerElement = document.getElementById("timer") || document.getElementById("remainingTime");
         if (timerElement) timerElement.innerText = "Expired";
 
@@ -206,7 +157,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (statusElement) statusElement.innerText = "Expired";
     }
 
-    fetchConnectionStatus();
+    // Kick off status check loop
+    startStatusPolling();
 });
 
 function buyMore() {
