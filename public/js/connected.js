@@ -46,11 +46,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 expiresAt.innerText = new Date(data.expiryTime).toLocaleString();
             }
 
-            // Check if user is active/paid
-            if (["Paid", "Online", "Active"].includes(data.status)) {
+            // Immediately start timer from DB expiryTime if available
+            if (data.expiryTime) {
+                startTimerFromExpiry(new Date(data.expiryTime));
+            } else {
+                startTimerFromSeconds(3600); // Default fallback
+            }
+
+            // Accept "Offline" as valid paid user state after M-Pesa callback
+            if (["Paid", "Online", "Active", "Offline"].includes(data.status)) {
                 if (!hasLoggedIntoMikrotik) {
                     hasLoggedIntoMikrotik = true;
-                    submitMikrotikCredentials(data.expiryTime);
+                    submitMikrotikCredentials();
                 }
             } else if (data.status === "Expired") {
                 renderExpiredState();
@@ -58,11 +65,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (error) {
             console.error("Error loading connection data:", error);
+            // Fallback timer if network request fails
+            startTimerFromSeconds(3600);
         }
     }
 
     // 2. Submit credentials to local MikroTik Gateway
-    function submitMikrotikCredentials(expiryTime) {
+    function submitMikrotikCredentials() {
         const statusElement = document.getElementById("status");
         if (statusElement) statusElement.innerText = "Authenticating with Wi-Fi...";
 
@@ -99,22 +108,19 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(form);
         form.submit();
 
-        // Verify gateway internet routing before running timer
-        verifyNetworkAccess(expiryTime);
+        // Verify gateway internet routing
+        verifyNetworkAccess();
     }
 
-    // 3. Ping external health route to verify internet flow
-    function verifyNetworkAccess(expiryTime) {
+    // 3. Ping external health route to update connection status text
+    function verifyNetworkAccess() {
         let attempts = 0;
-        const maxAttempts = 15;
+        const maxAttempts = 10;
         const statusElement = document.getElementById("status");
 
         const checkInterval = setInterval(async () => {
             attempts++;
-            if (statusElement && !countdownInterval) {
-                statusElement.innerText = `Connecting (${attempts}s)...`;
-            }
-
+            
             try {
                 const res = await fetch("https://witime-o2tz.onrender.com/api/health?cachebust=" + Date.now(), {
                     mode: "cors",
@@ -124,13 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (res.ok) {
                     clearInterval(checkInterval);
                     if (statusElement) statusElement.innerText = "Online";
-
-                    // Start timer now that internet is confirmed
-                    if (expiryTime) {
-                        startTimerFromExpiry(new Date(expiryTime));
-                    } else {
-                        startTimerFromSeconds(3600); // Fallback to 1 hour
-                    }
                 }
             } catch (err) {
                 console.log("Waiting for network route...", err);
@@ -138,9 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
-                if (statusElement && !countdownInterval) {
-                    statusElement.innerText = "Connection active";
-                    startTimerFromSeconds(3600);
+                if (statusElement) {
+                    statusElement.innerText = "Connected";
                 }
             }
         }, 1000);
@@ -191,7 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const timeString = `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
-        // Support both "timer" and "remainingTime" ID conventions
         const timerElement = document.getElementById("timer") || document.getElementById("remainingTime");
         if (timerElement) {
             timerElement.innerText = timeString;
@@ -207,7 +204,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (statusElement) statusElement.innerText = "Expired";
     }
 
-    // Verify step success
     function verifySetup() {
         const timerTarget = document.getElementById("timer") || document.getElementById("remainingTime");
         if (!timerTarget) {
