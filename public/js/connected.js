@@ -70,44 +70,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 2. Submit credentials to MikroTik Hotspot
-    function submitMikrotikAndVerify(expiryTime) {
-        const statusElement = document.getElementById("status");
-        if (statusElement) statusElement.innerText = "Authenticating with Wi-Fi...";
+    function submitMikrotikCredentials() {
+    const statusElement = document.getElementById("status");
+    if (statusElement) statusElement.innerText = "Authenticating with Wi-Fi...";
 
-        const linkLogin = params.get("link-login-only") || `http://${routerIp}/login`;
+    const linkLogin = params.get("link-login-only") || `http://${routerIp}/login`;
 
-        let iframe = document.getElementById("mikrotik_iframe");
-        if (!iframe) {
-            iframe = document.createElement("iframe");
-            iframe.id = "mikrotik_iframe";
-            iframe.name = "mikrotik_iframe";
-            iframe.style.display = "none";
-            document.body.appendChild(iframe);
-        }
+    // Direct form submission to local hotspot gateway
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = linkLogin;
 
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = linkLogin;
-        form.target = "mikrotik_iframe";
+    // Send username & password
+    const user = document.createElement("input");
+    user.type = "hidden";
+    user.name = "username";
+    user.value = phone;
+    form.appendChild(user);
 
-        const user = document.createElement("input");
-        user.type = "hidden";
-        user.name = "username";
-        user.value = phone;
-        form.appendChild(user);
+    const pass = document.createElement("input");
+    pass.type = "hidden";
+    pass.name = "password";
+    pass.value = phone;
+    form.appendChild(pass);
 
-        const pass = document.createElement("input");
-        pass.type = "hidden";
-        pass.name = "password";
-        pass.value = phone;
-        form.appendChild(pass);
+    // Redirect back to connected page upon successful MikroTik auth
+    const dst = document.createElement("input");
+    dst.type = "hidden";
+    dst.name = "dst";
+    dst.value = window.location.href;
+    form.appendChild(dst);
 
-        document.body.appendChild(form);
-        form.submit();
-
-        // Check if MikroTik has opened network access before starting timer
-        verifyNetworkAccess(expiryTime);
-    }
+    document.body.appendChild(form);
+    form.submit();
+}
 
     // 3. Verify actual network flow through MikroTik before starting timer
     function verifyNetworkAccess(expiryTime) {
